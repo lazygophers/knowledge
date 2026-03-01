@@ -1,1 +1,10 @@
-["index", "data-structures", "cache-patterns"]
+[
+  { "type": "section-header", "label": "Getting Started" },
+  { "type": "file", "name": "index", "label": "Overview" },
+  { "type": "file", "name": "data-structures", "label": "01 Data Structures" },
+  { "type": "file", "name": "cache-patterns", "label": "02 Caching Patterns" },
+  { "type": "divider" },
+  { "type": "section-header", "label": "Reliability" },
+  { "type": "file", "name": "persistence", "label": "03 Persistence" },
+  { "type": "file", "name": "high-availability", "label": "04 High Availability" }
+]

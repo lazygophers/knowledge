@@ -1,1 +1,10 @@
-["index", "data-structures", "cache-patterns"]
+[
+  { "type": "section-header", "label": "学习入口" },
+  { "type": "file", "name": "index", "label": "模块概览" },
+  { "type": "file", "name": "data-structures", "label": "01 数据结构" },
+  { "type": "file", "name": "cache-patterns", "label": "02 缓存模式" },
+  { "type": "divider" },
+  { "type": "section-header", "label": "稳定性建设" },
+  { "type": "file", "name": "persistence", "label": "03 持久化机制" },
+  { "type": "file", "name": "high-availability", "label": "04 高可用架构" }
+]

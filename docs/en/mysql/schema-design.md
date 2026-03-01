@@ -1,7 +1,7 @@
 # MySQL Schema Design
 
-This chapter focuses on relational modeling conventions:
+## Design Principles
 
-- Data type selection
-- Primary keys and unique constraints
-- Trade-offs between normalization and denormalization
+- Start from query patterns before defining columns and indexes.
+- Keep consistency first; denormalize only with clear evidence.
+- Separate hot fields from large payload fields.

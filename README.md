@@ -2,12 +2,15 @@
 
 基于 [Rspress](https://rspress.rs/zh/) 构建，使用 `pnpm` 管理依赖，默认语言为中文，并提供英文版本。
 
+线上地址：`https://lazygophers.github.io/knowledge/`
+
 ## 目录结构
 
 - `docs/zh/golang/*`：Golang 模块（中文）
 - `docs/zh/mysql/*`：MySQL 模块（中文）
 - `docs/zh/redis/*`：Redis 模块（中文）
 - `docs/en/**`：英文文档与导航
+- `docs/styles/theme.css`：全站视觉主题样式
 
 ## 本地开发
 

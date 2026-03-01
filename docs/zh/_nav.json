@@ -5,6 +5,11 @@
     "activeMatch": "^/$"
   },
   {
+    "text": "学习路线",
+    "link": "/playbook/",
+    "activeMatch": "/playbook/"
+  },
+  {
     "text": "Golang",
     "link": "/golang/",
     "activeMatch": "/golang/"

@@ -1,0 +1,154 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+:root {
+  --rp-font-family-base: 'Space Grotesk', 'Noto Sans SC', 'Avenir Next', 'Segoe UI', sans-serif;
+  --rp-font-family-mono: 'JetBrains Mono', 'Fira Code', 'SFMono-Regular', Menlo, monospace;
+  --rp-c-brand: #0b8f8a;
+  --rp-c-brand-light: #0db9ad;
+  --rp-c-brand-lighter: #d4fbf6;
+  --rp-c-brand-dark: #076f78;
+  --rp-c-brand-darker: #04515b;
+  --rp-c-brand-tint: #0b8f8a24;
+  --rp-radius: 1.1rem;
+  --rp-radius-large: 1.6rem;
+}
+
+:where(html:not(.rp-dark)) {
+  --rp-home-hero-secondary-color: #f47b48;
+  --rp-home-hero-title-bg: linear-gradient(100deg, #04515b 0%, #0b8f8a 55%, #f47b48 100%);
+  --rp-home-background-bg: radial-gradient(52% 62% at 94% -8%, #0db9ad2e 0%, transparent 100%), radial-gradient(60% 58% at 0% -20%, #f47b4824 0%, transparent 100%), #f7fbfc;
+  --rp-home-feature-bg: linear-gradient(145deg, #ffffffea 0%, #eefaf8f0 100%);
+  --rp-c-bg-soft: #f4fbfa;
+  --rp-c-bg-mute: #e6f5f3;
+  --rp-c-divider-light: #04515b22;
+}
+
+:where(html.rp-dark) {
+  --rp-home-hero-secondary-color: #ff9a66;
+  --rp-home-hero-title-bg: linear-gradient(100deg, #8be7dd 0%, #57c7c9 50%, #ff9a66 100%);
+  --rp-home-background-bg: radial-gradient(60% 62% at 100% -20%, #0f4f58 0%, transparent 100%), radial-gradient(55% 60% at 0% -25%, #7a3b23 0%, transparent 100%), #081217;
+  --rp-home-feature-bg: linear-gradient(145deg, #0f232ccc 0%, #132f2fcc 100%);
+  --rp-c-bg-soft: #11202a;
+  --rp-c-bg-mute: #16303c;
+}
+
+.rp-nav {
+  backdrop-filter: blur(14px);
+  background: color-mix(in srgb, var(--rp-c-bg) 84%, transparent);
+  border-bottom: 1px solid var(--rp-c-divider-light);
+}
+
+.rp-nav__title__link {
+  gap: 0.55rem;
+}
+
+.rp-nav__title__logo-image {
+  height: 2rem;
+  width: auto;
+  filter: drop-shadow(0 6px 14px #0000001a);
+}
+
+.rp-home-hero {
+  padding-top: clamp(1rem, 2vw, 2.5rem);
+}
+
+.rp-home-hero__container {
+  border: 1px solid var(--rp-c-divider-light);
+  border-radius: 1.9rem;
+  box-shadow: 0 24px 48px -32px #04414f6b;
+  margin-inline: auto;
+  max-width: 74rem;
+  overflow: hidden;
+  padding: clamp(1.4rem, 3vw, 2.3rem);
+  position: relative;
+}
+
+.rp-home-hero__container::after {
+  background: radial-gradient(50% 70% at 100% 0%, #f47b4830 0%, transparent 100%);
+  content: '';
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+.rp-home-hero__title {
+  letter-spacing: -0.02em;
+}
+
+.rp-home-hero__tagline {
+  max-width: 40ch;
+}
+
+.rp-home-feature {
+  max-width: 74rem;
+  padding-inline: 0.5rem;
+}
+
+.rp-home-feature__card {
+  border-radius: 1.3rem;
+  box-shadow: 0 20px 36px -30px #0228348a;
+  transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+}
+
+.rp-home-feature__card:hover {
+  box-shadow: 0 26px 44px -28px #06647aa8;
+  transform: translateY(-4px);
+}
+
+.rp-home-feature__icon {
+  border-color: color-mix(in srgb, var(--rp-c-brand) 26%, transparent);
+}
+
+.rp-doc-layout__sidebar {
+  background: color-mix(in srgb, var(--rp-c-bg-soft) 88%, transparent);
+}
+
+.rp-sidebar-item--active {
+  background: color-mix(in srgb, var(--rp-c-brand) 12%, transparent);
+  border-left: 3px solid var(--rp-c-brand);
+}
+
+.rp-doc :not(:where(.rp-not-doc, .rp-not-doc *)):where(h1) {
+  letter-spacing: -0.02em;
+}
+
+.rp-doc :not(:where(.rp-not-doc, .rp-not-doc *)):where(h2) {
+  letter-spacing: -0.01em;
+}
+
+.kb-card-grid {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  margin: 1.25rem 0 1.8rem;
+}
+
+.kb-card {
+  background: var(--rp-home-feature-bg);
+  border: 1px solid var(--rp-c-divider-light);
+  border-radius: 1rem;
+  color: inherit;
+  display: block;
+  padding: 1rem;
+  text-decoration: none;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kb-card:hover {
+  border-color: var(--rp-c-brand);
+  box-shadow: 0 12px 24px -20px #055262cc;
+  transform: translateY(-2px);
+}
+
+.kb-card-title {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+}
+
+.kb-card-desc {
+  color: var(--rp-c-text-2);
+  display: block;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}

@@ -1,1 +1,10 @@
-["index", "schema-design", "performance-tuning"]
+[
+  { "type": "section-header", "label": "Getting Started" },
+  { "type": "file", "name": "index", "label": "Overview" },
+  { "type": "file", "name": "schema-design", "label": "01 Schema Design" },
+  { "type": "file", "name": "transactions-locks", "label": "02 Transactions & Locks" },
+  { "type": "divider" },
+  { "type": "section-header", "label": "Performance & Operations" },
+  { "type": "file", "name": "performance-tuning", "label": "03 Performance Tuning" },
+  { "type": "file", "name": "operations-checklist", "label": "04 Operations Checklist" }
+]

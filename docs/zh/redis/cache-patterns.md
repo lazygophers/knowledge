@@ -1,7 +1,13 @@
 # Redis 缓存模式
 
-本章节沉淀缓存设计模式：
+## 常见模式
 
-- Cache Aside
-- Read Through / Write Through
-- 缓存击穿、穿透、雪崩
+1. Cache Aside
+2. Read Through
+3. Write Through / Write Back
+
+## 风险治理
+
+- 缓存击穿：热点 key 互斥重建
+- 缓存穿透：布隆过滤或空值缓存
+- 缓存雪崩：过期时间随机化 + 限流

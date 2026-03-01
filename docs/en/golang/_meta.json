@@ -1,1 +1,10 @@
-["index", "basics", "concurrency"]
+[
+  { "type": "section-header", "label": "Getting Started" },
+  { "type": "file", "name": "index", "label": "Overview" },
+  { "type": "file", "name": "basics", "label": "01 Basics" },
+  { "type": "file", "name": "concurrency", "label": "02 Concurrency" },
+  { "type": "divider" },
+  { "type": "section-header", "label": "Engineering" },
+  { "type": "file", "name": "project-structure", "label": "03 Project Structure" },
+  { "type": "file", "name": "testing", "label": "04 Testing Strategy" }
+]

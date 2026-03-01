@@ -1,7 +1,13 @@
 # Redis 数据结构
 
-本章节聚焦 Redis 核心数据结构：
+## 场景映射
 
-- String / Hash / List
-- Set / ZSet
-- Stream 与典型场景
+- String：计数器、状态位、短文本缓存
+- Hash：对象字段缓存
+- List：消息队列（轻量场景）
+- ZSet：排行榜与优先级队列
+
+## 选择原则
+
+- 先看访问模式，再看结构能力。
+- 避免“一把梭”都用 String。

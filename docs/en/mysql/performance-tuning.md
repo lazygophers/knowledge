@@ -1,7 +1,7 @@
 # MySQL Performance Tuning
 
-This chapter focuses on optimization and diagnostics:
+## Optimization Order
 
-- Index design principles
-- Query plan analysis
-- Slow query remediation
+1. Find the heaviest SQL first.
+2. Correct indexing and query plans.
+3. Scale architecture only after SQL hygiene.

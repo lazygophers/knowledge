@@ -1,7 +1,12 @@
 # Redis Data Structures
 
-This chapter covers Redis core data structures:
+## Scenario Mapping
 
-- String / Hash / List
-- Set / ZSet
-- Stream and typical use cases
+- String: counters and simple states
+- Hash: object field cache
+- List: lightweight queue patterns
+- ZSet: ranking and priority queues
+
+## Selection Rule
+
+Pick by access pattern first, not by familiarity.

@@ -1,1 +1,10 @@
-["index", "basics", "concurrency"]
+[
+  { "type": "section-header", "label": "学习入口" },
+  { "type": "file", "name": "index", "label": "模块概览" },
+  { "type": "file", "name": "basics", "label": "01 语言基础" },
+  { "type": "file", "name": "concurrency", "label": "02 并发模型" },
+  { "type": "divider" },
+  { "type": "section-header", "label": "工程实践" },
+  { "type": "file", "name": "project-structure", "label": "03 项目结构" },
+  { "type": "file", "name": "testing", "label": "04 测试策略" }
+]
