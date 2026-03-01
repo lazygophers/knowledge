@@ -11,8 +11,12 @@ from lib.hooks.pre_tool_use import handle_pre_tool_use, PreToolUseConfig
 from lib.utils.env import get_project_dir
 
 prompt = {
-    "SessionStart": [],
-    "UserPromptSubmit": [],
+    "SessionStart": [
+        "不要主动提交变更，除非用户要求",
+		"默认只更新中文部分",
+	],
+    "UserPromptSubmit": [
+	],
 }
 
 def filepath_to_slash(path: str) -> str:
