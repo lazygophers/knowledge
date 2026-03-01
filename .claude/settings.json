@@ -41,10 +41,6 @@
 					{
 						"type": "command",
 						"command": "PLUGIN_NAME=knowledge uv run --directory=${CLAUDE_PROJECT_DIR} ./.claude/scripts/hooks.py"
-					},
-					{
-						"type": "command",
-						"command": "cd ${CLAUDE_PROJECT_DIR} && go fmt ./..."
 					}
 				]
 			}
