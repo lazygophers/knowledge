@@ -1,0 +1,22 @@
+[
+  {
+    "text": "Home",
+    "link": "/en/",
+    "activeMatch": "/en/$"
+  },
+  {
+    "text": "Golang",
+    "link": "/en/golang/",
+    "activeMatch": "/en/golang/"
+  },
+  {
+    "text": "MySQL",
+    "link": "/en/mysql/",
+    "activeMatch": "/en/mysql/"
+  },
+  {
+    "text": "Redis",
+    "link": "/en/redis/",
+    "activeMatch": "/en/redis/"
+  }
+]
