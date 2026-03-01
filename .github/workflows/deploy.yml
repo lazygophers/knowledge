@@ -38,7 +38,7 @@ jobs:
         run: pnpm install
       - name: Build with Rspress
         env:
-          GITHUB_ACTIONS: true
+          RSPRESS_BASE: /knowledge/
         run: |
           pnpm run build
       - name: Upload artifact
