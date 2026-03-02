@@ -194,7 +194,7 @@ const n = 100
 | 类型 | 含义 | 使用场景 | 示例 |
 |-----|------|---------|------|
 | **State** | 单一状态值 | 枚举、布尔值 | `On/Off`, `Running/Paused` |
-| **Status** | 位运算组合或复合结构 | 多状态组合或复杂状态 | `1<<0 \| 1<<2`, `Status{Code, Message}` |
+| **Status** | 位运算组合 | 一个值表达多个状态 | `1<<0 \| 1<<2` |
 
 ### State - 单一状态
 
@@ -235,20 +235,7 @@ if status&StatusRunning != 0 {
 status := StatusReady | StatusRunning  // 3
 ```
 
-### Status - 复合结构
-
-包含多个字段的复杂状态。
-
-```go
-// Status - 复合状态结构
-type Status struct {
-    Code    int
-    Message string
-    Details map[string]interface{}
-}
-```
-
-<Badge text="记忆" type="tip" /> **State** = 单一状态 / **Status** = 位运算组合 OR 复合结构
+<Badge text="记忆" type="tip" /> **State** = 单一状态 / **Status** = 位运算组合多状态
 
 ### 快速判断
 
@@ -257,20 +244,16 @@ type Status struct {
 flowchart TD
     A[需要状态] --> B{单一还是组合?}
     B -->|单一| C[State 枚举/bool]
-    B -->|组合| D[Status]
+    B -->|组合| D[Status 位运算]
 
     C --> E[On/Off, Running/Paused]
-    D --> F{组合方式?}
-    F -->|位运算| G[Status 位常量<br/>1<<0 | 1<<2]
-    F -->|结构体| H[Status 结构体<br/>Code + Message]
+    D --> F[1<<0 | 1<<2<br/>StatusReady | StatusRunning]
 
     linkStyle default stroke:#3b82f6,stroke-width:2px
     classDef state fill:#e1f5ff,stroke:#1976d2,stroke-width:2px,color:#0d47a1
-    classDef status fill:#fff9c4,stroke:#f59e0b,stroke-width:2px,color:#78350f
-    classDef bit fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px,color:#064e3b
+    classDef status fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px,color:#064e3b
     class C,E state
-    class D,G,H status
-    class G bit
+    class D,F status
 ```
 
 
@@ -400,8 +383,8 @@ flowchart TD
 | 变量/常量 | 驼峰命名 | `userName`, `maxCount` |
 | 接口 | 动词+er 或描述性 | `Reader`, `HttpClient` |
 | 缩写词 | 首字母大写 | `HttpServer`, `userId` |
-| 单一状态 | `State` / `bool` | `Enabled`, `StateOn` |
-| 复合状态 | `Status` 结构 | `Status{Code, Message}` |
+| 单一状态 | `State` / `bool` | 枚举或布尔 | `Enabled`, `StateOn` |
+| 组合状态 | `Status` | 位运算组合多个状态 | `Status | StatusRunning`, `StatusReady | StatusError` |
 | 时间点 | `At` 后缀 | `CreatedAt`, `UpdatedAt` |
 | 时间范围 | `Start/End` | `StartTime`, `EndTime` |
 | 持续时间 | `Duration` | `Timeout`, `Delay` |
