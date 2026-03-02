@@ -5,7 +5,7 @@
 ## 🎯 学习路径
 
 <div class="kb-card-grid">
-  <a class="kb-card" href="/golang/install">
+  <a class="kb-card" href="install">
     <span class="kb-card-title">01 环境搭建</span>
     <span class="kb-card-desc">安装 Go 语言，配置开发环境，选择你的操作系统开始。</span>
   </a>
@@ -58,5 +58,5 @@ Go 是由 Google 开发的开源编程语言，专注于简洁、高效和可靠
 
 选择你的起点：
 
-- [我想安装 Go → 环境搭建](/golang/install)
+- [我想安装 Go → 环境搭建](install)
 - [我已经安装好了 → Hello World](/golang/hello)

@@ -2,7 +2,7 @@
 
 本指南提供在 Linux 系统上安装 Go 语言的多种方法。请根据你的发行版和需求选择合适的安装方式。
 
-[← 返回安装指南](/golang/install)
+[← 返回安装指南](.)
 
 ---
 
@@ -315,4 +315,4 @@ go env -w GOPROXY=https://goproxy.io,direct
 
 ---
 
-[← 返回安装指南](/golang/install) | [继续：Hello World →](/golang/hello)
+[← 返回安装指南](.) | [继续：Hello World →](../hello)

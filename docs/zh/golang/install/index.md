@@ -2,7 +2,7 @@
 
 本指南将帮助你在各种操作系统上安装 Go 语言。
 
-[← 返回模块概览](/golang/)
+[← 返回模块概览](../)
 
 ---
 
@@ -11,15 +11,15 @@
 选择你的操作系统，查看详细的安装指南：
 
 <div class="kb-card-grid">
-  <a class="kb-card" href="/golang/windows">
+  <a class="kb-card" href="windows">
     <span class="kb-card-title">🪟 Windows</span>
     <span class="kb-card-desc">MSI 安装包、Chocolatey、Scoop、ZIP 便携安装、goup 多版本管理</span>
   </a>
-  <a class="kb-card" href="/golang/macos">
+  <a class="kb-card" href="macos">
     <span class="kb-card-title">🍎 macOS</span>
     <span class="kb-card-desc">PKG 安装包、Homebrew、源码编译、goup 多版本管理</span>
   </a>
-  <a class="kb-card" href="/golang/linux">
+  <a class="kb-card" href="linux">
     <span class="kb-card-title">🐧 Linux</span>
     <span class="kb-card-desc">官方二进制包、apt/yum/dnf、Snap、goup 多版本管理</span>
   </a>
@@ -203,7 +203,7 @@ git clone https://github.com/LazyVim/starter ~/.config/nvim
 ## 📚 下一步
 
 安装完成后，继续学习：
-→ [编写你的第一个 Go 程序](/golang/hello)
+→ [编写你的第一个 Go 程序](../hello)
 
 ---
 
@@ -216,4 +216,4 @@ git clone https://github.com/LazyVim/starter ~/.config/nvim
 
 ---
 
-[返回模块概览](/golang/) | [继续：Hello World →](/golang/hello)
+[返回模块概览](../) | [继续：Hello World →](../hello)
