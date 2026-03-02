@@ -268,6 +268,104 @@ server := NewServer(
 )
 ```
 
+### 链式调用
+
+链式调用让方法返回结构体指针，实现流畅的 API：
+
+```go
+type Builder struct {
+    name string
+    age  int
+    city string
+}
+
+// 每个方法都返回 *Builder，支持链式调用
+func (b *Builder) SetName(name string) *Builder {
+    b.name = name
+    return b
+}
+
+func (b *Builder) SetAge(age int) *Builder {
+    b.age = age
+    return b
+}
+
+func (b *Builder) SetCity(city string) *Builder {
+    b.city = city
+    return b
+}
+
+func (b *Builder) Build() *Builder {
+    return b
+}
+
+// 使用链式调用
+builder := &Builder{}
+result := builder.
+    SetName("Alice").
+    SetAge(25).
+    SetCity("Beijing").
+    Build()
+
+fmt.Println(result)  // &{Alice 25 Beijing}
+```
+
+<Badge text="链式调用要点" type="tip" />
+1. 方法使用<strong>指针接收者</strong> `*Builder`
+2. 每个方法<strong>返回指针</strong> `return b`
+3. 每行以<strong>点结尾</strong>，方便链式书写
+
+### 实际应用：HTTP 请求构建器
+
+```go
+type Request struct {
+    url     string
+    method  string
+    headers map[string]string
+    body    []byte
+}
+
+type RequestBuilder struct {
+    request *Request
+}
+
+func NewRequestBuilder(url string) *RequestBuilder {
+    return &RequestBuilder{
+        request: &Request{
+            url:     url,
+            method:  "GET",
+            headers: make(map[string]string),
+        },
+    }
+}
+
+func (rb *RequestBuilder) Method(method string) *RequestBuilder {
+    rb.request.method = method
+    return rb
+}
+
+func (rb *RequestBuilder) Header(key, value string) *RequestBuilder {
+    rb.request.headers[key] = value
+    return rb
+}
+
+func (rb *RequestBuilder) Body(body []byte) *RequestBuilder {
+    rb.request.body = body
+    return rb
+}
+
+func (rb *RequestBuilder) Build() *Request {
+    return rb.request
+}
+
+// 使用
+req := NewRequestBuilder("https://api.example.com").
+    Method("POST").
+    Header("Content-Type", "application/json").
+    Body([]byte(`{"name":"Alice"}`)).
+    Build()
+```
+
 ## 练习
 
 1. 定义 Rectangle 结构体，计算面积和周长
