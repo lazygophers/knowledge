@@ -35,9 +35,13 @@ export default defineConfig({
   globalStyles: path.join(__dirname, 'docs/styles/theme.css'),
   markdown: {
     showLineNumbers: true,
-    defaultWrapCode: false, 
+    defaultWrapCode: false,
     // 需要禁用 mdxRs 以便使用 remark 插件（包括 mermaid）
     mdxRs: false,
+  },
+  redirect: {
+    // 重定向 data-types/channel 到 concurrency/channel
+    '/golang/data-types/channel.html': '/golang/concurrency/channel.html',
   },
   themeConfig: {
     localeRedirect: 'only-default-lang',

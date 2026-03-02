@@ -46,11 +46,6 @@
   },
   {
     "type": "file",
-    "name": "channel",
-    "label": "Channel"
-  },
-  {
-    "type": "file",
     "name": "generics",
     "label": "Generics"
   }
