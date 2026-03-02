@@ -38,6 +38,11 @@
     },
     {
         "type": "dir",
+        "name": "functions-methods",
+        "label": "函数与方法"
+    },
+    {
+        "type": "dir",
         "name": "interface",
         "label": "接口"
     },
@@ -45,10 +50,5 @@
         "type": "dir",
         "name": "concurrency",
         "label": "并发"
-    },
-    {
-        "type": "dir",
-        "name": "functions-methods",
-        "label": "函数与方法"
     }
 ]
