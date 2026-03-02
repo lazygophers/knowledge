@@ -1,5 +1,6 @@
 import * as path from 'node:path';
 import { defineConfig } from '@rspress/core';
+import mermaid from 'rspress-plugin-mermaid';
 
 const ghPagesBase = '/knowledge/';
 
@@ -33,9 +34,9 @@ export default defineConfig({
   globalStyles: path.join(__dirname, 'docs/styles/theme.css'),
   markdown: {
     showLineNumbers: true,
-    defaultWrapCode: false,
-    // @ts-ignore
-    mermaid: true,
+    defaultWrapCode: false, 
+    // 需要禁用 mdxRs 以便使用 remark 插件（包括 mermaid）
+    mdxRs: false,
   },
   themeConfig: {
     localeRedirect: 'only-default-lang',
@@ -52,4 +53,11 @@ export default defineConfig({
       },
     ],
   },
+  plugins:[
+    mermaid({
+      mermaidConfig: {
+        theme: 'forest',
+      },
+    }),
+  ]
 });
