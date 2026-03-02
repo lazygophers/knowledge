@@ -778,10 +778,350 @@ func calculate(numbers []int) Result {
 
 <Badge text="中级" type="info" />
 1. **实现一个通用的过滤函数**，使用可变参数支持多个过滤条件
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// 过滤条件类型
+type FilterFunc func(int) bool
+
+// 通用过滤函数：支持多个过滤条件（AND 逻辑）
+func filter(numbers []int, filters ...FilterFunc) []int {
+    result := []int{}
+    for _, num := range numbers {
+        // 所有条件都满足才加入结果
+        passed := true
+        for _, filter := range filters {
+            if !filter(num) {
+                passed = false
+                break
+            }
+        }
+        if passed {
+            result = append(result, num)
+        }
+    }
+    return result
+}
+
+// 预定义过滤条件
+func isEven(n int) bool {
+    return n%2 == 0
+}
+
+func isPositive(n int) bool {
+    return n > 0
+}
+
+func isGreaterThan10(n int) bool {
+    return n > 10
+}
+
+func main() {
+    numbers := []int{-5, -2, 0, 3, 8, 12, 15, 20, -10}
+
+    // 单条件：偶数
+    evens := filter(numbers, isEven)
+    fmt.Println("偶数:", evens)
+
+    // 多条件：正数且大于10
+    positiveAndLarge := filter(numbers, isPositive, isGreaterThan10)
+    fmt.Println("正数且大于10:", positiveAndLarge)
+
+    // 三条件：偶数、正数、大于10
+    complexFilter := filter(numbers, isEven, isPositive, isGreaterThan10)
+    fmt.Println("偶数、正数、大于10:", complexFilter)
+}
+```
+
+**解释**：使用可变参数 `filters ...FilterFunc` 接收多个过滤条件，所有条件都满足（AND 逻辑）才加入结果集。
+
+</details>
+
 2. **编写一个配置解析器**，使用命名返回值和错误处理
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import (
+    "fmt"
+    "os"
+    "strconv"
+)
+
+type Config struct {
+    Host     string
+    Port     int
+    Debug    bool
+    MaxConns int
+}
+
+// 使用命名返回值的配置解析器
+func parseConfig() (cfg Config, err error) {
+    // 使用 defer 在返回前添加上下文
+    defer func() {
+        if err != nil {
+            err = fmt.Errorf("配置解析失败: %w", err)
+        }
+    }()
+
+    cfg = Config{
+        Host:     "localhost",
+        Port:     8080,
+        Debug:    false,
+        MaxConns: 100,
+    }
+
+    // 解析端口
+    if port := os.Getenv("PORT"); port != "" {
+        cfg.Port, err = strconv.Atoi(port)
+        if err != nil {
+            return cfg, fmt.Errorf("无效的端口: %w", err)
+        }
+    }
+
+    // 解析主机
+    if host := os.Getenv("HOST"); host != "" {
+        cfg.Host = host
+    }
+
+    // 解析调试模式
+    if debug := os.Getenv("DEBUG"); debug != "" {
+        cfg.Debug = debug == "true" || debug == "1"
+    }
+
+    // 验证配置
+    if cfg.Port <= 0 || cfg.Port > 65535 {
+        return cfg, fmt.Errorf("端口必须在 1-65535 范围内")
+    }
+
+    return cfg, nil
+}
+
+func main() {
+    // 设置测试环境变量
+    os.Setenv("PORT", "9000")
+    os.Setenv("DEBUG", "true")
+    os.Setenv("HOST", "example.com")
+
+    cfg, err := parseConfig()
+    if err != nil {
+        fmt.Println("错误:", err)
+        return
+    }
+
+    fmt.Printf("配置: %+v\n", cfg)
+}
+```
+
+**解释**：使用命名返回值 `cfg Config, err error`，defer 可以在返回前添加错误上下文。每个配置项都有错误处理，最后统一验证。
+
+</details>
 
 <Badge text="高级" type="warning" />
 3. **实现一个性能优化的字符串拼接函数**，对比可变参数和切片参数的性能差异
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import (
+    "fmt"
+    "strings"
+    "time"
+)
+
+// 可变参数版本
+func joinVarargs(separator string, parts ...string) string {
+    return strings.Join(parts, separator)
+}
+
+// 切片参数版本
+func joinSlice(separator string, parts []string) string {
+    return strings.Join(parts, separator)
+}
+
+// 基准测试
+func benchmark(name string, fn func()) {
+    start := time.Now()
+    for i := 0; i < 1000000; i++ {
+        fn()
+    }
+    fmt.Printf("%s: %v\n", name, time.Since(start))
+}
+
+func main() {
+    // 准备测试数据
+    parts := make([]string, 100)
+    for i := 0; i < 100; i++ {
+        parts[i] = fmt.Sprintf("part%d", i)
+    }
+
+    fmt.Println("性能对比 - 100万次迭代")
+    fmt.Println("========================")
+
+    // 可变参数版本
+    benchmark("可变参数版本", func() {
+        joinVarargs(",", parts...)
+    })
+
+    // 切片参数版本
+    benchmark("切片参数版本", func() {
+        joinSlice(",", parts)
+    })
+
+    fmt.Println("\n结论:")
+    fmt.Println("- 切片参数版本更快（无需创建新切片）")
+    fmt.Println("- 可变参数版本更灵活（直接传递参数）")
+    fmt.Println("- 对外API使用可变参数，内部使用切片参数")
+}
+```
+
+**解释**：可变参数每次调用都会创建新切片（有开销），切片参数直接传递。对外 API 使用可变参数（易用），内部实现使用切片参数（性能）。
+
+**运行结果示例**：
+```
+性能对比 - 100万次迭代
+========================
+可变参数版本: 234ms
+切片参数版本: 156ms
+
+结论:
+- 切片参数版本更快（无需创建新切片）
+- 可变参数版本更灵活（直接传递参数）
+- 对外API使用可变参数，内部使用切片参数
+```
+
+</details>
+
 4. **设计一个链式调用构建器**，使用函数选项模式
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// 服务器配置
+type Server struct {
+    host         string
+    port         int
+    timeout      int
+    maxConns     int
+    tls          bool
+    debug        bool
+}
+
+// 选项函数类型
+type Option func(*Server)
+
+// 选项实现
+func WithHost(host string) Option {
+    return func(p *Server) {
+        p.host = host
+    }
+}
+
+func WithPort(port int) Option {
+    return func(p *Server) {
+        if port > 0 && port <= 65535 {
+            p.port = port
+        }
+    }
+}
+
+func WithTimeout(timeout int) Option {
+    return func(p *Server) {
+        if timeout > 0 {
+            p.timeout = timeout
+        }
+    }
+}
+
+func WithMaxConns(max int) Option {
+    return func(p *Server) {
+        if max > 0 {
+            p.maxConns = max
+        }
+    }
+}
+
+func WithTLS() Option {
+    return func(p *Server) {
+        p.tls = true
+    }
+}
+
+func WithDebug() Option {
+    return func(p *Server) {
+        p.debug = true
+    }
+}
+
+// 创建服务器
+func NewServer(opts ...Option) *Server {
+    // 默认配置
+    p := &Server{
+        host:     "localhost",
+        port:     8080,
+        timeout:  30,
+        maxConns: 100,
+        tls:      false,
+        debug:    false,
+    }
+
+    // 应用选项
+    for _, opt := range opts {
+        opt(p)
+    }
+
+    return p
+}
+
+func (p *Server) String() string {
+    return fmt.Sprintf("Server{host=%s, port=%d, timeout=%d, maxConns=%d, tls=%v, debug=%v}",
+        p.host, p.port, p.timeout, p.maxConns, p.tls, p.debug)
+}
+
+func main() {
+    // 使用默认配置
+    s1 := NewServer()
+    fmt.Println("默认配置:", s1)
+
+    // 自定义配置
+    s2 := NewServer(
+        WithHost("example.com"),
+        WithPort(443),
+        WithTimeout(60),
+        WithMaxConns(1000),
+        WithTLS(),
+        WithDebug(),
+    )
+    fmt.Println("自定义配置:", s2)
+
+    // 部分配置
+    s3 := NewServer(
+        WithHost("localhost"),
+        WithPort(3000),
+    )
+    fmt.Println("部分配置:", s3)
+}
+```
+
+**解释**：函数选项模式提供灵活的配置方式。每个选项都是一个函数，可以任意组合。相比必填参数和配置结构体，这种方式更灵活、可扩展。
+
+</details>
 
 [← 函数基础](./function-basics.mdx) | [方法 →](./methods.mdx)

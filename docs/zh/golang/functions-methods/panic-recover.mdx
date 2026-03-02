@@ -664,15 +664,299 @@ flowchart TD
 
 <Badge text="初级" type="tip" />
 1. **实现一个除法函数**，处理除零错误
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import (
+    "errors"
+    "fmt"
+)
+
+func divide(a, b float64) (float64, error) {
+    if b == 0 {
+        return 0, errors.New("division by zero")
+    }
+    return a / b, nil
+}
+
+func main() {
+    result, err := divide(10, 0)
+    if err != nil {
+        fmt.Println("错误:", err)
+        return
+    }
+    fmt.Println("结果:", result)
+}
+```
+
+**解释**：使用 Go 标准的多返回值模式，最后一个返回值是 `error` 类型。除零时返回错误信息和零值。
+
+</details>
+
 2. **编写一个文件读取函数**，返回详细的错误信息
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import (
+    "fmt"
+    "io"
+    "os"
+)
+
+func readFile(filename string) ([]byte, error) {
+    file, err := os.Open(filename)
+    if err != nil {
+        return nil, fmt.Errorf("打开文件 %s 失败: %w", filename, err)
+    }
+    defer file.Close()
+
+    data, err := io.ReadAll(file)
+    if err != nil {
+        return nil, fmt.Errorf("读取文件 %s 失败: %w", filename, err)
+    }
+
+    return data, nil
+}
+
+func main() {
+    data, err := readFile("example.txt")
+    if err != nil {
+        fmt.Println("错误:", err)
+        return
+    }
+    fmt.Println("内容:", string(data))
+}
+```
+
+**解释**：使用 `fmt.Errorf` 和 `%w` 动词包装错误，添加文件名等上下文信息，便于定位问题。
+
+</details>
 
 <Badge text="中级" type="info" />
 3. **创建自定义错误类型** `ValidationError`，包含字段名和错误信息
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import (
+    "fmt"
+)
+
+// 自定义验证错误
+type ValidationError struct {
+    Field   string
+    Message string
+}
+
+func (e *ValidationError) Error() string {
+    return fmt.Sprintf("验证失败: 字段 '%s' %s", e.Field, e.Message)
+}
+
+func validateUser(name, email string) error {
+    if name == "" {
+        return &ValidationError{
+            Field:   "name",
+            Message: "不能为空",
+        }
+    }
+    if email == "" {
+        return &ValidationError{
+            Field:   "email",
+            Message: "不能为空",
+        }
+    }
+    return nil
+}
+
+func main() {
+    err := validateUser("", "test@example.com")
+    if err != nil {
+        fmt.Println("错误:", err)
+    }
+}
+```
+
+**解释**：实现 `error` 接口的 `Error()` 方法，可以携带结构化的错误信息，便于调用方处理特定错误。
+
+</details>
+
 4. **实现错误包装**，在不同层次添加上下文信息
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import (
+    "errors"
+    "fmt"
+)
+
+var ErrUserNotFound = errors.New("user not found")
+
+// 数据库层
+func getUserFromDB(id int) (*User, error) {
+    return nil, ErrUserNotFound
+}
+
+// 服务层
+func getUserService(id int) (*User, error) {
+    user, err := getUserFromDB(id)
+    if err != nil {
+        return nil, fmt.Errorf("获取用户 %d: %w", id, err)
+    }
+    return user, nil
+}
+
+// 处理器层
+func handleUser(id int) error {
+    user, err := getUserService(id)
+    if err != nil {
+        return fmt.Errorf("处理用户请求: %w", err)
+    }
+    fmt.Printf("用户: %+v\n", user)
+    return nil
+}
+
+type User struct {
+    Id   int
+    Name string
+}
+
+func main() {
+    err := handleUser(123)
+    if err != nil {
+        // 检查是否是特定错误
+        if errors.Is(err, ErrUserNotFound) {
+            fmt.Println("用户不存在")
+        } else {
+            fmt.Println("其他错误:", err)
+        }
+    }
+}
+```
+
+**解释**：使用 `%w` 动词包装错误，保留错误链。每层添加自己的上下文信息，使用 `errors.Is()` 判断底层错误。
+
+</details>
 
 <Badge text="高级" type="warning" />
 5. **实现一个安全的 HTTP 处理器**，使用 recover 捕获 panic
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import (
+    "fmt"
+    "log"
+)
+
+// 安全的 HTTP 处理器包装器
+func safeHandler(handler func() error) (err error) {
+    defer func() {
+        if r := recover(); r != nil {
+            log.Printf("捕获 panic: %v", r)
+            err = fmt.Errorf("内部错误: %v", r)
+        }
+    }()
+    return handler()
+}
+
+func processRequest() error {
+    // 模拟 panic
+    panic("意外的错误!")
+    return nil
+}
+
+func main() {
+    err := safeHandler(processRequest)
+    if err != nil {
+        fmt.Println("处理错误:", err)
+    }
+    fmt.Println("程序继续运行")
+}
+```
+
+**解释**：使用 `defer + recover` 模式捕获 panic，转换为 error 返回。只在顶层或边界处使用 recover，避免滥用。
+
+</details>
+
 6. **编写一个错误处理中间件**，统一处理和记录错误
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import (
+    "fmt"
+    "log"
+)
+
+// 处理器类型
+type Handler func(string) error
+
+// 错误处理中间件
+func errorHandler(next Handler) Handler {
+    return func(input string) error {
+        defer func() {
+            if r := recover(); r != nil {
+                log.Printf("[PANIC] 恢复: %v", r)
+            }
+        }()
+
+        err := next(input)
+        if err != nil {
+            log.Printf("[ERROR] 处理 '%s' 失败: %v", input, err)
+            return fmt.Errorf("处理失败: %w", err)
+        }
+        log.Printf("[INFO] 成功处理: %s", input)
+        return nil
+    }
+}
+
+// 业务处理器
+func processOrder(orderId string) error {
+    if orderId == "" {
+        return fmt.Errorf("订单 ID 不能为空")
+    }
+    if orderId == "invalid" {
+        panic("数据格式错误")
+    }
+    fmt.Printf("处理订单: %s\n", orderId)
+    return nil
+}
+
+func main() {
+    // 包装处理器
+    safeProcess := errorHandler(processOrder)
+
+    // 测试
+    safeProcess("ORDER-001")
+    safeProcess("")
+    safeProcess("invalid")
+}
+```
+
+**解释**：中间件模式包装处理器，统一处理 panic 和 error，添加日志记录。这是 Web 框架中常见的错误处理模式。
+
+</details>
 
 
 [← 返回函数与方法](../functions-methods/) | [Defer 详解](defer/) | [继续：上下文 →](context/)

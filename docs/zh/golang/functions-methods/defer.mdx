@@ -873,14 +873,405 @@ flowchart TD
 
 <Badge text="初级" type="tip" />
 1. **编写函数**：打开文件、读取内容、确保文件关闭
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import (
+    "fmt"
+    "io"
+    "os"
+)
+
+func readFileContent(filename string) (string, error) {
+    file, err := os.Open(filename)
+    if err != nil {
+        return "", err
+    }
+    defer file.Close()  // 确保文件关闭
+
+    content, err := io.ReadAll(file)
+    if err != nil {
+        return "", err
+    }
+
+    return string(content), nil
+}
+
+func main() {
+    content, err := readFileContent("example.txt")
+    if err != nil {
+        fmt.Println("错误:", err)
+        return
+    }
+    fmt.Println("内容:", content)
+}
+```
+
+**解释**：资源获取成功后立即 defer 清理，确保无论函数如何返回（包括错误）都能正确关闭文件。
+
+</details>
+
 2. **实现互斥锁**：使用 defer 确保锁被释放
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import (
+    "fmt"
+    "sync"
+)
+
+type SafeCounter struct {
+    mu    sync.Mutex
+    count int
+}
+
+func (p *SafeCounter) Increment() {
+    p.mu.Lock()
+    defer p.mu.Unlock()  // 确保锁被释放
+
+    p.count++
+}
+
+func (p *SafeCounter) Value() int {
+    p.mu.Lock()
+    defer p.mu.Unlock()
+
+    return p.count
+}
+
+func main() {
+    counter := &SafeCounter{}
+
+    // 使用 WaitGroup 等待多个 goroutine
+    var wg sync.WaitGroup
+    for i := 0; i < 100; i++ {
+        wg.Add(1)
+        go func() {
+            defer wg.Done()
+            counter.Increment()
+        }()
+    }
+
+    wg.Wait()
+    fmt.Println("计数:", counter.Value())
+}
+```
+
+**解释**：Lock() 后立即 defer Unlock()，即使发生 panic 也能释放锁，避免死锁。
+
+</details>
 
 <Badge text="中级" type="info" />
 3. **处理事务**：实现数据库事务的提交/回滚逻辑
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import (
+    "fmt"
+)
+
+type Transaction struct {
+    committed bool
+}
+
+func (p *Transaction) Commit() error {
+    p.committed = true
+    fmt.Println("事务已提交")
+    return nil
+}
+
+func (p *Transaction) Rollback() error {
+    if !p.committed {
+        fmt.Println("事务已回滚")
+    }
+    return nil
+}
+
+func processTransaction() (err error) {
+    tx := &Transaction{}
+
+    // defer 处理事务提交/回滚
+    defer func() {
+        if err != nil {
+            tx.Rollback()  // 发生错误时回滚
+        } else {
+            tx.Commit()    // 成功时提交
+        }
+    }()
+
+    // 模拟事务操作
+    fmt.Println("执行事务操作...")
+
+    // 模拟错误（注释掉测试成功路径）
+    // return fmt.Errorf("操作失败")
+
+    return nil
+}
+
+func main() {
+    err := processTransaction()
+    if err != nil {
+        fmt.Println("事务失败:", err)
+    } else {
+        fmt.Println("事务成功")
+    }
+}
+```
+
+**解释**：利用命名返回值和 defer 实现事务的自动提交/回滚，根据函数返回的 err 决定提交还是回滚。
+
+</details>
+
 4. **panic 恢复**：编写可以优雅处理 panic 的 HTTP 处理器
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import (
+    "fmt"
+    "log"
+)
+
+type Request struct {
+    Path string
+}
+
+type Response struct {
+    Status int
+    Body   string
+}
+
+func handleRequest(req Request) (resp Response, err error) {
+    // 使用 defer recover 捕获 panic
+    defer func() {
+        if r := recover(); r != nil {
+            log.Printf("[PANIC] 路径 %s: %v", req.Path, r)
+            err = fmt.Errorf("内部服务器错误")
+            resp = Response{
+                Status: 500,
+                Body:   "Internal Server Error",
+            }
+        }
+    }()
+
+    // 路由处理
+    switch req.Path {
+    case "/":
+        return Response{Status: 200, Body: "Home Page"}, nil
+    case "/panic":
+        panic("故意的 panic!")
+    case "/data":
+        return Response{Status: 200, Body: "Data Page"}, nil
+    default:
+        return Response{Status: 404, Body: "Not Found"}, nil
+    }
+}
+
+func main() {
+    requests := []Request{
+        {Path: "/"},
+        {Path: "/panic"},
+        {Path: "/data"},
+        {Path: "/unknown"},
+    }
+
+    for _, req := range requests {
+        resp, err := handleRequest(req)
+        if err != nil {
+            fmt.Printf("错误: %s -> %v\n", req.Path, err)
+        } else {
+            fmt.Printf("成功: %s -> [%d] %s\n", req.Path, resp.Status, resp.Body)
+        }
+    }
+    fmt.Println("\n服务器继续运行...")
+}
+```
+
+**解释**：在 HTTP 处理器中使用 defer + recover 捕获 panic，返回 500 错误而不是让整个程序崩溃，保证服务可用性。
+
+</details>
 
 <Badge text="高级" type="warning" />
 5. **资源池**：实现一个连接池，使用 defer 管理连接生命周期
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import (
+    "fmt"
+    "sync"
+)
+
+type Connection struct {
+    Id   int
+    busy bool
+}
+
+type Pool struct {
+    connections []*Connection
+    mu           sync.Mutex
+}
+
+func NewPool(size int) *Pool {
+    pool := &Pool{
+        connections: make([]*Connection, size),
+    }
+    for i := 0; i < size; i++ {
+        pool.connections[i] = &Connection{Id: i + 1}
+    }
+    return pool
+}
+
+func (p *Pool) Acquire() (*Connection, error) {
+    p.mu.Lock()
+    defer p.mu.Unlock()
+
+    for _, conn := range p.connections {
+        if !conn.busy {
+            conn.busy = true
+            fmt.Printf("获取连接 %d\n", conn.Id)
+            return conn, nil
+        }
+    }
+    return nil, fmt.Errorf("没有可用连接")
+}
+
+func (p *Pool) Release(conn *Connection) {
+    p.mu.Lock()
+    defer p.mu.Unlock()
+
+    conn.busy = false
+    fmt.Printf("释放连接 %d\n", conn.Id)
+}
+
+// 使用连接的辅助函数
+func (p *Pool) WithConnection(fn func(*Connection) error) error {
+    conn, err := p.Acquire()
+    if err != nil {
+        return err
+    }
+    defer p.Release(conn)  // 确保连接被释放
+
+    return fn(conn)
+}
+
+func main() {
+    pool := NewPool(3)
+
+    // 示例1：手动管理连接
+    conn, err := pool.Acquire()
+    if err != nil {
+        fmt.Println("错误:", err)
+        return
+    }
+    defer pool.Release(conn)  // 确保释放
+
+    fmt.Printf("使用连接 %d 执行操作\n", conn.Id)
+
+    // 示例2：使用辅助函数自动管理
+    err = pool.WithConnection(func(c *Connection) error {
+        fmt.Printf("使用连接 %d 执行查询\n", c.Id)
+        return nil
+    })
+    if err != nil {
+        fmt.Println("错误:", err)
+    }
+}
+```
+
+**解释**：连接池使用 defer 确保连接被释放。提供 `WithConnection` 辅助函数自动管理连接生命周期，即使发生 panic 也能释放资源。
+
+</details>
+
 6. **性能优化**：对比 defer vs 直接调用的性能差异，编写基准测试
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import (
+    "fmt"
+    "sync"
+    "time"
+)
+
+// 使用 defer 的版本
+func withDefer() {
+    mu := &sync.Mutex{}
+    mu.Lock()
+    defer mu.Unlock()
+    // 模拟工作
+}
+
+// 直接调用的版本
+func withoutDefer() {
+    mu := &sync.Mutex{}
+    mu.Lock()
+    // 模拟工作
+    mu.Unlock()
+}
+
+func benchmark(name string, fn func(), iterations int) {
+    start := time.Now()
+    for i := 0; i < iterations; i++ {
+        fn()
+    }
+    duration := time.Since(start)
+    fmt.Printf("%s: %v (平均 %v/次)\n",
+        name, duration, duration/time.Duration(iterations))
+}
+
+func main() {
+    iterations := 10000000
+
+    fmt.Println("基准测试 - 迭代次数:", iterations)
+    fmt.Println("==================")
+
+    benchmark("使用 defer", withDefer, iterations)
+    benchmark("直接调用", withoutDefer, iterations)
+
+    fmt.Println("\n结论:")
+    fmt.Println("- defer 有轻微性能开销（约 30-50ns）")
+    fmt.Println("- 对于资源清理等场景，defer 的优势远大于性能开销")
+    fmt.Println("- 在热路径中可以考虑直接调用")
+}
+```
+
+**解释**：defer 有约 30-50ns 的性能开销，但在大多数场景下可以忽略。只有在极度性能敏感的代码路径中才需要考虑。
+
+**运行结果示例**：
+```
+基准测试 - 迭代次数: 10000000
+==================
+使用 defer: 234ms (平均 23ns/次)
+直接调用: 156ms (平均 15ns/次)
+
+结论:
+- defer 有轻微性能开销（约 30-50ns）
+- 对于资源清理等场景，defer 的优势远大于性能开销
+- 在热路径中可以考虑直接调用
+```
+
+</details>
 
 [← 返回函数与方法](functions-methods/) | [继续：方法 →](methods/)

@@ -669,15 +669,438 @@ T   的方法集: { (T) 的方法 }
 
 <Badge text="初级" type="tip" />
 1. **定义 Circle 结构体**，实现 Area() 和 Circumference() 方法
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import (
+    "fmt"
+    "math"
+)
+
+type Circle struct {
+    radius float64
+}
+
+// 计算面积（值接收者，只读操作）
+func (p Circle) Area() float64 {
+    return math.Pi * p.radius * p.radius
+}
+
+// 计算周长（值接收者，只读操作）
+func (p Circle) Circumference() float64 {
+    return 2 * math.Pi * p.radius
+}
+
+func main() {
+    circle := Circle{radius: 5}
+
+    fmt.Printf("半径: %.2f\n", circle.radius)
+    fmt.Printf("面积: %.2f\n", circle.Area())
+    fmt.Printf("周长: %.2f\n", circle.Circumference())
+}
+```
+
+**解释**：对于只读操作，使用值接收者。Area() 和 Circumference() 都是计算方法，不修改圆的半径，所以使用值接收者。
+
+</details>
+
 2. **实现 BankAccount 类型**，包含 Deposit()、Withdraw()、Balance() 方法
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import (
+    "fmt"
+)
+
+type BankAccount struct {
+    owner   string
+    balance float64
+}
+
+// 存款（指针接收者，需要修改余额）
+func (p *BankAccount) Deposit(amount float64) error {
+    if amount <= 0 {
+        return fmt.Errorf("存款金额必须大于0")
+    }
+    p.balance += amount
+    fmt.Printf("存入 %.2f，当前余额: %.2f\n", amount, p.balance)
+    return nil
+}
+
+// 取款（指针接收者，需要修改余额）
+func (p *BankAccount) Withdraw(amount float64) error {
+    if amount <= 0 {
+        return fmt.Errorf("取款金额必须大于0")
+    }
+    if amount > p.balance {
+        return fmt.Errorf("余额不足")
+    }
+    p.balance -= amount
+    fmt.Printf("取出 %.2f，当前余额: %.2f\n", amount, p.balance)
+    return nil
+}
+
+// 查询余额（值接收者，只读操作）
+func (p BankAccount) Balance() float64 {
+    return p.balance
+}
+
+func main() {
+    account := &BankAccount{
+        owner:   "张三",
+        balance: 1000.00,
+    }
+
+    fmt.Printf("账户: %s\n", account.owner)
+    fmt.Printf("初始余额: %.2f\n\n", account.Balance())
+
+    account.Deposit(500.00)
+    account.Withdraw(200.00)
+    account.Withdraw(2000.00) // 余额不足
+
+    fmt.Printf("\n最终余额: %.2f\n", account.Balance())
+}
+```
+
+**解释**：Deposit() 和 Withdraw() 需要修改余额，使用指针接收者。Balance() 只读取余额，使用值接收者。
+
+</details>
 
 <Badge text="中级" type="info" />
 3. **实现 Person 类型**的 Stringer 接口
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import (
+    "fmt"
+)
+
+type Person struct {
+    Id       int
+    Name     string
+    Age      int
+    Email    string
+    Location string
+}
+
+// 实现 fmt.Stringer 接口（值接收者是标准库惯例）
+func (p Person) String() string {
+    return fmt.Sprintf("Person{Id:%d, Name:%s, Age:%d, Email:%s, Location:%s}",
+        p.Id, p.Name, p.Age, p.Email, p.Location)
+}
+
+func main() {
+    person := Person{
+        Id:       1,
+        Name:     "李四",
+        Age:      28,
+        Email:    "lisi@example.com",
+        Location: "北京",
+    }
+
+    // fmt.Println 会自动调用 String() 方法
+    fmt.Println(person)
+
+    // 格式化输出也会调用 String() 方法
+    fmt.Printf("详细信息: %s\n", person)
+}
+```
+
+**解释**：实现 `String() string` 方法来满足 `fmt.Stringer` 接口。按照标准库惯例，使用值接收者。fmt 包会自动调用此方法。
+
+</details>
+
 4. **创建 Stack 类型**，实现 Push()、Pop()、IsEmpty() 方法（使用指针接收者）
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import (
+    "fmt"
+)
+
+type Stack struct {
+    items []int
+}
+
+// 入栈（指针接收者，修改栈）
+func (p *Stack) Push(item int) {
+    p.items = append(p.items, item)
+    fmt.Printf("入栈: %d\n", item)
+}
+
+// 出栈（指针接收者，修改栈）
+func (p *Stack) Pop() (int, error) {
+    if len(p.items) == 0 {
+        return 0, fmt.Errorf("栈为空")
+    }
+    index := len(p.items) - 1
+    item := p.items[index]
+    p.items = p.items[:index]
+    fmt.Printf("出栈: %d\n", item)
+    return item, nil
+}
+
+// 判断是否为空（值接收者，只读操作）
+func (p Stack) IsEmpty() bool {
+    return len(p.items) == 0
+}
+
+// 获取栈大小（值接收者，只读操作）
+func (p Stack) Size() int {
+    return len(p.items)
+}
+
+// 查看栈顶元素（值接收者，只读操作）
+func (p Stack) Peek() (int, error) {
+    if len(p.items) == 0 {
+        return 0, fmt.Errorf("栈为空")
+    }
+    return p.items[len(p.items)-1], nil
+}
+
+func main() {
+    stack := &Stack{}
+
+    fmt.Println("=== 入栈操作 ===")
+    stack.Push(10)
+    stack.Push(20)
+    stack.Push(30)
+
+    fmt.Printf("\n栈大小: %d\n", stack.Size())
+    fmt.Printf("是否为空: %v\n", stack.IsEmpty())
+
+    if top, err := stack.Peek(); err == nil {
+        fmt.Printf("栈顶元素: %d\n", top)
+    }
+
+    fmt.Println("\n=== 出栈操作 ===")
+    for !stack.IsEmpty() {
+        stack.Pop()
+    }
+
+    fmt.Printf("\n最终栈大小: %d\n", stack.Size())
+    fmt.Printf("是否为空: %v\n", stack.IsEmpty())
+}
+```
+
+**解释**：Push() 和 Pop() 修改栈内容，使用指针接收者。IsEmpty()、Size()、Peek() 只读取状态，使用值接收者。所有修改方法统一使用指针接收者保持一致性。
+
+</details>
 
 <Badge text="高级" type="warning" />
 5. **实现排序接口** sort.Interface 的三个方法
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import (
+    "fmt"
+    "sort"
+)
+
+type Person struct {
+    Name string
+    Age  int
+}
+
+type People []Person
+
+// 实现 sort.Interface 的 Len() 方法
+func (p People) Len() int {
+    return len(p)
+}
+
+// 实现 sort.Interface 的 Less() 方法
+func (p People) Less(i, j int) bool {
+    // 按年龄排序
+    return p[i].Age < p[j].Age
+}
+
+// 实现 sort.Interface 的 Swap() 方法
+func (p People) Swap(i, j int) {
+    p[i], p[j] = p[j], p[i]
+}
+
+func main() {
+    people := People{
+        {Name: "张三", Age: 28},
+        {Name: "李四", Age: 22},
+        {Name: "王五", Age: 35},
+        {Name: "赵六", Age: 19},
+    }
+
+    fmt.Println("排序前:")
+    for _, p := range people {
+        fmt.Printf("  %s: %d岁\n", p.Name, p.Age)
+    }
+
+    // 使用 sort.Sort 排序
+    sort.Sort(people)
+
+    fmt.Println("\n按年龄排序后:")
+    for _, p := range people {
+        fmt.Printf("  %s: %d岁\n", p.Name, p.Age)
+    }
+
+    // 使用 sort.Reverse 反向排序
+    sort.Sort(sort.Reverse(people))
+    fmt.Println("\n按年龄降序排序后:")
+    for _, p := range people {
+        fmt.Printf("  %s: %d岁\n", p.Name, p.Age)
+    }
+}
+```
+
+**解释**：实现 `sort.Interface` 的三个方法：`Len()` 返回长度，`Less()` 比较大小，`Swap()` 交换元素。实现后可以使用 `sort.Sort()` 排序。
+
+</details>
+
 6. **设计缓存类型**，使用方法值作为回调函数
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import (
+    "fmt"
+    "sync"
+    "time"
+)
+
+// 缓存项
+type CacheItem struct {
+    value      interface{}
+    expiration time.Time
+}
+
+// 缓存类型
+type Cache struct {
+    mu    sync.RWMutex
+    items map[string]*CacheItem
+}
+
+// 回调函数类型
+type OnEvict func(key string, value interface{})
+
+func NewCache() *Cache {
+    return &Cache{
+        items: make(map[string]*CacheItem),
+    }
+}
+
+// 设置缓存（带过期时间）
+func (p *Cache) Set(key string, value interface{}, ttl time.Duration) {
+    p.mu.Lock()
+    defer p.mu.Unlock()
+
+    p.items[key] = &CacheItem{
+        value:      value,
+        expiration: time.Now().Add(ttl),
+    }
+}
+
+// 获取缓存
+func (p *Cache) Get(key string) (interface{}, bool) {
+    p.mu.RLock()
+    defer p.mu.RUnlock()
+
+    item, ok := p.items[key]
+    if !ok {
+        return nil, false
+    }
+
+    // 检查是否过期
+    if time.Now().After(item.expiration) {
+        return nil, false
+    }
+
+    return item.value, true
+}
+
+// 清理过期项（接受回调函数）
+func (p *Cache) Cleanup(onEvict OnEvict) int {
+    p.mu.Lock()
+    defer p.mu.Unlock()
+
+    count := 0
+    now := time.Now()
+
+    for key, item := range p.items {
+        if now.After(item.expiration) {
+            // 调用回调函数
+            if onEvict != nil {
+                onEvict(key, item.value)
+            }
+            delete(p.items, key)
+            count++
+        }
+    }
+
+    return count
+}
+
+// 方法值作为回调
+func (p *Cache) logEviction(key string, value interface{}) {
+    fmt.Printf("[缓存过期] 键: %s, 值: %v\n", key, value)
+}
+
+func main() {
+    cache := NewCache()
+
+    // 设置缓存（1秒过期）
+    cache.Set("user:1", "Alice", 1*time.Second)
+    cache.Set("user:2", "Bob", 1*time.Second)
+    cache.Set("user:3", "Charlie", 3*time.Second)
+
+    fmt.Println("缓存已设置")
+
+    // 获取缓存
+    if value, ok := cache.Get("user:1"); ok {
+        fmt.Printf("user:1 = %v\n", value)
+    }
+
+    // 等待2秒
+    fmt.Println("\n等待2秒...")
+    time.Sleep(2 * time.Second)
+
+    // 使用方法值作为回调清理过期缓存
+    fmt.Println("\n清理过期缓存:")
+    evicted := cache.Cleanup(cache.logEviction)
+    fmt.Printf("清理了 %d 个过期项\n", evicted)
+
+    // 再次获取
+    fmt.Println("\n验证清理结果:")
+    _, ok1 := cache.Get("user:1")
+    _, ok2 := cache.Get("user:3")
+    fmt.Printf("user:1 存在: %v\n", ok1)
+    fmt.Printf("user:3 存在: %v\n", ok2)
+}
+```
+
+**解释**：定义 `OnEvict` 函数类型，`Cleanup` 方法接受回调函数。使用方法值 `cache.logEviction` 作为回调，代码清晰简洁。
+
+</details>
 
 
 [← 返回函数与方法](./)
