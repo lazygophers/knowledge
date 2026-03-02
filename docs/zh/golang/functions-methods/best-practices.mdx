@@ -248,12 +248,13 @@ func processUser(id int64) error {
 
 ### 错误包装
 
+<Badge text="注意" type="warning" /> 此章节展示错误包装的用法。在 panic-recover.mdx 中有详细教学。
+
 ```go
-// ✅ 好的设计：记录日志后返回原始错误
+// ✅ 错误包装：添加上下文信息
 func saveUser(user *User) error {
     if err := db.Save(user); err != nil {
-        log.Printf("failed to save user %s", user.Id)
-        return err
+        return fmt.Errorf("failed to save user %s: %w", user.Id, err)
     }
     return nil
 }
@@ -262,21 +263,33 @@ func saveUser(user *User) error {
 type ValidationError struct {
     Field   string
     Message string
+    Err     error
 }
 
 func (e *ValidationError) Error() string {
     return fmt.Sprintf("validation failed for field %s: %s", e.Field, e.Message)
 }
 
-func validateUser(user *User) error {
-    if user.Email == "" {
-        return &ValidationError{Field: "email", Message: "cannot be empty"}
+func (e *ValidationError) Unwrap() error {
+    return e.Err
+}
+
+func validateUser(id int) error {
+    user, err := getUser(id)
+    if err != nil {
+        return fmt.Errorf("get user: %w", err)
+    }
+    if user.Age < 18 {
+        return &ValidationError{
+            Field:   "age",
+            Message: "user is underage",
+        }
     }
     return nil
 }
 
 // ❌ 不好的设计：吞掉错误
-func saveUser(user *User) error {
+func saveUserBad(user *User) error {
     if err := db.Save(user); err != nil {
         log.Printf("error: %v", err)
         return nil  // 不要这样做！
