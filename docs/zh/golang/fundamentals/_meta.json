@@ -1,37 +1,37 @@
 [
   {
     "type": "file",
-    "name": "index",
+    "name": "overview",
     "label": "基础概览"
   },
   {
-    "type": "dir",
-    "name": "naming",
+    "type": "file",
+    "name": "naming-conventions",
     "label": "命名规则"
   },
   {
-    "type": "dir",
-    "name": "declarations",
+    "type": "file",
+    "name": "variables-constants",
     "label": "声明与初始化"
   },
   {
-    "type": "dir",
-    "name": "types",
+    "type": "file",
+    "name": "type-system",
     "label": "类型系统"
   },
   {
-    "type": "dir",
-    "name": "functions",
+    "type": "file",
+    "name": "functions-methods",
     "label": "函数与方法"
   },
   {
-    "type": "dir",
-    "name": "packages",
+    "type": "file",
+    "name": "package-system",
     "label": "包系统"
   },
   {
-    "type": "dir",
-    "name": "scopes",
+    "type": "file",
+    "name": "variable-lifecycle",
     "label": "作用域"
   }
 ]
