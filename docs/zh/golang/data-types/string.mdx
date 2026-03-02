@@ -1,0 +1,258 @@
+import { Badge } from "@rspress/core/theme";
+
+# String 类型 - String Types
+
+[← 返回数据类型](../)
+
+Go 语言的字符串是<strong>不可变</strong>的字节序列。
+
+## <Badge text="字符串基础" type="tip" />
+
+### 字符串声明
+
+```go
+// 使用 var 声明
+var s1 string = "hello"
+
+// 短变量声明
+s2 := "世界"
+
+// 空字符串
+var s3 string
+fmt.Println(s3 == "")  // true
+```
+
+### 多行字符串
+
+```go
+// 使用反引号创建多行字符串
+s := `第一行
+第二行
+第三行`
+
+// 反引号字符串会保留所有格式，包括换行和空格
+```
+
+### 字符串拼接
+
+```go
+s1 := "Hello"
+s2 := "World"
+
+// 使用 + 运算符
+s3 := s1 + ", " + s2
+
+// 使用 += 追加
+s1 += " " + s2
+```
+
+## <Badge text="字符串与字节" type="info" />
+
+### string 与 []byte 互转
+
+```go
+s := "hello"
+
+// string → []byte
+bytes := []byte(s)
+fmt.Println(bytes)  // [104 101 108 108 111]
+
+// []byte → string
+str := string([]byte{104, 101, 108, 108, 111})
+fmt.Println(str)  // hello
+```
+
+### string 与 []rune 互转
+
+```go
+// 处理 Unicode 字符
+s := "你好，世界"
+
+// string → []rune（按字符分割）
+runes := []rune(s)
+fmt.Println(len(runes))  // 6
+fmt.Println(string(runes[0]))  // 你
+
+// 遍历 Unicode 字符
+for i, r := range s {
+    fmt.Printf("%d: %c\n", i, r)
+}
+```
+
+## <Badge text="string vs []rune vs []byte" type="warning" />
+
+### 三者区别对比
+
+| 特性 | `string` | `[]byte` | `[]rune` |
+|-----|----------|----------|----------|
+| **本质** | 只读的字节序列 | 可变的字节数组 | 可变的 Unicode 码点数组 |
+| **元素** | 字节（byte） | 字节（uint8） | Unicode 码点（int32） |
+| **长度** | 字节数（`len(s)`） | 字节数（`len(b)`） | 字符数（`len(r)`） |
+| **可变性** | 不可变 | 可变 | 可变 |
+| **索引访问** | 返回字节 | 返回字节 | 返回 rune |
+| **UTF-8 支持** | 原始 UTF-8 字节 | 原始 UTF-8 字节 | 解码后的字符 |
+
+### 使用场景对比
+
+```go
+s := "你好，世界"
+
+// string：用于只读文本
+fmt.Println(s)           // 你好，世界
+fmt.Println(len(s))      // 18（字节数，UTF-8编码中文3字节/字符）
+
+// []byte：用于二进制数据、网络传输、文件 I/O
+bytes := []byte(s)
+fmt.Println(len(bytes))  // 18
+fmt.Println(bytes[0])    // 228（'你'的第一个字节）
+
+// []rune：用于需要按字符处理的场景
+runes := []rune(s)
+fmt.Println(len(runes))  // 6（字符数）
+fmt.Println(runes[0])    // 20320（'你'的 Unicode 码点）
+```
+
+### 选择指南
+
+| 场景 | 推荐 | 原因 |
+|-----|------|------|
+| 存储和传递文本 | `string` | 不可变，安全，高效 |
+| 网络传输、文件操作 | `[]byte` | 与 I/O 接口兼容 |
+| 按字符处理 Unicode | `[]rune` | 正确处理多字节字符 |
+| 修改字符串内容 | `[]rune` | 可变，按字符操作 |
+| 二进制数据处理 | `[]byte` | 原始字节，无编码问题 |
+
+### 性能对比
+
+```go
+s := "hello world"
+
+// string → []byte（零拷贝，但共享底层数组）
+bytes := []byte(s)
+// 转换很快，但修改 bytes 会复制整个数组
+
+// string → []rune（需要解码）
+runes := []rune(s)
+// 转换较慢，需要遍历并解码每个字符
+```
+
+<Badge text="性能提示" type="info" /> 尽量使用 `string`，只在需要时转换。频繁的转换会影响性能。
+
+### 常见陷阱
+
+```go
+s := "你好"
+
+// 陷阱1：按字节索引会导致乱码
+for i := 0; i < len(s); i++ {
+    fmt.Printf("%d: %c\n", i, s[i])  // 输出乱码
+}
+
+// 陷阱2：字符串切片可能截断多字节字符
+sub := s[0:2]  // 截断了"你"字
+fmt.Println(sub)  // 乱码
+
+// ✅ 正确：使用 range 或 []rune
+for i, r := range s {
+    fmt.Printf("%d: %c\n", i, r)  // 正确输出
+}
+
+runes := []rune(s)
+subRunes := runes[0:1]  // 安全
+fmt.Println(string(subRunes))  // 你
+```
+
+## <Badge text="字符串是不可变的" type="warning" />
+
+```go
+s := "hello"
+
+// ❌ 错误：不能修改字符串
+// s[0] = 'H'  // 编译错误
+
+// ✅ 正确：创建新字符串
+s = "H" + s[1:]  // "Hello"
+
+// ✅ 正确：使用 []rone 修改
+runes := []rune(s)
+runes[0] = 'H'
+s = string(runes)
+```
+
+## <Badge text="字符串长度陷阱" type="warning" />
+
+```go
+s := "你好"
+
+// len() 返回字节数，不是字符数
+fmt.Println(len(s))  // 6（每个中文字符占3字节UTF-8编码）
+
+// 使用 utf8.RuneCountInString() 获取字符数
+fmt.Println(utf8.RuneCountInString(s))  // 2
+
+// 或转换为 []rune 后取长度
+fmt.Println(len([]rune(s)))  // 2
+```
+
+## <Badge text="常用字符串操作" type="info" />
+
+```go
+import "strings"
+
+s := "Hello, World!"
+
+// 获取长度（字节数）
+fmt.Println(len(s))  // 13
+
+// 获取子串
+fmt.Println(s[0:5])  // "Hello"
+
+// 包含判断
+fmt.Println(strings.Contains(s, "World"))  // true
+
+// 前缀/后缀
+fmt.Println(strings.HasPrefix(s, "Hello"))  // true
+fmt.Println(strings.HasSuffix(s, "!"))  // true
+
+// 分割
+parts := strings.Split("a,b,c", ",")
+fmt.Println(parts)  // [a b c]
+
+// 连接
+fmt.Println(strings.Join([]string{"a", "b", "c"}, ","))  // "a,b,c"
+
+// 替换
+fmt.Println(strings.Replace(s, "World", "Go", 1))  // "Hello, Go!"
+
+// 大小写转换
+fmt.Println(strings.ToLower("HELLO"))  // "hello"
+fmt.Println(strings.ToUpper("hello"))  // "HELLO"
+
+// 去除空白
+fmt.Println(strings.TrimSpace("  hello  "))  // "hello"
+```
+
+## <Badge text="字符串遍历" type="info" />
+
+```go
+s := "hello"
+
+// 按字节遍历
+for i := 0; i < len(s); i++ {
+    fmt.Printf("%d: %c\n", i, s[i])
+}
+
+// 按 rune（字符）遍历
+for i, r := range s {
+    fmt.Printf("%d: %c\n", i, r)
+}
+```
+
+## 练习
+
+1. 编写函数判断字符串是否为回文
+2. 实现字符串反转功能
+3. 统计字符串中每个字符出现的次数
+
+
+[← 数值类型](./numeric.mdx) | [数组 →](./array.mdx)

@@ -1,0 +1,275 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# Pointer 类型 - Pointer Types
+
+[← 返回数据类型](../)
+
+指针存储变量的<strong>内存地址</strong>。
+
+## <Badge text="指针基础" type="tip" />
+
+### 指针声明
+
+```go
+x := 42
+
+// 获取地址（&运算符）
+p := &x
+fmt.Printf("%p\n", p)  // 0xc0000140a0（地址值）
+
+// 解引用（*运算符）
+fmt.Println(*p)  // 42
+
+// 通过指针修改值
+*p = 100
+fmt.Println(x)   // 100
+fmt.Println(*p)  // 100
+```
+
+### 指针零值
+
+```go
+var p *int
+fmt.Println(p == nil)  // true
+
+// ❌ 解引用 nil 指针会 panic
+// fmt.Println(*p)  // panic: nil pointer dereference
+```
+
+## <Badge text="指针与函数" type="info" />
+
+### 值传递 vs 指针传递
+
+```go
+// 值传递：函数内修改不影响原值
+func modifyValue(x int) {
+    x = 100
+}
+
+func modifyPointer(x *int) {
+    *x = 100
+}
+
+n := 50
+modifyValue(n)
+fmt.Println(n)  // 50 - 未改变
+
+modifyPointer(&n)
+fmt.Println(n)  // 100 - 已改变
+```
+
+### 返回指针
+
+```go
+func createInt() *int {
+    x := 42
+    return &x  // ✅ Go 允许返回局部变量的地址
+}
+
+p := createInt()
+fmt.Println(*p)  // 42
+```
+
+<Badge text="逃逸分析" type="info" /> Go 编译器会进行逃逸分析，将需要返回的局部变量分配到堆上。
+
+## <Badge text="指针最佳实践" type="warning" />
+
+<Callout type="warning" title={<Badge text="最佳实践" type="warning" />}>
+  <strong>优先使用值类型，仅在必要时使用指针</strong>
+
+  • 需要修改原值时使用指针
+  • 大结构体使用指针避免拷贝
+  • 一致性：同一类型全部使用值或全部使用指针
+</Callout>
+
+### 何时使用指针
+
+| 场景 | 值类型 | 指针类型 |
+|-----|-------|---------|
+| 基本类型（int, bool） | ✅ 推荐 | ❌ 不推荐 |
+| 小结构体（< 64字节） | ✅ 推荐 | ⚠️ 可选 |
+| 大结构体（> 64字节） | ❌ 性能开销 | ✅ 推荐 |
+| 需要修改原值 | ❌ 不能修改 | ✅ 推荐 |
+| 实现接口 | ✅ 值接收者 | ⚠️ 根据需求 |
+
+## <Badge text="指针陷阱" type="danger" />
+
+### 陷阱1：nil 指针解引用
+
+```go
+var p *int
+// *p = 10  // panic: nil pointer dereference
+
+// ✅ 检查后再使用
+if p != nil {
+    *p = 10
+}
+```
+
+### 陷阱2：返回局部变量的指针（安全但需理解）
+
+```go
+func dangerous() *int {
+    x := 42
+    return &x  // ✅ Go 中安全，但 x 会分配到堆上
+}
+
+// 更好的做法
+func better() *int {
+    x := new(int)  // 直接在堆上分配
+    *x = 42
+    return x
+}
+```
+
+### 陷阱3：指针与切片
+
+```go
+s := []int{1, 2, 3}
+p := &s[0]  // 指向第一个元素
+
+s = append(s, 4)  // 可能触发扩容，重新分配内存
+// p 现在可能指向无效内存！
+
+fmt.Println(*p)  // 可能是旧值
+```
+
+## <Badge text="指针与结构体" type="info" />
+
+### 结构体指针
+
+```go
+type User struct {
+    Name string
+    Age  int
+}
+
+// 值类型
+u1 := User{Name: "Alice", Age: 25}
+fmt.Println(u1.Name)  // Alice
+
+// 指针类型
+u2 := &User{Name: "Bob", Age: 30}
+fmt.Println(u2.Name)  // Bob（自动解引用）
+
+// 等价于
+fmt.Println((*u2).Name)  // Bob
+```
+
+### 结构体字段指针
+
+```go
+type Config struct {
+    Host string
+    Port int
+}
+
+c := Config{Host: "localhost", Port: 8080}
+
+p := &c.Host
+*p = "example.com"
+fmt.Println(c.Host)  // example.com
+```
+
+## <Badge text="指针运算" type="warning" />
+
+```go
+arr := [3]int{1, 2, 3}
+p := &arr[0]
+
+// ❌ Go 不支持指针运算
+// p++  // 编译错误
+// p = p + 1  // 编译错误
+
+// ✅ 使用 slice 代替
+s := arr[:]
+for i, v := range s {
+    fmt.Printf("%d: %d\n", i, v)
+}
+```
+
+<Badge text="注意" type="danger" /> Go <strong>不支持指针运算</strong>，这是与 C/C++ 的主要区别。
+
+## <Badge text="指针比较" type="info" />
+
+```go
+x := 42
+y := 42
+
+p1 := &x
+p2 := &x
+p3 := &y
+
+fmt.Println(p1 == p2)  // true - 指向同一变量
+fmt.Println(p1 == p3)  // false - 指向不同变量
+fmt.Println(p1 != nil)  // true
+```
+
+## <Badge text="new() 函数" type="info" />
+
+```go
+// new() 创建零值的指针
+p := new(int)
+fmt.Println(*p)  // 0（int 的零值）
+fmt.Println(p == nil)  // false
+
+*p = 42
+fmt.Println(*p)  // 42
+
+// 等价于
+var p2 *int
+p2 = new(int)
+```
+
+## <Badge text="常见用法" type="info" />
+
+### 修改接收者
+
+```go
+type Counter struct {
+    count int
+}
+
+// 值接收者：不修改原值
+func (c Counter) Value() int {
+    return c.count
+}
+
+// 指针接收者：修改原值
+func (c *Counter) Increment() {
+    c.count++
+}
+
+c := Counter{count: 0}
+c.Increment()
+fmt.Println(c.Value())  // 1
+```
+
+### 可选参数
+
+```go
+func process(data []byte, timeout *time.Duration) {
+    t := 30 * time.Second
+    if timeout != nil {
+        t = *timeout
+    }
+    // 使用 t...
+}
+
+// 不传超时（使用默认值）
+process(data, nil)
+
+// 传超时
+to := 10 * time.Second
+process(data, &to)
+```
+
+## 练习
+
+1. 编写函数交换两个变量的值（使用指针）
+2. 实现链表节点结构
+3. 创建二叉树结构，实现插入和遍历
+
+
+[← 结构体](./struct.mdx) | [接口 →](./interface.mdx)

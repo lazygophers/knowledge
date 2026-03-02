@@ -11,8 +11,8 @@
   },
   {
     "type": "file",
-    "name": "variables-constants",
-    "label": "声明与初始化"
+    "name": "variables",
+    "label": "变量"
   },
   {
     "type": "file",

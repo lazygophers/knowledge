@@ -1,0 +1,320 @@
+import { Badge } from "@rspress/core/theme";
+
+# Constants 类型 - Constants
+
+[← 返回数据类型](../)
+
+常量是不可改变的值，在编译时确定，用于定义固定的配置和枚举值。
+
+## <Badge text="常量基础" type="tip" />
+
+### const 声明
+
+```go
+package main
+
+import "fmt"
+
+// 包级常量
+const Pi = 3.14159
+const Greeting = "Hello"
+
+func main() {
+    // 函数内常量
+    const MaxUsers = 1000
+    const Timeout = 30
+
+    fmt.Println(Pi, Greeting, MaxUsers, Timeout)
+}
+```
+
+### 批量声明
+
+```go
+const (
+    StatusActive   = 1
+    StatusInactive = 0
+    StatusPending  = 2
+)
+```
+
+## <Badge text="const vs var" type="info" />
+
+| 特性 | var | const |
+|-----|-----|-------|
+| 值可变性 | 可修改 | 不可修改 |
+| 初始化 | 可以延迟初始化 | 必须在声明时初始化 |
+| 类型推断 | 支持 | 支持 |
+| 计算时机 | 运行时 | 编译时 |
+
+```go
+// var - 运行时计算
+var x = 1 + 2  // 每次运行时计算
+
+// const - 编译时计算
+const y = 1 + 2  // 编译时替换为 3
+```
+
+## <Badge text="iota 枚举" type="warning" />
+
+### iota 基础
+
+```go
+package main
+
+import "fmt"
+
+// 定义日志级别
+const (
+    LevelDebug = iota  // 0
+    LevelInfo          // 1
+    LevelWarn          // 2
+    LevelError         // 3
+    LevelFatal         // 4
+)
+
+// 定义权限位
+const (
+    ReadPermission  = 1 << iota  // 1 (二进制: 0001)
+    WritePermission              // 2 (二进制: 0010)
+    ExecutePermission            // 4 (二进制: 0100)
+    AdminPermission              // 8 (二进制: 1000)
+)
+
+func main() {
+    fmt.Println("日志级别:", LevelDebug, LevelInfo, LevelError)
+    fmt.Println("权限:", ReadPermission, WritePermission, AdminPermission)
+}
+```
+
+### iota 高级用法
+
+```go
+package main
+
+import "fmt"
+
+const (
+    // iota = 0
+    A = iota  // 0
+    B         // 1
+    C         // 2
+)
+
+const (
+    // iota 重置为 0
+    D = iota * 10  // 0
+    E              // 10
+    F              // 20
+)
+
+const (
+    // 跳过值
+    G = iota  // 0
+    _         // 1 (使用 _ 跳过)
+    I         // 2
+)
+
+const (
+    // 表达式中使用 iota
+    J = 1 << iota  // 1 (二进制: 0001)
+    K              // 2 (二进制: 0010)
+    L              // 4 (二进制: 0100)
+)
+
+const (
+    // 同行多个常量
+    X, Y = iota, iota + 10  // 0, 10
+    Z, W                     // 1, 11
+)
+
+func main() {
+    fmt.Println(A, B, C)      // 0 1 2
+    fmt.Println(D, E, F)      // 0 10 20
+    fmt.Println(G, I)         // 0 2
+    fmt.Println(J, K, L)      // 1 2 4
+    fmt.Println(X, Y, Z, W)   // 0 10 1 11
+}
+```
+
+<Badge text="iota 规则" type="info" />
+- 每个 `const` 块中，`iota` 从 0 开始
+- 每新增一行，`iota` 自动加 1
+- 同一行的多个常量共享相同的 `iota` 值
+
+## <Badge text="常量类型" type="info" />
+
+### 有类型常量
+
+```go
+const (
+    MaxInt int    = 2147483647
+    Pi     float64 = 3.141592653589793
+    Name   string = "Go"
+)
+
+// 类型严格，不能隐式转换
+var n int = MaxInt  // ✅
+// var f float64 = MaxInt  // ❌ 编译错误
+```
+
+### 无类型常量
+
+```go
+const (
+    A = 1      // 无类型整数常量
+    B = 1.5    // 无类型浮点常量
+    C = "text" // 无类型字符串常量
+)
+
+// 可以赋值给任何兼容类型
+var i int = A      // ✅
+var f float64 = A  // ✅
+var j int = B      // ✅ (截断为 1)
+```
+
+<Badge text="优势" type="tip" /> 无类型常量提供更大的灵活性。
+
+## <Badge text="常量表达式" type="warning" />
+
+### 编译时计算
+
+```go
+const (
+    // ✅ 编译时可计算
+    A = 1 + 2
+    B = A * 3
+    C = len("hello")  // 字符串长度是常量
+    D = cap([5]int{}) // 数组容量是常量
+
+    // ❌ 编译时不可计算
+    // E = len([]int{1, 2, 3})  // slice 长度不是常量
+    // F = time.Now().Year()   // 函数调用不是常量
+)
+```
+
+### 精度问题
+
+```go
+const (
+    A = 0.1 + 0.2  // 0.3（浮点精度问题）
+    B = 1.0 / 3.0  // 0.3333333333333333
+)
+
+fmt.Println(A == 0.3)  // false（精度问题）
+fmt.Println(A)         // 0.30000000000000004
+```
+
+## <Badge text="常量应用场景" type="info" />
+
+### 配置常量
+
+```go
+const (
+    // 服务器配置
+    DefaultHost = "localhost"
+    DefaultPort = 8080
+    DefaultTimeout = 30
+
+    // 业务配置
+    MaxRetries     = 3
+    MaxConnections = 100
+    CacheSize      = 1024
+)
+```
+
+### 状态枚举
+
+```go
+// HTTP 状态码
+const (
+    StatusOK               = 200
+    StatusBadRequest      = 400
+    StatusUnauthorized    = 401
+    StatusNotFound        = 404
+    StatusInternalError   = 500
+)
+
+// 用户状态
+const (
+    UserStatusActive   = 1
+    UserStatusInactive = 0
+    UserStatusPending  = 2
+    UserStatusBanned   = 3
+)
+```
+
+### 位标志常量
+
+```go
+const (
+    FlagRead   = 1 << iota  // 1  (0001)
+    FlagWrite               // 2  (0010)
+    FlagExecute             // 4  (0100)
+    FlagAdmin              // 8  (1000)
+)
+
+// 组合标志
+var permissions = FlagRead | FlagWrite  // 3 (0011)
+
+// 检查标志
+if permissions&FlagRead != 0 {
+    fmt.Println("有读权限")
+}
+```
+
+## <Badge text="常量生成" type="warning" />
+
+### 使用 iota 生成单位常量
+
+```go
+const (
+    KB = 1 << (10 * iota)  // 1 << 0 = 1
+    MB                      // 1 << 10 = 1024
+    GB                      // 1 << 20 = 1048576
+    TB                      // 1 << 30 = 1073741824
+)
+
+fmt.Println(KB, MB, GB, TB)  // 1 1024 1048576 1073741824
+```
+
+## <Badge text="常量作用域" type="danger" />
+
+```go
+package main
+
+// 包级常量
+const PackageConst = "package"
+
+func main() {
+    // 函数级常量
+    const LocalConst = "local"
+
+    fmt.Println(PackageConst)  // ✅
+    fmt.Println(LocalConst)    // ✅
+}
+
+func other() {
+    fmt.Println(PackageConst)  // ✅
+    // fmt.Println(LocalConst)  // ❌ 超出作用域
+}
+```
+
+## 常量速查表
+
+| 类型 | 语法 | 说明 |
+|-----|------|------|
+| 简单常量 | `const name = value` | 类型推断 |
+| 有类型常量 | `const name Type = value` | 指定类型 |
+| 批量常量 | `const ( A = 0; B = 1 )` | 组声明 |
+| iota 枚举 | `const ( A = iota )` | 自动递增 |
+| 位标志 | `const ( F = 1 << iota )` | 位运算 |
+
+## 练习
+
+1. 使用 iota 定义 HTTP 状态码
+2. 创建配置常量组，包含服务器和数据库配置
+3. 实现位标志常量，用于权限控制
+
+
+[← Interface](./interface.mdx)

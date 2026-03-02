@@ -1,0 +1,376 @@
+import { Badge } from "@rspress/core/theme";
+
+# Struct 类型 - Struct Types
+
+[← 返回数据类型](../)
+
+结构体是 Go 语言<strong>聚合不同类型数据</strong>的方式。
+
+## <Badge text="结构体基础" type="tip" />
+
+### 定义结构体
+
+```go
+// 定义结构体类型
+type User struct {
+    ID   int
+    Name string
+    Email string
+}
+
+// 创建结构体实例
+u1 := User{1, "Alice", "alice@example.com"}
+fmt.Println(u1)  // {1 Alice alice@example.com}
+
+// 指定字段名初始化
+u2 := User{
+    ID:   2,
+    Name: "Bob",
+}
+fmt.Println(u2)  // {2 Bob }
+```
+
+### 访问字段
+
+```go
+u := User{ID: 1, Name: "Alice"}
+
+// 读取字段
+fmt.Println(u.Name)  // Alice
+
+// 修改字段
+u.Name = "Bob"
+fmt.Println(u.Name)  // Bob
+```
+
+## <Badge text="结构体标签" type="info" />
+
+### 使用标签
+
+```go
+type User struct {
+    ID       int    `json:"id" db:"user_id"`
+    Name     string `json:"name" db:"name"`
+    Password string `json:"-" db:"password"`  // json:"-" 表示不序列化
+}
+
+// 通过反射获取标签
+import "reflect"
+t := reflect.TypeOf(User{})
+field, _ := t.FieldByName("ID")
+fmt.Println(field.Tag.Get("json"))  // id
+fmt.Println(field.Tag.Get("db"))    // user_id
+```
+
+<Badge text="常用标签" type="tip" />
+- `json:"field_name"` - JSON 序列化
+- `db:"column_name"` - 数据库字段
+- `xml:"element"` - XML 序列化
+- `form:"field"` - 表单字段
+
+## <Badge text="匿名字段（嵌入）" type="info" />
+
+### 结构体嵌入
+
+```go
+type Address struct {
+    City    string
+    Country string
+}
+
+type Person struct {
+    Name    string
+    Address // 匿名嵌入
+}
+
+p := Person{
+    Name: "Alice",
+    Address: Address{
+        City:    "Beijing",
+        Country: "China",
+    },
+}
+
+// 可以直接访问嵌入字段的字段
+fmt.Println(p.City)     // Beijing（提升字段）
+fmt.Println(p.Address.City)  // Beijing（完整路径）
+```
+
+### 嵌入提升
+
+```go
+type Animal struct {
+    Name string
+}
+
+func (a Animal) Speak() string {
+    return "..."
+}
+
+type Dog struct {
+    Animal  // 匿名嵌入
+    Breed string
+}
+
+d := Dog{
+    Animal: Animal{Name: "Buddy"},
+    Breed:  "Golden Retriever",
+}
+
+fmt.Println(d.Name)    // Buddy（提升字段）
+fmt.Println(d.Speak())  // ...（提升方法）
+```
+
+## <Badge text="结构体比较" type="warning" />
+
+```go
+type Point struct {
+    X, Y int
+}
+
+p1 := Point{1, 2}
+p2 := Point{1, 2}
+p3 := Point{1, 3}
+
+fmt.Println(p1 == p2)  // true
+fmt.Println(p1 == p3)  // false
+```
+
+<Badge text="可比较条件" type="danger" /> 只有<strong>所有字段都可比较</strong>的结构体才能比较：
+
+```go
+type User struct {
+    Name string
+    Data []int  // 不可比较
+}
+
+// u1 == u2  // 编译错误：结构体包含不可比较字段
+```
+
+## <Badge text="结构体是值类型" type="warning" />
+
+```go
+type Point struct {
+    X, Y int
+}
+
+p1 := Point{1, 2}
+p2 := p1  // 拷贝整个结构体
+
+p2.X = 10
+fmt.Println(p1)  // {1 2} - 原结构体不受影响
+fmt.Println(p2)  // {10 2}
+```
+
+### 使用指针避免拷贝
+
+```go
+// 对于大结构体，使用指针
+func process(u *User) {
+    u.Name = "Processed"
+}
+
+u := &User{ID: 1, Name: "Alice"}
+process(u)
+fmt.Println(u.Name)  // Processed
+```
+
+## <Badge text="构造函数" type="info" />
+
+Go 没有内置构造函数，通常使用 `New` 开头的函数：
+
+```go
+type User struct {
+    ID   int
+    Name string
+}
+
+// 构造函数
+func NewUser(id int, name string) *User {
+    return &User{
+        ID:   id,
+        Name: name,
+    }
+}
+
+// 使用
+u := NewUser(1, "Alice")
+fmt.Println(u.Name)  // Alice
+```
+
+## <Badge text="结构体布局" type="warning" />
+
+### 内存对齐
+
+```go
+type BadStruct struct {
+    A bool   // 1 字节
+    B int64  // 8 字节
+    C bool   // 1 字节
+    // 实际占用：24 字节（因为对齐）
+}
+
+type GoodStruct struct {
+    B int64  // 8 字节
+    A bool   // 1 字节
+    C bool   // 1 字节
+    // 实际占用：16 字节
+}
+
+import "unsafe"
+fmt.Println(unsafe.Sizeof(BadStruct{}))   // 16
+fmt.Println(unsafe.Sizeof(GoodStruct{}))  // 16
+```
+
+<Badge text="优化建议" type="tip" /> 将相同大小的字段放在一起，减少内存填充。
+
+## <Badge text="常用模式" type="info" />
+
+### Builder 模式
+
+```go
+type Server struct {
+    host     string
+    port     int
+    timeout  time.Duration
+}
+
+type ServerOption func(*Server)
+
+func WithHost(host string) ServerOption {
+    return func(s *Server) {
+        s.host = host
+    }
+}
+
+func WithPort(port int) ServerOption {
+    return func(s *Server) {
+        s.port = port
+    }
+}
+
+func NewServer(opts ...ServerOption) *Server {
+    s := &Server{
+        host:    "localhost",
+        port:    8080,
+        timeout: 30 * time.Second,
+    }
+    for _, opt := range opts {
+        opt(s)
+    }
+    return s
+}
+
+// 使用
+server := NewServer(
+    WithHost("example.com"),
+    WithPort(443),
+)
+```
+
+### 链式调用
+
+链式调用让方法返回结构体指针，实现流畅的 API：
+
+```go
+type Builder struct {
+    name string
+    age  int
+    city string
+}
+
+// 每个方法都返回 *Builder，支持链式调用
+func (b *Builder) SetName(name string) *Builder {
+    b.name = name
+    return b
+}
+
+func (b *Builder) SetAge(age int) *Builder {
+    b.age = age
+    return b
+}
+
+func (b *Builder) SetCity(city string) *Builder {
+    b.city = city
+    return b
+}
+
+func (b *Builder) Build() *Builder {
+    return b
+}
+
+// 使用链式调用
+builder := &Builder{}
+result := builder.
+    SetName("Alice").
+    SetAge(25).
+    SetCity("Beijing").
+    Build()
+
+fmt.Println(result)  // &{Alice 25 Beijing}
+```
+
+<Badge text="链式调用要点" type="tip" />
+1. 方法使用<strong>指针接收者</strong> `*Builder`
+2. 每个方法<strong>返回指针</strong> `return b`
+3. 每行以<strong>点结尾</strong>，方便链式书写
+
+### 实际应用：HTTP 请求构建器
+
+```go
+type Request struct {
+    url     string
+    method  string
+    headers map[string]string
+    body    []byte
+}
+
+type RequestBuilder struct {
+    request *Request
+}
+
+func NewRequestBuilder(url string) *RequestBuilder {
+    return &RequestBuilder{
+        request: &Request{
+            url:     url,
+            method:  "GET",
+            headers: make(map[string]string),
+        },
+    }
+}
+
+func (rb *RequestBuilder) Method(method string) *RequestBuilder {
+    rb.request.method = method
+    return rb
+}
+
+func (rb *RequestBuilder) Header(key, value string) *RequestBuilder {
+    rb.request.headers[key] = value
+    return rb
+}
+
+func (rb *RequestBuilder) Body(body []byte) *RequestBuilder {
+    rb.request.body = body
+    return rb
+}
+
+func (rb *RequestBuilder) Build() *Request {
+    return rb.request
+}
+
+// 使用
+req := NewRequestBuilder("https://api.example.com").
+    Method("POST").
+    Header("Content-Type", "application/json").
+    Body([]byte(`{"name":"Alice"}`)).
+    Build()
+```
+
+## 练习
+
+1. 定义 Rectangle 结构体，计算面积和周长
+2. 实现 Point 结构体的 String() 方法
+3. 创建配置结构体，支持链式设置
+
+
+[← 映射](./map.mdx) | [指针 →](./pointer.mdx)

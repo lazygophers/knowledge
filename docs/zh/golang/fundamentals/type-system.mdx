@@ -1,4 +1,5 @@
 import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
 
 # 类型系统 - Go 的静态类型系统
 
@@ -11,7 +12,7 @@ Go 是静态类型语言，每个变量都有明确的类型，类型系统是 G
 
 ```mermaid
 %%{init: {'theme':'base', 'themeVariables': { 'lineColor':'#3b82f6', 'primaryColor':'#e3f2fd', 'primaryTextColor':'#0d47a1'}}}%%
-flowchart TD
+flowchart LR
     A[Go 类型系统] --> B[基础类型]
     A --> C[复合类型]
     A --> D[引用类型]
@@ -203,6 +204,18 @@ func main() {
 }
 ```
 
+<Callout type="warning" title={<Badge text="重要" type="warning" />}>
+  切片的长度<strong>不能通过 `nil` 判断</strong>，必须使用 `len(s)` 来判断切片是否为空。
+
+  ```go
+  // ❌ 错误：nil 切片的 len() 返回 0，不是 nil
+  if s == nil { }  // 这个判断没有意义
+
+  // ✅ 正确：使用 len() 判断
+  if len(s) == 0 { }  // 切片为空
+  ```
+</Callout>
+
 <Badge text="切片 vs 数组" type="info" />
 | 特性 | 数组 | 切片 |
 |-----|------|-----|
@@ -244,6 +257,23 @@ func main() {
     }
 }
 ```
+
+<Callout type="danger" title={<Badge text="重要" type="danger" />}>
+  <strong>map 必须初始化才能使用</strong>，禁止仅定义的行为。
+
+  ```go
+  // ❌ 错误：仅定义，map 是 nil，写入会 panic
+  var m map[string]int
+  m["key"] = 1  // panic: assignment to entry in nil map
+
+  // ✅ 正确：使用 make 初始化
+  m := make(map[string]int)
+  m["key"] = 1  // 正常工作
+
+  // ✅ 正确：使用字面量初始化
+  m := map[string]int{"key": 1}
+  ```
+</Callout>
 
 ### 结构体 (Struct)
 
@@ -377,6 +407,19 @@ func main() {
 }
 ```
 
+<Callout type="warning" title={<Badge text="最佳实践" type="warning" />}>
+  <strong>接口实现必须使用 `var _` 编译时检查</strong>，确保类型真正实现了接口。
+
+  ```go
+  // ✅ 推荐：编译时验证接口实现
+  // 使用 (*Type)(nil) 形式
+  var _ Speaker = (*Dog)(nil)
+  var _ Speaker = (*Cat)(nil)
+
+  // 这样可以在编译时就发现接口实现问题，而不是运行时 panic
+  ```
+</Callout>
+
 
 ## <Badge text="类型转换" type="warning" outline />
 
@@ -434,4 +477,4 @@ func main() {
 3. **编写函数接收接口参数**，实现不同的打印方式
 
 
-[← 返回基础概念](overview/) | [声明与初始化](variables-constants/) | [继续：函数与方法 →](functions-methods/)
+[← 返回基础概念](overview/) | [声明与初始化](variables/) | [继续：函数与方法 →](functions-methods/)

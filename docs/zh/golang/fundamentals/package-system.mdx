@@ -1,4 +1,5 @@
 import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
 
 # 包系统 - Go 的模块化组织
 
@@ -256,11 +257,27 @@ require (
 )
 ```
 
-### go 命令
+### go mod 命令
 
 ```bash
+# ===== 基础操作 =====
+
 # 初始化模块
 go mod init myproject
+
+# 下载依赖到本地缓存
+go mod download
+
+# 整理依赖（添加缺失的、移除未使用的）
+go mod tidy
+
+# 验证依赖完整性
+go mod verify
+
+# 制作 vendor 副本
+go mod vendor
+
+# ===== 编辑操作 =====
 
 # 添加依赖
 go get github.com/gin-gonic/gin
@@ -268,14 +285,31 @@ go get github.com/gin-gonic/gin
 # 添加特定版本
 go get github.com/gin-gonic/gin@v1.9.0
 
-# 整理依赖（移除未使用的）
-go mod tidy
+# 添加依赖到 require 块（不安装）
+go get -d github.com/gin-gonic/gin
 
-# 下载依赖
-go mod download
+# 编辑 go.mod（添加 replace 指令）
+go mod edit -replace=oldpkg=newpkg
 
-# 查看依赖
+# 编辑 go.mod（删除 replace 指令）
+go mod edit -dropreplace=oldpkg
+
+# ===== 查询操作 =====
+
+# 查看所有依赖
 go list -m all
+
+# 查看某个模块信息
+go list -m github.com/gin-gonic/gin
+
+# 查看模块可用版本
+go list -m -versions github.com/gin-gonic/gin
+
+# 打印模块依赖图
+go mod graph
+
+# 解释为什么需要某个包
+go mod why github.com/gin-gonic/gin
 ```
 
 ### 依赖版本管理
@@ -293,6 +327,99 @@ go list -m -versions github.com/gin-gonic/gin
 # 更新 go.mod 和 go.sum
 go mod tidy
 ```
+
+### replace 指令
+
+replace 指令用于将依赖包替换为本地路径或其他版本，常用于本地模块开发。
+
+```go
+// go.mod
+module myproject
+
+go 1.26
+
+require (
+    github.com/example/mypackage v1.0.0
+)
+
+// 替换为本地路径
+replace github.com/example/mypackage => ../mypackage
+
+// 或替换为特定版本
+// replace github.com/example/mypackage => github.com/example/mypackage v1.1.0
+
+// 或替换为 fork 版本
+// replace github.com/example/mypackage => github.com/myfork/mypackage v1.0.0
+```
+
+```bash
+# 使用 replace 后需要整理依赖
+go mod tidy
+
+# 使用 go mod edit 添加 replace 指令
+go mod edit -replace github.com/example/mypackage=../mypackage
+
+# 查看完整的模块依赖图
+go mod graph
+
+# 查看为什么需要某个依赖
+go mod why github.com/example/mypackage
+```
+
+### go.work 工作区
+
+go.work 是 Go 1.18+ 引入的<strong>多模块工作区</strong>模式，用于在本地开发多个相关联的模块。
+
+```go
+// go.work
+go 1.26
+
+use (
+    ./app
+    ./mypackage
+    ./utils
+)
+```
+
+```
+项目结构/
+├── go.work
+├── app/           # 主应用
+│   ├── go.mod
+│   └── main.go
+├── mypackage/     # 被引用的本地包
+│   ├── go.mod
+│   └── package.go
+└── utils/         # 被引用的本地包
+    ├── go.mod
+    └── util.go
+```
+
+```bash
+# 创建工作区
+go work init
+
+# 添加模块到工作区
+go work use ./app ./mypackage
+
+# 同步工作区
+go work sync
+```
+
+<Callout type="tip" title={<Badge text="优势" type="tip" />}>
+  <strong>go.work vs replace</strong>：
+
+  • <strong>多模块支持</strong>：可以同时开发多个本地模块
+  • <strong>自动发现</strong>：无需在每个模块中配置 replace
+  • <strong>IDE 友好</strong>：IDE 可以正确解析和跳转
+  • <strong>团队协作</strong>：go.work 可以提交到仓库，团队成员共享配置
+</Callout>
+
+<Callout type="info" title={<Badge text="注意" type="info" />}>
+  replace 指令仅在当前模块<strong>作为主模块</strong>时生效。当你的模块被其他项目引用为依赖时，replace 规则<strong>不会被继承</strong>。
+
+  如果需要发布包含 replace 的包，考虑使用<strong> go.work</strong> 工作区模式。
+</Callout>
 
 
 ## <Badge text="包设计原则" type="warning" outline />
@@ -404,13 +531,30 @@ func main() {
 
 | 操作 | 命令 |
 |-----|------|
+| **模块管理** | |
 | 初始化模块 | `go mod init <module-name>` |
-| 添加依赖 | `go get <package>` |
 | 整理依赖 | `go mod tidy` |
 | 下载依赖 | `go mod download` |
-| 查看依赖 | `go list -m all` |
-| 更新依赖 | `go get -u ./...` |
 | 验证依赖 | `go mod verify` |
+| vendor 模式 | `go mod vendor` |
+| **依赖操作** | |
+| 添加依赖 | `go get <package>` |
+| 添加特定版本 | `go get <package>@version` |
+| 仅添加不安装 | `go get -d <package>` |
+| 升级所有依赖 | `go get -u ./...` |
+| **查询操作** | |
+| 查看所有依赖 | `go list -m all` |
+| 查看模块信息 | `go list -m <package>` |
+| 查看可用版本 | `go list -m -versions <package>` |
+| 依赖关系图 | `go mod graph` |
+| 解释依赖来源 | `go mod why <package>` |
+| **编辑操作** | |
+| 添加 replace | `go mod edit -replace=old=new` |
+| 删除 replace | `go mod edit -dropreplace=old` |
+| **工作区** | |
+| 初始化工作区 | `go work init` |
+| 添加模块到工作区 | `go work use <path>` |
+| 同步工作区 | `go work sync` |
 
 
 ## 练习

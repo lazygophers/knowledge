@@ -13,3 +13,29 @@
 - [Sidebar Metadata](./_meta.json): Navigation metadata used by the Golang module sidebar.
 - [Install Submodule Index](./install/llms.txt): English index for the installation subdirectory.
 - [This LLMs File](./llms.txt): Machine-readable index for this Golang directory.
+
+## Fundamentals
+
+- [Fundamentals Overview](./fundamentals/overview.mdx): Overview of Go language fundamentals and concepts.
+- [Naming Conventions](./fundamentals/naming-conventions.mdx): Go naming conventions including identifiers, package names, constants, and file naming.
+- [Variables](./fundamentals/variables.mdx): Variable declaration methods, zero values, initialization, scope, and shadowing.
+- [Type System](./fundamentals/type-system.mdx): Go type system overview with value types, reference types, and type conversion diagrams.
+- [Functions and Methods](./fundamentals/functions-methods.mdx): Functions and methods in Go including parameters, return values, multiple return values, variadic functions, function types, higher-order functions, anonymous functions, closures, defer mechanism, generic functions (Go 1.18+), value vs pointer receivers, method values and expressions, and best practices.
+- [Package System](./fundamentals/package-system.mdx): Go package system, imports, visibility, init functions, go.mod, go.work, and dependency management.
+- [Variable Lifecycle](./fundamentals/variable-lifecycle.mdx): Variable scope, lexical scoping, closures, and lifetime with stack/heap allocation diagrams.
+- [Fundamentals Sidebar](./fundamentals/_meta.json): Navigation metadata for fundamentals subdirectory.
+
+## Data Types
+
+- [Bool Types](./data-types/bool.mdx): Boolean type basics, logical operators, control flow, best practices, naming conventions, and common pitfalls.
+- [Constants](./data-types/constants.mdx): Go constants including const declarations, iota enumerations, typed vs untyped constants, constant expressions, and common use cases.
+- [Numeric Types](./data-types/numeric.mdx): Integer and floating-point types, type selection guide, literals, and conversions.
+- [String Types](./data-types/string.mdx): String fundamentals, byte/rune conversions, immutability, common operations, and traversal.
+- [Array Types](./data-types/array.mdx): Fixed-length arrays, initialization, value type semantics, multi-dimensional arrays, and comparison.
+- [Slice Types](./data-types/slice.mdx): Dynamic slices, internal structure, append mechanism, common pitfalls, and operations.
+- [Map Types](./data-types/map.mdx): Hash tables, CRUD operations, traversal, concurrency safety, and usage patterns.
+- [Struct Types](./data-types/struct.mdx): Aggregate data types, struct tags, anonymous fields, comparison, memory layout, and common patterns including method chaining.
+- [Pointer Types](./data-types/pointer.mdx): Memory addresses, pointer semantics, function parameters, best practices, and common pitfalls.
+- [Interface Types](./data-types/interface.mdx): Behavior contracts, implementation checks, empty interface, type assertions, and interface composition.
+- [Data Types Sidebar](./data-types/_meta.json): Navigation metadata for data-types subdirectory.
+- [Data Types LLMs Index](./data-types/llms.txt): English index for data-types subdirectory.
