@@ -39,3 +39,17 @@
 - [Interface Types](./data-types/interface.mdx): Behavior contracts, implementation checks, empty interface, type assertions, and interface composition.
 - [Data Types Sidebar](./data-types/_meta.json): Navigation metadata for data-types subdirectory.
 - [Data Types LLMs Index](./data-types/llms.txt): English index for data-types subdirectory.
+
+## Functions and Methods
+
+- [Functions and Methods Overview](./functions-methods/index.mdx): Module overview, learning roadmap, dependency relationships, reader level guide, and practice project summary.
+- [Function Basics](./functions-methods/function-basics.mdx): Function declaration syntax, parameter lists, return value mechanisms, function call flow, basic code examples, and common errors for beginners.
+- [Methods System](./functions-methods/methods.mdx): Method declaration syntax, value vs pointer receivers, method values vs expressions, method set rules, interface implementation, and receiver selection decision tree.
+- [Advanced Parameters](./functions-methods/advanced-parameters.mdx): Variadic functions, named return values, multiple return value patterns, parameter passing mechanism, and performance considerations.
+- [Function Types](./functions-methods/function-types.mdx): Function type definitions, functions as variables, functions as parameters, functions as return values, higher-order function patterns, and practical applications.
+- [Closures](./functions-methods/closures.mdx): Anonymous function syntax, closure principles, variable capture mechanism, closure pitfalls, Go 1.22+ changes, memory management, and practical examples.
+- [Defer Mechanism](./functions-methods/defer.mdx): Defer basic syntax, LIFO execution order, parameter evaluation timing, interaction with named return values, resource cleanup patterns, panic recovery, and common pitfalls.
+- [Error Handling](./functions-methods/panic-recover.mdx): Go error handling philosophy, multiple return value error patterns, error wrapping and unwrapping, panic trigger conditions, recover usage timing, custom error types, and best practices.
+- [Best Practices](./functions-methods/best-practices.mdx): Function design principles, naming conventions, error handling patterns, performance optimization techniques, testability design, common anti-patterns, and code review checklist.
+- [Functions and Methods Sidebar](./functions-methods/_meta.json): Navigation metadata for functions-methods subdirectory.
+- [Functions and Methods LLMs Index](./functions-methods/llms.txt): English index for functions-methods subdirectory.

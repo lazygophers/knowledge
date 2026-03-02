@@ -1,0 +1,16 @@
+# Functions and Methods Module (Chinese Source)
+
+> English llms.txt for files under `docs/zh/golang/functions-methods`.
+
+## Docs
+
+- [Learning Path](./index.mdx): Module overview, learning roadmap, dependency relationships, reader level guide, and practice project summary.
+- [Function Basics](./function-basics.mdx): Function declaration syntax, parameter lists, return value mechanisms, function call flow, basic code examples, and common errors for beginners.
+- [Methods System](./methods.mdx): Method declaration syntax, value vs pointer receivers, method values vs expressions, method set rules, interface implementation, and receiver selection decision tree.
+- [Advanced Parameters](./advanced-parameters.mdx): Variadic functions, named return values, multiple return value patterns, parameter passing mechanism (value passing detail), and performance considerations.
+- [Function Types](./function-types.mdx): Function type definitions, functions as variables, functions as parameters, functions as return values, higher-order function patterns, and practical applications.
+- [Closures](./closures.mdx): Anonymous function syntax, closure principles, variable capture mechanism, closure pitfalls (loop variable issues), Go 1.22+ changes, memory management considerations, and practical examples.
+- [Defer Mechanism](./defer.mdx): Defer basic syntax, LIFO execution order, parameter evaluation timing, interaction with named return values, resource cleanup patterns, panic recovery, and common pitfalls.
+- [Error Handling](./panic-recover.mdx): Go error handling philosophy, multiple return value error patterns, error wrapping and unwrapping, panic trigger conditions, recover usage timing, custom error types, and best practices.
+- [Best Practices](./best-practices.mdx): Function design principles, naming conventions, error handling patterns, performance optimization techniques, testability design, common anti-patterns, and code review checklist.
+- [Module Metadata](./_meta.json): Navigation metadata for functions-methods subdirectory.

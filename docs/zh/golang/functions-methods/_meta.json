@@ -1,0 +1,47 @@
+[
+  {
+    "type": "file",
+    "name": "index",
+    "label": "学习路径"
+  },
+  {
+    "type": "file",
+    "name": "function-basics",
+    "label": "函数基础"
+  },
+  {
+    "type": "file",
+    "name": "methods",
+    "label": "方法系统"
+  },
+  {
+    "type": "file",
+    "name": "advanced-parameters",
+    "label": "高级参数"
+  },
+  {
+    "type": "file",
+    "name": "function-types",
+    "label": "函数类型"
+  },
+  {
+    "type": "file",
+    "name": "closures",
+    "label": "闭包"
+  },
+  {
+    "type": "file",
+    "name": "defer",
+    "label": "Defer 机制"
+  },
+  {
+    "type": "file",
+    "name": "panic-recover",
+    "label": "错误处理"
+  },
+  {
+    "type": "file",
+    "name": "best-practices",
+    "label": "最佳实践"
+  }
+]

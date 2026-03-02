@@ -35,5 +35,10 @@
         "type": "dir",
         "name": "data-types",
         "label": "数据类型"
+    },
+    {
+        "type": "dir",
+        "name": "functions-methods",
+        "label": "函数与方法"
     }
 ]
