@@ -4,13 +4,15 @@
 
 ## 🖥️ 快速选择你的平台
 
-| 操作系统 | 图形化安装 | 命令行安装 | 包管理器 | 便携版 |
-|---------|-----------|-----------|---------|--------|
-| **Windows** | ✅ MSI 安装包 | ✅ | Chocolatey / Scoop | ✅ ZIP |
-| **macOS** | ✅ PKG 安装包 | ✅ | Homebrew | - |
-| **Linux** | - | ✅ tar.gz | apt / yum / dnf / Snap | ✅ |
+| 操作系统 | 图形化安装 | 命令行安装 | 包管理器 | 便携版 | 多版本管理 |
+|---------|-----------|-----------|---------|--------|-----------|
+| **Windows** | ✅ MSI 安装包 | ✅ | Chocolatey / Scoop | ✅ ZIP | ✅ goup |
+| **macOS** | ✅ PKG 安装包 | ✅ | Homebrew | - | ✅ goup |
+| **Linux** | - | ✅ tar.gz | apt / yum / dnf / Snap | ✅ | ✅ goup |
 
 > 💡 **提示**：如果你是第一次安装，推荐使用图形化安装或包管理器方式。
+>
+> 🌟 **goup** 是跨平台的 Go 版本管理工具，支持 Windows/macOS/Linux，适合需要管理多个 Go 版本的场景。
 
 ---
 
@@ -52,6 +54,15 @@
    go version go1.26.0 windows/amd64
    ```
 
+#### 🔸 卸载方法
+
+```
+1. 打开"控制面板" → "程序和功能"
+2. 找到 "Go Programming Language"
+3. 右键点击 → "卸载"
+4. 按照卸载向导完成操作
+```
+
 #### 常见问题
 
 **Q: 安装后提示找不到 go 命令？**
@@ -80,6 +91,13 @@ choco install golang
 go version
 ```
 
+#### 🔸 卸载方法
+
+```cmd
+# 以管理员身份打开 PowerShell
+choco uninstall golang
+```
+
 ---
 
 ### 🟡 中级开发者 - Scoop 安装
@@ -104,6 +122,16 @@ go version
 - 更新方便：`scoop update go`
 - 多版本管理：`scoop install go1.25`
 
+#### 🔸 卸载方法
+
+```powershell
+# 卸载 Go
+scoop uninstall go
+
+# 如果不再使用 Scoop，可以卸载 Scoop
+scoop uninstall scoop
+```
+
 ---
 
 ### 🟠 高级开发者 - ZIP 便携安装
@@ -119,6 +147,17 @@ go version
 #    - 在 PATH 中添加：C:\MyTools\go\bin
 # 4. 重启命令提示符
 go version
+```
+
+#### 🔸 卸载方法
+
+```cmd
+# 1. 从环境变量 PATH 中移除 Go 路径
+#    - 右键"此电脑" → 属性 → 高级系统设置 → 环境变量
+#    - 从 PATH 中删除对应的 Go 路径
+
+# 2. 删除解压的 Go 目录
+rmdir /s C:\MyTools\go
 ```
 
 ---
@@ -157,6 +196,22 @@ go version
 - 点击菜单栏  → "关于本机"
 - 查看"芯片"或"处理器"信息
 
+#### 🔸 卸载方法
+
+```bash
+# 删除 Go 安装目录
+sudo rm -rf /usr/local/go
+
+# 从 shell 配置中移除 Go 相关行
+# 编辑 ~/.bashrc 或 ~/.zshrc，删除类似以下的行：
+# export PATH=$PATH:/usr/local/go/bin
+
+# 重新加载 shell 配置
+source ~/.bashrc  # Bash
+# 或
+source ~/.zshrc   # Zsh
+```
+
 ---
 
 ### 🔵 初级开发者 - Homebrew 安装（推荐）
@@ -180,28 +235,104 @@ brew info go
 brew upgrade go
 ```
 
+#### 🔸 卸载方法
+
+```bash
+# 使用 Homebrew 卸载
+brew uninstall go
+
+# 清理相关配置
+brew cleanup
+```
+
 ---
 
 ### 🟡 中级开发者 - 多版本管理
 
 **适合人群**：需要在不同项目间切换 Go 版本
 
-#### 方案：使用 g 工具
+> 💡 **推荐使用 goup**：goup 是跨平台的 Go 版本管理工具，支持 Windows、macOS 和 Linux，安装简单，使用方便。
+
+#### 方案：使用 goup（跨平台）
+
+**优势**：
+- ✅ 真正的跨平台支持（Windows/macOS/Linux）
+- ✅ 一行命令安装，无需预装 Go
+- ✅ 支持项目级版本锁定（`.go-version` 文件）
+- ✅ 国内镜像支持（`GOUP_GO_HOST` 环境变量）
+- ✅ 现代化设计，受 Rustup 启发
+
+##### 安装 goup
 
 ```bash
-# 1. 安装 g
-curl -sSL https://git.io/g-install | sh
-source ~/.g/env
+# 一键安装（所有平台通用）
+curl -sSf https://raw.githubusercontent.com/owenthereal/goup/master/install.sh | sh
 
-# 2. 安装多个版本
-g install 1.26.0
-g install 1.25.5
+# 加载环境变量
+source ~/.go/env
 
-# 3. 切换版本
-g use 1.26.0
+# 验证安装
+goup version
+```
 
-# 4. 查看当前版本
-g current
+##### 国内用户安装
+
+```bash
+# 使用国内镜像加速
+GOUP_GO_HOST=golang.google.cn goup install
+```
+
+##### 基本使用
+
+```bash
+# 搜索可用版本
+goup search 1.21
+
+# 安装最新版本
+goup install
+
+# 安装指定版本
+goup install 1.26.0
+goup install 1.25.5
+
+# 列出已安装版本
+goup list
+
+# 切换版本
+goup use 1.26.0
+
+# 设置默认版本
+goup set 1.26.0
+
+# 验证当前版本
+go version
+```
+
+##### 项目级版本锁定
+
+```bash
+# 在项目根目录创建 .go-version 文件
+echo "1.26.0" > .go-version
+
+# 配合 shell hooks 实现自动切换（需要额外配置）
+```
+
+##### 🔸 卸载 goup
+
+```bash
+# 删除 goup 目录
+rm -rf ~/.go
+
+# 从 shell 配置中移除相关行
+# 编辑 ~/.bashrc, ~/.zshrc, ~/.config/fish/config.fish
+# 删除类似以下的行:
+# export PATH="$HOME/.go/bin:$PATH"
+# export PATH="$HOME/.go/current/bin:$PATH"
+
+# 重新加载 shell 配置
+source ~/.bashrc  # Bash
+# 或
+source ~/.zshrc   # Zsh
 ```
 
 ---
@@ -225,6 +356,16 @@ git checkout go1.26.0
 
 # 4. 配置环境
 export PATH=$PATH:$HOME/go/bin
+```
+
+#### 🔸 卸载方法
+
+```bash
+# 删除源码目录
+rm -rf $HOME/go
+
+# 从 shell 配置中移除 PATH 设置
+# 编辑 ~/.bashrc 或 ~/.zshrc，删除对应的行
 ```
 
 ---
@@ -273,6 +414,24 @@ echo 'export PATH=$PATH:$HOME/tools/go/bin' >> ~/.bashrc
 source ~/.bashrc
 ```
 
+#### 🔸 卸载方法
+
+```bash
+# 系统安装卸载
+sudo rm -rf /usr/local/go
+
+# 用户安装卸载
+rm -rf ~/tools/go
+
+# 从 shell 配置中移除 PATH 设置
+# 编辑 ~/.bashrc 或 ~/.zshrc，删除对应的行：
+# export PATH=$PATH:/usr/local/go/bin
+# export PATH=$PATH:$HOME/tools/go/bin
+
+# 重新加载配置
+source ~/.bashrc
+```
+
 ---
 
 ### 🟢 Ubuntu/Debian - 包管理器安装
@@ -289,6 +448,18 @@ sudo apt install golang-go
 
 # 验证
 go version
+```
+
+#### 🔸 卸载方法
+
+```bash
+# apt 安装的卸载
+sudo apt remove golang-go
+
+# PPA 安装的卸载
+sudo apt remove golang-go
+sudo add-apt-repository --remove ppa:longsleep/golang-backports
+sudo apt update
 ```
 
 ---
@@ -309,6 +480,22 @@ sudo pacman -S go
 sudo zypper install go
 ```
 
+#### 🔸 卸载方法
+
+```bash
+# CentOS/RHEL
+sudo yum remove golang
+
+# Fedora
+sudo dnf remove golang
+
+# Arch Linux
+sudo pacman -R go
+
+# openSUSE
+sudo zypper remove go
+```
+
 ---
 
 ### 🟢 Snap 安装（通用）
@@ -321,24 +508,114 @@ sudo snap install go --classic
 go version
 ```
 
----
-
-### 🟡 中级开发者 - 多版本管理（gvm）
+#### 🔸 卸载方法
 
 ```bash
-# 1. 安装依赖
-sudo apt-get install bison git
+# 卸载 Go
+sudo snap remove go
+```
 
-# 2. 安装 gvm
-bash < <(curl -s -S -L https://raw.githubusercontent.com/moovweb/gvm/master/binscripts/gvm-installer)
+---
 
-# 3. 配置 shell
-source ~/.gvm/scripts/gvm
-echo '[[ -s "$HOME/.gvm/scripts/gvm" ]] && source "$HOME/.gvm/scripts/gvm"' >> ~/.bashrc
+### 🟡 中级开发者 - 多版本管理
 
-# 4. 安装版本
-gvm install go1.26.0
-gvm use go1.26.0 --default
+**适合人群**：需要在不同项目间切换 Go 版本
+
+> 💡 **推荐使用 goup**：goup 是跨平台的 Go 版本管理工具，与 macOS 和 Windows 使用相同的工具和命令，提供一致的使用体验。
+
+#### 方案：使用 goup（跨平台）
+
+**优势**：
+- ✅ 真正的跨平台支持（Windows/macOS/Linux）
+- ✅ 一行命令安装，无需预装 Go
+- ✅ 支持项目级版本锁定（`.go-version` 文件）
+- ✅ 国内镜像支持（`GOUP_GO_HOST` 环境变量）
+
+##### 安装 goup
+
+```bash
+# 一键安装（所有平台通用）
+curl -sSf https://raw.githubusercontent.com/owenthereal/goup/master/install.sh | sh
+
+# 加载环境变量
+source ~/.go/env
+
+# 验证安装
+goup version
+```
+
+##### 国内用户安装
+
+```bash
+# 使用国内镜像加速
+GOUP_GO_HOST=golang.google.cn goup install
+```
+
+##### 基本使用
+
+```bash
+# 搜索可用版本
+goup search 1.21
+
+# 安装最新版本
+goup install
+
+# 安装指定版本
+goup install 1.26.0
+goup install 1.25.5
+
+# 列出已安装版本
+goup list
+
+# 切换版本
+goup use 1.26.0
+
+# 设置默认版本
+goup set 1.26.0
+
+# 验证当前版本
+go version
+```
+
+##### 项目级版本锁定
+
+```bash
+# 在项目根目录创建 .go-version 文件
+echo "1.26.0" > .go-version
+```
+
+##### 环境变量配置
+
+```bash
+# 添加到 ~/.bashrc 或 ~/.zshrc
+export PATH="$HOME/.go/bin:$PATH"
+export PATH="$HOME/.go/current/bin:$PATH"
+export GOROOT="$HOME/.go/current/"
+export GOPATH="$HOME/.go/GOPATH/"
+
+# 国内用户
+export GOUP_GO_HOST=golang.google.cn
+export GOPROXY=https://goproxy.cn,direct
+```
+
+##### 🔸 卸载 goup
+
+```bash
+# 删除 goup 目录
+rm -rf ~/.go
+
+# 从 shell 配置中移除相关行
+# 编辑 ~/.bashrc, ~/.zshrc, ~/.config/fish/config.fish
+# 删除类似以下的行:
+# export PATH="$HOME/.go/bin:$PATH"
+# export PATH="$HOME/.go/current/bin:$PATH"
+# export GOROOT="$HOME/.go/current/"
+# export GOPATH="$HOME/.go/GOPATH/"
+
+# 重新加载 shell 配置
+source ~/.bashrc  # Bash
+# 或
+source ~/.zshrc   # Zsh
 ```
 
 ---
@@ -368,11 +645,20 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: ['1.25', '1.26']
     steps:
+      - name: Install goup
+        run: curl -sSf https://raw.githubusercontent.com/owenthereal/goup/master/install.sh | sh
+
+      - name: Install Go
+        run: |
+          source $HOME/.go/env
+          goup install ${{ matrix.go-version }}
+          goup use ${{ matrix.go-version }}
+
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
-        with:
-          go-version: '1.26.0'
       - run: go test ./...
       - run: go build -v ./...
 ```
@@ -395,9 +681,20 @@ export PATH=$PATH:$HOME/go/bin
 ### 中国用户网络加速
 
 ```bash
-# 设置国内镜像
+# 设置国内 Go 代理（选择其一）
 go env -w GOPROXY=https://goproxy.cn,direct
+# 或
+go env -w GOPROXY=https://goproxy.io,direct
+
+# goup 用户同时设置 Go 下载镜像
+export GOUP_GO_HOST=golang.google.cn
 ```
+
+**国内 Go 代理服务**：
+- [https://goproxy.cn](https://goproxy.cn) - 七牛云提供的 Go 模块代理
+- [https://goproxy.io](https://goproxy.io) - 全球知名的 Go 模块代理
+
+两者皆为稳定可靠的选择，可任选其一使用。
 
 ---
 
@@ -465,16 +762,31 @@ git clone https://github.com/LazyVim/starter ~/.config/nvim
 **A**: PATH 环境变量未正确配置，请检查上述配置步骤。
 
 ### Q: 多个 Go 版本冲突
-**A**: 使用版本管理工具（g 或 gvm）管理多版本。
+**A**: 使用 **goup** 版本管理工具统一管理多版本。goup 支持 Windows、macOS 和 Linux，提供一致的跨平台体验。
+
+### Q: goup 和其他版本管理工具的区别
+**A**:
+
+| 特性 | goup | gvm | g |
+|------|------|-----|---|
+| **跨平台支持** | ✅ Windows/macOS/Linux | ❌ Unix/macOS only | ❌ Unix/macOS only |
+| **安装难度** | ⭐ 一行命令 | ⭐⭐⭐⭐ 需要依赖 | ⭐ 一行命令 |
+| **预装 Go** | ❌ 不需要 | ✅ 需要 | ❌ 不需要 |
+| **国内镜像** | ✅ 支持 | ❌ 不支持 | ❌ 不支持 |
 
 ### Q: 中国用户下载慢
-**A**: 使用国内镜像下载：https://golang.google.cn/dl/
+**A**:
+- 使用国内镜像下载：https://golang.google.cn/dl/
+- 设置 Go 代理（选择其一）：
+  ```bash
+  go env -w GOPROXY=https://goproxy.cn,direct
+  # 或
+  go env -w GOPROXY=https://goproxy.io,direct
+  ```
+- goup 用户设置：`export GOUP_GO_HOST=golang.google.cn`
 
 ### Q: 如何卸载 Go
-**A**:
-- Windows：控制面板 → 卸载程序
-- macOS：删除 `/usr/local/go`
-- Linux：`sudo rm -rf /usr/local/go`
+**A**: 每种安装方式都有对应的卸载方法，请查看对应平台的"卸载方法"章节。
 
 ---
 
@@ -488,3 +800,4 @@ git clone https://github.com/LazyVim/starter ~/.config/nvim
 - [Go 官方下载页](https://go.dev/dl/)
 - [Go 中国镜像](https://golang.google.cn/dl/)
 - [Go 官方文档](https://go.dev/doc/)
+- [goup GitHub](https://github.com/owenthereal/goup)
