@@ -124,22 +124,19 @@ type HttpClient interface {
 ### 常见缩写处理
 
 ```go
-// ✅ 推荐：缩写词首字母大写，其余小写
-type HttpServer struct {}   // 不是 HTTPServer
-type XmlDocument struct {}  // 不是 XMLDocument
-type UserId int             // 不是 UserID
+// ✅ 推荐：缩写词在开头全大写，在其他位置只首字母大写
+type HTTPServer struct {}   // 开头全大写
+type XMLParser struct {}    // 开头全大写
+type UserID int             // 开头全大写
 
-var apiUrl string           // 不是 APIURL
-var xmlContent []byte       // 不是 XMLContent
+var apiURL string           // 非开头，只首字母大写
+var xmlContent []byte       // 非开头，只首字母大写
+var userID int              // 非开头，只首字母大写
 ```
 
 <Badge text="常见缩写词" type="info" />
-- **Http** → Http
-- **Xml** → Xml
-- **Json** → Json
-- **Id** → Id
-- **Url** → Url
-- **Sql** → Sql
+- **开头**：`HTTP`、`XML`、`ID`、`URL`、`JSON`、`SQL`
+- **非开头**：`apiURL`、`xmlContent`、`userID`、`jsonParser`
 
 
 ## <Badge text="命名最佳实践" type="warning" outline />
@@ -388,7 +385,7 @@ flowchart TD
     E --> G{包含缩写词?}
     F --> G
 
-    G -->|是| H[首字母大写、其余小写<br/>HttpServer]
+    G -->|是| H[开头全大写/非开头首字母大写<br/>HTTPServer/apiURL]
     G -->|否| I[驼峰命名法<br/>UserName]
 
     linkStyle default stroke:#3b82f6,stroke-width:2px
@@ -415,7 +412,7 @@ flowchart TD
 | 私有标识符 | 首字母小写 | `func getUser()` |
 | 变量/常量 | 驼峰命名 | `userName`, `maxCount` |
 | 接口 | 动词+er 或描述性 | `Reader`, `HttpClient` |
-| 缩写词 | 首字母大写 | `HttpServer`, `userId` |
+| 缩写词 | 开头全大写，非开头首字母大写 | `HTTPServer`, `userID` |
 | 单一状态 | `State` / `bool` | 枚举或布尔 | `Enabled`, `StateOn` |
 | 组合状态 | `Status` | 位运算组合多个状态 | `Status | StatusRunning`, `StatusReady | StatusError` |
 | 时间点 | `At` 后缀 | `int64` 时间戳 | `CreatedAt int64`, `UpdatedAt int64` |
