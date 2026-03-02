@@ -7,7 +7,7 @@
   {
     "type": "file",
     "name": "string",
-    "label": "字符串"
+    "label": "String"
   },
   {
     "type": "file",
@@ -27,16 +27,16 @@
   {
     "type": "file",
     "name": "struct",
-    "label": "结构体"
+    "label": "Struct"
   },
   {
     "type": "file",
     "name": "pointer",
-    "label": "指针"
+    "label": "Pointer"
   },
   {
     "type": "file",
     "name": "interface",
-    "label": "接口"
+    "label": "Interface"
   }
 ]
