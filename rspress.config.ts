@@ -5,6 +5,7 @@ const ghPagesBase = '/knowledge/';
 
 export default defineConfig({
   root: path.join(__dirname, 'docs'),
+  llms: true,
   lang: 'zh',
   title: '技术知识库',
   description: 'Golang / MySQL / Redis 工程实践知识库',
