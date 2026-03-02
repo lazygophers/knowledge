@@ -143,3 +143,23 @@
 
 - [Testing Sidebar](./testing/_meta.json): Navigation metadata for testing subdirectory.
 - [Testing LLMs Index](./testing/llms.txt): English index for testing subdirectory.
+
+## Advanced Topics
+
+### Unsafe
+
+- [Unsafe Basics](./unsafe/basics.mdx): Introduction to unsafe package, unsafe.Pointer and uintptr types, Sizeof/Alignof/Offsetof functions, safety warnings, pointer conversion rules, uintptr dangers, and real-world applications (zero-copy conversions, atomic operations).
+- [Pointer Operations](./unsafe/pointer-operations.mdx): Advanced pointer operations, type conversion (same-size types), array/slice operations, string operations (zero-copy), struct operations (direct field access), and union simulation.
+- [Memory Layout](./unsafe/memory-layout.mdx): Go type memory layout, basic types (bool, integers, floats, string, slice, interface), struct layout (alignment, padding, field reordering), arrays, slices, maps, channels, and interface memory layout.
+- [Best Practices](./unsafe/best-practices.mdx): When to use unsafe (performance-critical, CGO, system programming), when NOT to use (application code, normal optimization), common pitfalls (uintptr storage, object moving, read-only memory), safe patterns, performance optimization, CGO integration, testing unsafe code, debugging, and alternatives.
+- [Unsafe Sidebar](./unsafe/_meta.json): Navigation metadata for unsafe subdirectory.
+- [Unsafe LLMs Index](./unsafe/llms.txt): English index for unsafe subdirectory.
+
+### CGO
+
+- [CGO Basics](./cgo/basics.mdx): Introduction to CGO, basic structure (#include ... import "C"), CGO directives (CFLAGS, LDFLAGS, pkg-config), basic type mapping, calling C functions, calling Go functions (export), string handling (C.CString, C.GoString), and array operations.
+- [Type Conversions](./cgo/type-conversions.mdx): Go to C and C to Go type conversions, numeric types, pointer conversions (unsafe.Pointer), struct conversions, C struct definitions, enum conversions, union types, function signature conversions, and C function pointers.
+- [Memory Management](./cgo/memory-management.mdx): Memory allocation (C-side malloc/free, Go-side make/new), string memory lifecycle, reference passing rules, memory leak detection, finalizers, cross-boundary memory rules, memory ownership, and memory pool patterns.
+- [Best Practices](./cgo/best-practices.mdx): When to use CGO (existing C libraries, performance-critical code), when NOT to use (pure Go possible), performance optimization (reduce cross-boundary calls), error handling (C errors to Go), build tags (platform-specific), debugging, alternatives (pure Go, Go libraries), security (input validation), and testing CGO code.
+- [CGO Sidebar](./cgo/_meta.json): Navigation metadata for cgo subdirectory.
+- [CGO LLMs Index](./cgo/llms.txt): English index for cgo subdirectory.

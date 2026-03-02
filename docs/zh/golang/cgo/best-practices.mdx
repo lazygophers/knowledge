@@ -1,0 +1,619 @@
+import { Badge } from "@rspress/core/theme";
+import {Callout } from "@rspress/core/theme-original";
+
+# 最佳实践
+
+<Badge text="专业" type="danger" /> <Badge text="Go 1.0+" type="info" />
+
+使用 CGO 需要特别注意性能、安全性和可维护性。以下是最佳实践指南。
+
+## 何时使用 CGO
+
+### 适合的场景
+
+```go
+// 1. 需要使用现有的 C 库
+// - SQLite, OpenSSL, libpng 等
+
+// 2. 性能关键的低级操作
+// - 需要直接硬件访问
+// - 特定的系统调用
+
+// 3. 遗留系统集成
+// - 与现有 C/C++ 系统交互
+
+// 4. 平台特定功能
+// - macOS: Core Foundation
+// - Windows: Win32 API
+// - Linux: 特定系统调用
+```
+
+### 不适合的场景
+
+```go
+// ❌ 避免使用 CGO 的场景
+
+// 1. 可以用纯 Go 实现
+func compute() int {
+    // Go 代码通常足够快
+    return 42
+}
+
+// 2. 性能不敏感的代码
+func processData(data []byte) {
+    // 不需要 C 的性能
+}
+
+// 3. 有现成的 Go 库
+// 使用 Go 版本而非 C 版本
+
+// 4. 跨平台兼容性要求高
+// CGO 增加复杂度
+```
+
+<Callout type="warning" title="CGO 性能影响">
+  CGO 调用开销：
+  <ul>
+    <li>每次调用约 50-100ns</li>
+    <li>需要调度器切换</li>
+    <li>需要线程本地存储</li>
+    <li>频繁调用会显著降低性能</li>
+  </ul>
+
+  <strong>优化策略</strong>：
+  <ul>
+    <li>批量操作，减少调用次数</li>
+    <li>保持 C 端工作在独立线程</li>
+    <li>使用通道进行异步通信</li>
+  </ul>
+</Callout>
+
+## 性能优化
+
+### 减少跨边界调用
+
+```go
+package main
+
+/*
+#include <stdlib.h>
+
+// ❌ 多次小调用
+int processOne(int value) {
+    return value * 2;
+}
+
+// ✅ 批量处理
+void processBatch(int* values, int count) {
+    for (int i = 0; i < count; i++) {
+        values[i] *= 2;
+    }
+}
+*/
+import "C"
+import (
+    "unsafe"
+)
+
+func slowProcess(data []int) {
+    for i, v := range data {
+        data[i] = int(C.processOne(C.int(v)))
+    }
+}
+
+func fastProcess(data []int) {
+    if len(data) == 0 {
+        return
+    }
+    C.processBatch(
+        (*C.int)(unsafe.Pointer(&data[0])),
+        C.int(len(data)),
+    )
+}
+```
+
+### 使用独立线程
+
+```go
+package main
+
+/*
+#include <stdlib.h>
+#include <pthread.h>
+
+typedef struct {
+    int* data;
+    int size;
+} WorkItem;
+
+void* processWork(void* arg) {
+    WorkItem* item = (WorkItem*)arg;
+    // 处理数据
+    free(item);
+    return NULL;
+}
+*/
+import "C"
+import (
+    "runtime"
+    "unsafe"
+)
+
+type WorkItem struct {
+    data []int
+}
+
+func ProcessInCThread(data []int) {
+    // 锁定 OS 线程
+    runtime.LockOSThread()
+    defer runtime.UnlockOSThread()
+
+    // 创建 C 工作项
+    work := (*C.struct_WorkItem)(C.malloc(C.size_t(unsafe.Sizeof(C.struct_WorkItem{}))))
+    work.data = (*C.int)(unsafe.Pointer(&data[0]))
+    work.size = C.int(len(data))
+
+    var tid C.pthread_t
+    C.pthread_create(&tid, nil, C.processWork, unsafe.Pointer(work))
+
+    C.pthread_join(tid, nil)
+}
+```
+
+## 错误处理
+
+### C 错误转 Go
+
+```go
+package main
+
+/*
+#include <errno.h>
+
+int divide(int a, int b, int* result) {
+    if (b == 0) {
+        errno = EINVAL;  // 无效参数
+        return -1;
+    }
+    *result = a / b;
+    return 0;
+}
+*/
+import "C"
+import (
+    "errors"
+    "fmt"
+)
+
+func Divide(a, b int) (int, error) {
+    var result C.int
+    ret := C.divide(C.int(a), C.int(b), &result)
+
+    if ret != 0 {
+        // 检查 errno
+        if C.errno() == C.EINVAL {
+            return 0, errors.New("division by zero")
+        }
+        return 0, fmt.Errorf("C error: %d", C.errno())
+    }
+
+    return int(result), nil
+}
+
+func main() {
+    result, err := Divide(10, 0)
+    if err != nil {
+        fmt.Println("Error:", err)
+        return
+    }
+    fmt.Println("Result:", result)
+}
+```
+
+### Go 错误转 C
+
+```go
+package main
+
+/*
+#include <stdlib.h>
+
+typedef enum {
+    GO_ERROR_NONE = 0,
+    GO_ERROR_INVALID,
+    GO_ERROR_FAILED,
+} GoError;
+
+const char* getGoErrorMessage(GoError err) {
+    switch (err) {
+        case GO_ERROR_NONE: return "Success";
+        case GO_ERROR_INVALID: return "Invalid argument";
+        case GO_ERROR_FAILED: return "Operation failed";
+        default: return "Unknown error";
+    }
+}
+*/
+import "C"
+
+//export ProcessData
+func ProcessData(data *C.char, len C.size_t) C.GoError {
+    goStr := C.GoStringN(data, C.int(len))
+
+    if goStr == "" {
+        return C.GO_ERROR_INVALID
+    }
+
+    // 处理数据...
+
+    return C.GO_ERROR_NONE
+}
+
+func main() {
+    data := C.CString("test data")
+    defer C.free(unsafe.Pointer(data))
+
+    err := C.ProcessData(data, C.size_t(9))
+    if err != C.GO_ERROR_NONE {
+        msg := C.getGoErrorMessage(err)
+        fmt.Println("Error:", C.GoString(msg))
+    }
+}
+```
+
+## 构建标签
+
+### 平台特定代码
+
+```go
+package main
+
+/*
+#cgo windows LDFLAGS: -lkernel32
+#cgo darwin LDFLAGS: -framework CoreFoundation
+#cgo linux LDFLAGS: -lrt
+
+#include <stdlib.h>
+*/
+import "C"
+import "runtime"
+
+func main() {
+    switch runtime.GOOS {
+    case "windows":
+        fmt.Println("Windows specific code")
+    case "darwin":
+        fmt.Println("macOS specific code")
+    case "linux":
+        fmt.Println("Linux specific code")
+    }
+}
+```
+
+### 架构特定代码
+
+```go
+package main
+
+/*
+#cgo amd64 CFLAGS: -DARCH_X64
+#cgo arm64 CFLAGS: -DARCH_ARM64
+
+#include <stdlib.h>
+*/
+import "C"
+import "runtime"
+
+func main() {
+    switch runtime.GOARCH {
+    case "amd64":
+        fmt.Println("x86-64 architecture")
+    case "arm64":
+        fmt.Println("ARM64 architecture")
+    }
+}
+```
+
+## 调试技巧
+
+### 添加调试输出
+
+```go
+package main
+
+/*
+#define CGO_DEBUG 1
+
+#include <stdio.h>
+*/
+import "C"
+
+func main() {
+    // CGO_DEBUG 环境变量会显示详细的 CGO 日志
+    fmt.Println("Set CGO_DEBUG=1 for detailed logs")
+}
+```
+
+### 运行时检查
+
+```go
+package main
+
+/*
+#include <stdlib.h>
+*/
+import "C"
+import (
+    "fmt"
+    "os"
+    "runtime/debug"
+)
+
+func main() {
+    // 启用 CGO 追踪
+    os.Setenv("CGO_TRACE", "1")
+
+    // 检查 CGO 是否启用
+    if !debug.IsEnabled {
+        fmt.Println("CGO not enabled")
+        return
+    }
+
+    // 执行 CGO 操作
+    _ = C.malloc(1024)
+}
+```
+
+## 替代方案
+
+### 优先考虑纯 Go
+
+```go
+// ❌ 使用 CGO
+/*
+#include <math.h>
+*/
+import "C"
+func Sqrt(x float64) float64 {
+    return float64(C.sqrt(C.double(x)))
+}
+
+// ✅ 使用 Go 标准库
+import "math"
+func SqrtGo(x float64) float64 {
+    return math.Sqrt(x)
+}
+```
+
+### 使用现有 Go 库
+
+```go
+// ❌ 使用 CGO 调用 SQLite C 库
+/*
+#include <sqlite3.h>
+*/
+import "C"
+
+// ✅ 使用纯 Go SQLite 驱动
+import "github.com/mattn/go-sqlite3"
+
+func main() {
+    db, err := sqlit`3.Open("test.db")
+    // ...
+}
+```
+
+### 使用 Syscall 包
+
+```go
+// ❌ 使用 CGO 调用系统函数
+/*
+#include <unistd.h>
+*/
+import "C"
+
+// ✅ 使用 syscall 包
+import "syscall"
+
+func main() {
+    // 直接系统调用
+    syscall.Getpid()
+}
+```
+
+## 安全考虑
+
+### 输入验证
+
+```go
+package main
+
+/*
+#include <stdlib.h>
+#include <string.h>
+
+char* safeCopy(const char* src, int maxLen) {
+    if (!src) return NULL;
+
+    int len = strlen(src);
+    if (len > maxLen) {
+        len = maxLen;
+    }
+
+    char* dst = (char*)malloc(len + 1);
+    if (!dst) return NULL;
+
+    strncpy(dst, src, len);
+    dst[len] = '\0';
+    return dst;
+}
+*/
+import "C"
+import (
+    "unsafe"
+)
+
+func SafeCopyString(s string, maxLen int) *C.char {
+    if len(s) > maxLen {
+        // 截断或拒绝
+        s = s[:maxLen]
+    }
+
+    return C.safeCopy(C.CString(s), C.int(maxLen))
+}
+```
+
+### 缓冲区溢出防护
+
+```go
+package main
+
+/*
+#include <stdlib.h>
+#include <string.h>
+
+int safeCopy(char* dst, const char* src, int dstSize) {
+    if (!dst || !src || dstSize <= 0) {
+        return -1;
+    }
+
+    int srcLen = strlen(src);
+    int copyLen = srcLen < dstSize - 1 ? srcLen : dstSize - 1;
+
+    memcpy(dst, src, copyLen);
+    dst[copyLen] = '\0';
+
+    return copyLen;
+}
+*/
+import "C"
+import (
+    "unsafe"
+)
+
+func SafeCopy(dst []byte, src string) int {
+    if len(dst) == 0 {
+        return 0
+    }
+
+    copied := int(C.safeCopy(
+        (*C.char)(unsafe.Pointer(&dst[0])),
+        C.CString(src),
+        C.int(len(dst)),
+    ))
+
+    return copied
+}
+```
+
+## 测试 CGO 代码
+
+### 单元测试
+
+```go
+package main
+
+/*
+#include <stdlib.h>
+
+int add(int a, int b) {
+    return a + b;
+}
+*/
+import "C"
+import "testing"
+
+func TestAdd(t *testing.T) {
+    tests := []struct {
+        name string
+        a, b int
+        want int
+    }{
+        {"positive", 10, 20, 30},
+        {"negative", -5, -3, -8},
+        {"zero", 0, 0, 0},
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            got := int(C.add(C.int(tt.a), C.int(tt.b)))
+            if got != tt.want {
+                t.Errorf("add() = %d, want %d", got, tt.want)
+            }
+        })
+    }
+}
+```
+
+### 内存泄漏测试
+
+```go
+package main
+
+/*
+#include <stdlib.h>
+
+char* allocate() {
+    return (char*)malloc(1024);
+}
+
+void deallocate(char* p) {
+    free(p);
+}
+*/
+import "C"
+import (
+    "runtime"
+    "testing"
+    "unsafe"
+)
+
+func TestMemoryLeak(t *testing.T) {
+    // 强制 GC
+    runtime.GC()
+
+    // 分配并释放
+    for i := 0; i < 1000; i++ {
+        p := C.allocate()
+        C.deallocate(p)
+    }
+
+    // 再次 GC
+    runtime.GC()
+
+    // 如果没有泄漏，内存应该保持稳定
+    t.Log("Memory test completed")
+}
+```
+
+## 总结
+
+<Callout type="info" title="CGO 使用指南">
+  <strong>使用原则</strong>：
+  <ol>
+    <li><strong>最后手段</strong>：优先考虑纯 Go 实现</li>
+    <li><strong>明确边界</strong>：清晰划分 Go 和 C 责任</li>
+    <li><strong>最小化调用</strong>：减少跨边界调用次数</li>
+    <li><strong>正确清理</strong>：谁分配谁释放</li>
+    <li><strong>充分测试</strong>：包括内存泄漏测试</li>
+  </ol>
+
+  <strong>性能考虑</strong>：
+  <ul>
+    <li>CGO 调用开销约 50-100ns</li>
+    <li>使用批量操作减少调用</li>
+    <li>考虑独立线程处理 C 代码</li>
+    <li>使用通道进行异步通信</li>
+  </ul>
+
+  <strong>安全考虑</strong>：
+  <ul>
+    <li>验证所有输入</li>
+    <li>防止缓冲区溢出</li>
+    <li>正确处理错误</li>
+    <li>管理内存生命周期</li>
+  </ul>
+</Callout>
+
+---
+
+[← 内存管理](./memory-management.mdx)

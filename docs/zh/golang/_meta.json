@@ -64,5 +64,19 @@
         "type": "dir",
         "name": "testing",
         "label": "测试"
+    },
+    {
+        "type": "section-header",
+        "label": "高级主题"
+    },
+    {
+        "type": "dir",
+        "name": "unsafe",
+        "label": "Unsafe"
+    },
+    {
+        "type": "dir",
+        "name": "cgo",
+        "label": "CGO"
     }
 ]
