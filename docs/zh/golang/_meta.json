@@ -1,11 +1,25 @@
 [
-  { "type": "section-header", "label": "快速入门" },
-  { "type": "file", "name": "index", "label": "模块概览" },
-  { "type": "section-header", "label": "环境搭建" },
-  { "type": "file", "name": "install/index", "label": "01 安装指南" },
-  { "type": "file", "name": "install/windows", "label": "01.1 Windows" },
-  { "type": "file", "name": "install/macos", "label": "01.2 macOS" },
-  { "type": "file", "name": "install/linux", "label": "01.3 Linux" },
-  { "type": "section-header", "label": "编程入门" },
-  { "type": "file", "name": "hello", "label": "02 Hello World" }
+    {
+        "type": "section-header",
+        "label": "快速入门"
+    },
+    {
+        "type": "file",
+        "name": "index",
+        "label": "模块概览"
+    },
+    {
+        "type": "dir",
+        "name": "install",
+        "label": "环境搭建"
+    },
+    {
+        "type": "section-header",
+        "label": "编程入门"
+    },
+    {
+        "type": "file",
+        "name": "hello",
+        "label": "02 Hello World"
+    }
 ]
