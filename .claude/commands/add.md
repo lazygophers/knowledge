@@ -54,6 +54,7 @@ $ARGUMENTS
    5. [主题](https://rspress.rs/zh/guide/theme)
    6. [其它组件](https://rspress.rs/zh/ui/components/)
    7. [Badge](https://rspress.rs/zh/ui/components/badge)
+   8. [Callout](https://rspress.rs/zh/ui/components/callout)
 
 检查清单：
 

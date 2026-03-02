@@ -6,7 +6,6 @@ import { Badge } from "@rspress/core/theme";
 
 理解 Go 中变量和常量的声明方式是编写代码的基础。
 
-
 ## <Badge text="变量声明" type="tip" />
 
 ### 三种声明方式
@@ -33,6 +32,10 @@ func main() {
 }
 ```
 
+<Callout type="tip" title={<Badge text="风格推荐" type="tip" />}>
+  对于需要赋初值的场景，推荐方式 3，对于不需要初值的场景，推荐方式 1
+</Callout>
+
 ### 声明方式选择
 
 ```mermaid
@@ -52,7 +55,6 @@ flowchart TD
     classDef typeInf fill:#e1f5ff,stroke:#1976d2,stroke-width:2px,color:#0d47a1
     classDef varDecl fill:#fff9c4,stroke:#f59e0b,stroke-width:2px,color:#78350f
 ```
-
 
 ## <Badge text="零值机制" type="info" />
 
@@ -86,22 +88,22 @@ func main() {
 
 **零值速查表**：
 
-| 类型 | 零值 | 说明 |
-|-----|------|-----|
-| `int`, `int8`...`int64` | `0` | 数值零 |
-| `uint`, `uint8`...`uint64` | `0` | 数值零 |
-| `float32`, `float64` | `0` | 数值零 |
-| `string` | `""` | 空字符串（不是 nil） |
-| `bool` | `false` | 布尔假 |
-| 指针 | `nil` | 空指针 |
-| slice | `nil` | 空切片 |
-| map | `nil` | 空映射 |
-| channel | `nil` | 空通道 |
-| interface | `nil` | 空接口 |
-| function | `nil` | 空函数 |
+| 类型                       | 零值    | 说明                 |
+| -------------------------- | ------- | -------------------- |
+| `int`, `int8`...`int64`    | `0`     | 数值零               |
+| `uint`, `uint8`...`uint64` | `0`     | 数值零               |
+| `float32`, `float64`       | `0`     | 数值零               |
+| `string`                   | `""`    | 空字符串（不是 nil） |
+| `bool`                     | `false` | 布尔假               |
+| 指针                       | `nil`   | 空指针               |
+| slice                      | `nil`   | 空切片               |
+| map                        | `nil`   | 空映射               |
+| channel                    | `nil`   | 空通道               |
+| interface                  | `nil`   | 空接口               |
+| function                   | `nil`   | 空函数               |
 
-<Badge text="重要" type="warning" /> **Go 没有未初始化的变量**，声明后自动获得零值，避免了"未定义行为"。
-
+<Badge text="重要" type="warning" /> **Go
+没有未初始化的变量**，声明后自动获得零值，避免了"未定义行为"。
 
 ## <Badge text="常量声明" type="info" />
 
@@ -127,13 +129,12 @@ func main() {
 
 ### const 与 var 的区别
 
-| 特性 | var | const |
-|-----|-----|-------|
-| 值可变性 | 可修改 | 不可修改 |
-| 初始化 | 可以延迟初始化 | 必须在声明时初始化 |
-| 类型推断 | 支持 | 支持 |
-| 计算时机 | 运行时 | 编译时 |
-
+| 特性     | var            | const              |
+| -------- | -------------- | ------------------ |
+| 值可变性 | 可修改         | 不可修改           |
+| 初始化   | 可以延迟初始化 | 必须在声明时初始化 |
+| 类型推断 | 支持           | 支持               |
+| 计算时机 | 运行时         | 编译时             |
 
 ## <Badge text="iota 枚举" type="warning" />
 
@@ -210,11 +211,8 @@ func main() {
 }
 ```
 
-<Badge text="iota 规则" type="info" />
-- 每个 `const` 块中，`iota` 从 0 开始
-- 每新增一行，`iota` 自动加 1
-- 同一行的多个常量共享相同的 `iota` 值
-
+<Badge text="iota 规则" type="info" />- 每个 `const` 块中，`iota` 从 0 开始 -
+每新增一行，`iota` 自动加 1 - 同一行的多个常量共享相同的 `iota` 值
 
 ## <Badge text="批量声明" type="warning" outline />
 
@@ -265,7 +263,6 @@ func main() {
     fmt.Printf("10 / 3 = %d\\n", q2)
 }
 ```
-
 
 ## <Badge text="变量作用域" type="danger" />
 
@@ -326,25 +323,23 @@ func main() {
 }
 ```
 
-<Badge text="警告" type="danger" /> **变量遮蔽**可能导致难以发现的 bug，建议使用不同的变量名避免遮蔽。
-
+<Badge text="警告" type="danger" /> **变量遮蔽**可能导致难以发现的
+bug，建议使用不同的变量名避免遮蔽。
 
 ## 快速参考
 
-| 声明类型 | 语法 | 使用场景 |
-|---------|------|----------|
-| 标准声明 | `var name Type` | 包级变量、需要明确类型 |
-| 类型推断 | `var name = value` | 包级变量、类型不明显 |
-| 简短声明 | `name := value` | 函数内局部变量（推荐） |
-| 常量声明 | `const name = value` | 不可改变的值 |
-| iota 枚举 | `const ( A = iota )` | 相关常量序列 |
-
+| 声明类型  | 语法                 | 使用场景               |
+| --------- | -------------------- | ---------------------- |
+| 标准声明  | `var name Type`      | 包级变量、需要明确类型 |
+| 类型推断  | `var name = value`   | 包级变量、类型不明显   |
+| 简短声明  | `name := value`      | 函数内局部变量（推荐） |
+| 常量声明  | `const name = value` | 不可改变的值           |
+| iota 枚举 | `const ( A = iota )` | 相关常量序列           |
 
 ## 练习
 
 1. **声明一个表示用户的变量**，包含姓名、年龄和邮箱
 2. **使用 iota 定义一周的七天**
 3. **编写函数返回两数之和与积**
-
 
 [← 返回基础概念](overview/) | [命名规则](naming-conventions/) | [继续：类型系统 →](type-system/)
