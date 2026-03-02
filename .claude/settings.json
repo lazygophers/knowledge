@@ -51,7 +51,7 @@
 		"env@ccplugin-market": true,
 		"git@ccplugin-market": true,
 		"superpowers@claude-plugins-official": false,
-		"notify@ccplugin-market": true,
+		"notify@ccplugin-market": false,
 		"llms@ccplugin-market": true,
 		"serena@claude-plugins-official": true,
 		"context7@claude-plugins-official": true,

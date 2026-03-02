@@ -32,7 +32,7 @@ $ARGUMENTS
    4. 对于不同目标读者水平的用户，如果知识点只是越高级的越深入，不需要单独添加章节，而是在章节中进行详细说明（通过 Badge 组件进行标记）
 6. 更新 @docs/zh 中的文档内容
    1. 如果是新增了目录相关的部分，要及时更新相关索引
-   2. 及时通过 Commands(llms-skills) 添加、更新 `llms.txt` 文件，且确保 `llms.txt` 是英文文件
+   2. 及时通过 Commands(llms-skills) 添加、更新 `llms.txt`/`llms-full.txt` 文件，且确保 `llms.txt`/`llms-full.txt` 是英文文件
 
 注意：
 

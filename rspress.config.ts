@@ -8,7 +8,6 @@ const ghPagesBase = '/knowledge/';
 
 export default defineConfig({
   root: path.join(__dirname, 'docs'),
-  llms: true,
   lang: 'zh',
   title: '技术知识库',
   description: 'Golang / MySQL / Redis 工程实践知识库',
@@ -62,7 +61,20 @@ export default defineConfig({
         theme: 'forest',
       },
     }),
-    pluginLlms(),
+    pluginLlms({
+      // 生成 llms.txt
+      llmsTxt: {
+        name: 'llms.txt',
+      },
+      // 生成 llms-full.txt
+      llmsFullTxt: {
+        name: 'llms-full.txt',
+      },
+      // 生成 MD 文件（SSG-MD 功能）
+      mdFiles: {
+        mdxToMd: true,
+      },
+    }),
     pluginTwoslash({
       explicitTrigger: false,
       cache: true,
