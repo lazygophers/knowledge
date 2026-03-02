@@ -10,6 +10,19 @@ This module covers Go's interface system, which is the core of polymorphism in G
 - interface-composition: Interface composition and embedding
 - best-practices: Interface design principles, naming conventions, standard interfaces
 
+## Standard Library Interfaces
+
+The library/ subdirectory covers commonly used interfaces from Go's standard library and popular third-party packages:
+
+- library/index: Overview and learning path for standard library interfaces
+- library/io: io.Reader, io.Writer, io.Closer, and composed interfaces
+- library/http: http.Handler, http.ResponseWriter, and HTTP server interfaces
+- library/error: error interface, error wrapping, and error handling patterns
+- library/sort: sort.Interface for custom sorting
+- library/fmt: fmt.Stringer, fmt.GoStringer, and formatting interfaces
+- library/context: context.Context interface and usage patterns
+- library/gorm: GORM ORM interfaces including DB, Session, hooks, and plugins
+
 ## Key Concepts
 
 Go interfaces are implicit - types implement interfaces without explicit declarations. This decouples interface definitions from implementations, making code more flexible and maintainable.

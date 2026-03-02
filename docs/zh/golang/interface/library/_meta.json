@@ -1,0 +1,37 @@
+[
+  {
+    "type": "file",
+    "name": "io",
+    "label": "io 包接口"
+  },
+  {
+    "type": "file",
+    "name": "http",
+    "label": "http 包接口"
+  },
+  {
+    "type": "file",
+    "name": "error",
+    "label": "error 接口"
+  },
+  {
+    "type": "file",
+    "name": "sort",
+    "label": "sort 接口"
+  },
+  {
+    "type": "file",
+    "name": "fmt",
+    "label": "fmt 接口"
+  },
+  {
+    "type": "file",
+    "name": "context",
+    "label": "context 接口"
+  },
+  {
+    "type": "file",
+    "name": "gorm",
+    "label": "GORM 接口"
+  }
+]

@@ -1,0 +1,494 @@
+import Badge from '@site/src/theme/Badge';
+
+# fmt 格式化接口
+
+<Badge text="标准库" type="info" /> <Badge text="格式化" color="blue" />
+
+Go 的 `fmt` 包提供了一组强大的格式化接口，允许自定义类型控制如何格式化为字符串。这些接口是 Go 语言中灵活输出的核心机制。
+
+## fmt.Stringer 接口
+
+最常用的格式化接口，用于定义类型的默认字符串表示。
+
+```go
+type Stringer interface {
+    String() string
+}
+```
+
+### 基本用法
+
+```go
+package main
+
+import "fmt"
+
+type Person struct {
+    Name string
+    Age  int
+}
+
+func (p Person) String() string {
+    return fmt.Sprintf("%s (%d岁)", p.Name, p.Age)
+}
+
+func main() {
+    p := Person{Name: "张三", Age: 25}
+    fmt.Println(p)  // 输出: 张三 (25岁)
+    fmt.Printf("人员信息: %s\n", p)  // 输出: 人员信息: 张三 (25岁)
+}
+```
+
+### 注意事项
+
+⚠️ **避免无限递归**：在 `String()` 方法中使用 `fmt.Print` 系列函数打印自身会导致无限递归。
+
+```go
+// ❌ 错误示例 - 会导致栈溢出
+func (p Person) String() string {
+    return fmt.Sprintf("Person: %v", p)  // %v 会再次调用 String()
+}
+
+// ✅ 正确做法 - 直接访问字段
+func (p Person) String() string {
+    return fmt.Sprintf("Person: %s (%d)", p.Name, p.Age)
+}
+```
+
+## fmt.GoStringer 接口
+
+用于定义类型的 Go 语法字符串表示，主要用于调试和 `%#v` 格式化动词。
+
+```go
+type GoStringer interface {
+    GoString() string
+}
+```
+
+### 使用示例
+
+```go
+package main
+
+import "fmt"
+
+type Point struct {
+    X, Y int
+}
+
+func (p Point) String() string {
+    return fmt.Sprintf("(%d, %d)", p.X, p.Y)
+}
+
+func (p Point) GoString() string {
+    return fmt.Sprintf("Point{X:%d, Y:%d}", p.X, p.Y)
+}
+
+func main() {
+    p := Point{X: 10, Y: 20}
+
+    fmt.Println(p)          // 输出: (10, 20)
+    fmt.Printf("%v\n", p)    // 输出: (10, 20)
+    fmt.Printf("%#v\n", p)   // 输出: Point{X:10, Y:20}
+}
+```
+
+## fmt.Formatter 接口
+
+提供高级格式化控制，允许自定义类型根据格式化动词和行为标志进行不同的输出。
+
+```go
+type Formatter interface {
+    Format(f State, verb rune)
+}
+```
+
+### fmt.State 接口
+
+`Format` 方法的 `State` 参数提供了格式化状态信息：
+
+```go
+type State interface {
+    // Write 是用于格式化输出的函数
+    Write(b []byte) (ret int, err error)
+
+    // Width 返回宽度值及其是否被设置
+    Width() (wid int, ok bool)
+
+    // Precision 返回精度值及其是否被设置
+    Precision() (prec int, ok bool)
+
+    // Flag 报告是否设置了标志位
+    Flag(c int) bool
+}
+```
+
+### 高级格式化示例
+
+```go
+package main
+
+import (
+    "fmt"
+    "io"
+    "os"
+)
+
+type Money struct {
+    Amount float64
+    Symbol string
+}
+
+// 实现 fmt.Stringer
+func (m Money) String() string {
+    return fmt.Sprintf("%s%.2f", m.Symbol, m.Amount)
+}
+
+// 实现 fmt.Formatter
+func (m Money) Format(f fmt.State, verb rune) {
+    switch verb {
+    case 'v':
+        if f.Flag('#') {
+            fmt.Fprintf(f, "Money{Symbol:%q, Amount:%.2f}", m.Symbol, m.Amount)
+        } else {
+            fmt.Fprintf(f, "%s%.2f", m.Symbol, m.Amount)
+        }
+    case 's':
+        fmt.Fprintf(f, "%s%.2f", m.Symbol, m.Amount)
+    case 'f':
+        width, hasWidth := f.Width()
+        precision, hasPrecision := f.Precision()
+
+        if !hasPrecision {
+            precision = 2
+        }
+
+        format := "%"
+        if hasWidth {
+            format += fmt.Sprintf("%d", width)
+        }
+        format += fmt.Sprintf(".%df", precision)
+
+        fmt.Fprintf(f, format, m.Amount)
+    default:
+        // 其他动词使用默认处理
+        fmt.Fprintf(f, "%s%.2f", m.Symbol, m.Amount)
+    }
+}
+
+func main() {
+    m := Money{Amount: 1234.567, Symbol: "¥"}
+
+    fmt.Printf("默认: %v\n", m)              // 默认: ¥1234.57
+    fmt.Printf("Go语法: %#v\n", m)           // Go语法: Money{Symbol:"¥", Amount:1234.57}
+    fmt.Printf("字符串: %s\n", m)            // 字符串: ¥1234.57
+    fmt.Printf("自定义精度: %.4f\n", m)      // 自定义精度: 1234.5670
+    fmt.Printf("带宽度: %10.2f\n", m)        // 带宽度:   1234.57
+}
+```
+
+## 格式化动词
+
+### 通用动词
+
+| 动词 | 描述 | 示例 |
+|------|------|------|
+| `%v` | 默认格式 | `fmt.Printf("%v", p)` |
+| `%+v` | 对结构体添加字段名 | `fmt.Printf("%+v", p)` |
+| `%#v` | Go 语法格式 | `fmt.Printf("%#v", p)` |
+| `%T` | 类型信息 | `fmt.Printf("%T", p)` |
+| `%%` | 字面值百分号 | `fmt.Printf("%%")` |
+
+### 布尔值
+
+| 动词 | 描述 | 示例 |
+|------|------|------|
+| `%t` | true 或 false | `fmt.Printf("%t", true)` |
+
+### 整数
+
+| 动词 | 描述 | 示例 |
+|------|------|------|
+| `%b` | 二进制 | `fmt.Printf("%b", 5)` → `101` |
+| `%d` | 十进制 | `fmt.Printf("%d", 42)` |
+| `%o` | 八进制 | `fmt.Printf("%o", 8)` → `10` |
+| `%x` | 十六进制（小写） | `fmt.Printf("%x", 255)` → `ff` |
+| `%X` | 十六进制（大写） | `fmt.Printf("%X", 255)` → `FF` |
+| `%U` | Unicode 格式 | `fmt.Printf("%U", '中')` → `U+4E2D` |
+
+### 浮点数和复数
+
+| 动词 | 描述 | 示例 |
+|------|------|------|
+| `%b` | 科学计数法（幂为2） | `fmt.Printf("%b", 8.0)` |
+| `%e` | 科学计数法（小写 e） | `fmt.Printf("%e", 1000.0)` → `1.000000e+03` |
+| `%E` | 科学计数法（大写 E） | `fmt.Printf("%E", 1000.0)` → `1.000000E+03` |
+| `%f` | 小数形式 | `fmt.Printf("%f", 3.14)` |
+| `%F` | 同 %f | `fmt.Printf("%F", 3.14)` |
+| `%g` | 根据值选择 %e 或 %f | `fmt.Printf("%g", 3.14)` |
+| `%G` | 根据值选择 %E 或 %F | `fmt.Printf("%G", 3.14)` |
+
+### 字符串和字节切片
+
+| 动词 | 描述 | 示例 |
+|------|------|------|
+| `%s` | 字符串或字节切片 | `fmt.Printf("%s", "hello")` |
+| `%q` | 双引号转义字符串 | `fmt.Printf("%q", "hello")` → `"hello"` |
+| `%x` | 十六进制（小写） | `fmt.Printf("%x", "hi")` → `6869` |
+| `%X` | 十六进制（大写） | `fmt.Printf("%X", "hi")` → `6869` |
+
+### 指针
+
+| 动词 | 描述 | 示例 |
+|------|------|------|
+| `%p` | 十六进制表示，前缀 0x | `fmt.Printf("%p", &x)` |
+
+### 格式化标志
+
+| 标志 | 描述 |
+|------|------|
+| `+` | 总是输出数值的正负号 |
+| `-` | 左对齐 |
+| `#` | 备用格式：为八进制添加 0x，为十六进制添加 0X |
+| ` `  | (空格) 省略正号时的符号空格 |
+| `0`  | 用 0 填充宽度而非空格 |
+
+## 标志位检查
+
+`State.Flag(c int)` 用于检查格式化标志：
+
+```go
+func (m Money) Format(f fmt.State, verb rune) {
+    switch verb {
+    case 'v':
+        // 检查 # 标志
+        if f.Flag('#') {
+            fmt.Fprintf(f, "Money{Symbol:%q, Amount:%.2f}", m.Symbol, m.Amount)
+        }
+        // 检查 + 标志
+        if f.Flag('+') {
+            fmt.Fprintf(f, "%s%+.2f", m.Symbol, m.Amount)
+        }
+        // 检查 - 标志（左对齐）
+        if f.Flag('-') {
+            fmt.Fprintf(f, "%s%.2f", m.Symbol, m.Amount)
+        }
+        // 检查空格标志
+        if f.Flag(' ') {
+            fmt.Fprintf(f, "%s% .2f", m.Symbol, m.Amount)
+        }
+        // 检查 0 标志
+        if f.Flag('0') {
+            width, _ := f.Width()
+            fmt.Fprintf(f, "%s%0*.2f", m.Symbol, width, m.Amount)
+        }
+    }
+}
+```
+
+## 练习
+
+### 练习 1：实现 Stringer 接口
+
+为以下类型实现 `String()` 方法，使其输出格式化为 "YYYY-MM-DD"：
+
+```go
+type Date struct {
+    Year  int
+    Month int
+    Day   int
+}
+```
+
+### 练习 2：实现 Formatter 接口
+
+实现一个 `Duration` 类型的 `Formatter` 接口，要求：
+- `%v`：输出 "Xh Ym Zs" 格式
+- `%s`：输出总秒数
+- `%f`：支持精度控制，如 `%.3f` 输出毫秒
+
+```go
+type Duration struct {
+    Hours   int
+    Minutes int
+    Seconds int
+}
+```
+
+### 练习 3：多级格式化
+
+创建一个 `IPAddress` 类型，实现：
+- `String()`：标准 IP 格式 "192.168.1.1"
+- `GoString()`：Go 构造格式 `IPAddress{Octets:[4]byte{192, 168, 1, 1}}`
+- `Formatter`：支持 `%x` 输出十六进制格式 "C0:A8:1:01"
+
+## 练习答案
+
+### 答案 1
+
+```go
+package main
+
+import "fmt"
+
+type Date struct {
+    Year  int
+    Month int
+    Day   int
+}
+
+func (d Date) String() string {
+    return fmt.Sprintf("%04d-%02d-%02d", d.Year, d.Month, d.Day)
+}
+
+func main() {
+    d := Date{Year: 2024, Month: 3, Day: 2}
+    fmt.Println(d)  // 输出: 2024-03-02
+}
+```
+
+### 答案 2
+
+```go
+package main
+
+import "fmt"
+
+type Duration struct {
+    Hours   int
+    Minutes int
+    Seconds int
+}
+
+func (d Duration) String() string {
+    return fmt.Sprintf("%dh %dm %ds", d.Hours, d.Minutes, d.Seconds)
+}
+
+func (d Duration) Format(f fmt.State, verb rune) {
+    totalSeconds := d.Hours*3600 + d.Minutes*60 + d.Seconds
+
+    switch verb {
+    case 'v':
+        fmt.Fprintf(f, "%dh %dm %ds", d.Hours, d.Minutes, d.Seconds)
+    case 's':
+        fmt.Fprintf(f, "%d", totalSeconds)
+    case 'f':
+        precision, ok := f.Precision()
+        if !ok {
+            precision = 0
+        }
+
+        multiplier := 1.0
+        unit := "s"
+
+        switch precision {
+        case 0:
+            fmt.Fprintf(f, "%d", totalSeconds)
+        case 1, 2:
+            fmt.Fprintf(f, "%.*f", precision, float64(totalSeconds))
+        case 3:
+            fmt.Fprintf(f, "%.3f", float64(totalSeconds)*1000)
+            unit = "ms"
+        case 6, 9:
+            fmt.Fprintf(f, "%.*f", precision-3, float64(totalSeconds)*1000)
+            unit = "ms"
+        default:
+            fmt.Fprintf(f, "%d", totalSeconds)
+        }
+
+        if precision == 3 || precision == 6 || precision == 9 {
+            // 去除小数点
+            result := fmt.Sprintf("%.*f", precision, float64(totalSeconds))
+            result = fmt.Sprintf("%.0f", float64(totalSeconds)*1000)
+            fmt.Fprintf(f, "%s", result)
+            fmt.Fprint(f, unit)
+        }
+    default:
+        fmt.Fprintf(f, "%dh %dm %ds", d.Hours, d.Minutes, d.Seconds)
+    }
+}
+
+func main() {
+    d := Duration{Hours: 2, Minutes: 30, Seconds: 45}
+
+    fmt.Printf("默认: %v\n", d)           // 默认: 2h 30m 45s
+    fmt.Printf("总秒数: %s\n", d)         // 总秒数: 9045
+    fmt.Printf("带精度: %.3f\n", d)       // 带精度: 9045000
+}
+```
+
+### 答案 3
+
+```go
+package main
+
+import "fmt"
+
+type IPAddress struct {
+    Octets [4]byte
+}
+
+func (ip IPAddress) String() string {
+    return fmt.Sprintf("%d.%d.%d.%d",
+        ip.Octets[0], ip.Octets[1], ip.Octets[2], ip.Octets[3])
+}
+
+func (ip IPAddress) GoString() string {
+    return fmt.Sprintf("IPAddress{Octets:[4]byte{%d, %d, %d, %d}}",
+        ip.Octets[0], ip.Octets[1], ip.Octets[2], ip.Octets[3])
+}
+
+func (ip IPAddress) Format(f fmt.State, verb rune) {
+    switch verb {
+    case 'v':
+        if f.Flag('#') {
+            fmt.Fprintf(f, "IPAddress{Octets:[4]byte{%d, %d, %d, %d}}",
+                ip.Octets[0], ip.Octets[1], ip.Octets[2], ip.Octets[3])
+        } else {
+            fmt.Fprintf(f, "%d.%d.%d.%d",
+                ip.Octets[0], ip.Octets[1], ip.Octets[2], ip.Octets[3])
+        }
+    case 's':
+        fmt.Fprintf(f, "%d.%d.%d.%d",
+            ip.Octets[0], ip.Octets[1], ip.Octets[2], ip.Octets[3])
+    case 'x':
+        fmt.Fprintf(f, "%02X:%02X:%02X:%02X",
+            ip.Octets[0], ip.Octets[1], ip.Octets[2], ip.Octets[3])
+    case 'X':
+        fmt.Fprintf(f, "%02X:%02X:%02X:%02X",
+            ip.Octets[0], ip.Octets[1], ip.Octets[2], ip.Octets[3])
+    default:
+        fmt.Fprintf(f, "%d.%d.%d.%d",
+            ip.Octets[0], ip.Octets[1], ip.Octets[2], ip.Octets[3])
+    }
+}
+
+func main() {
+    ip := IPAddress{[4]byte{192, 168, 1, 1}}
+
+    fmt.Printf("标准格式: %v\n", ip)        // 标准格式: 192.168.1.1
+    fmt.Printf("Go语法: %#v\n", ip)         // Go语法: IPAddress{Octets:[4]byte{192, 168, 1, 1}}
+    fmt.Printf("十六进制: %x\n", ip)        // 十六进制: C0:A8:1:01
+    fmt.Printf("十六进制大写: %X\n", ip)    // 十六进制大写: C0:A8:1:01
+}
+```
+
+## 总结
+
+Go 的 fmt 格式化接口提供了灵活而强大的字符串格式化能力：
+
+1. **Stringer**：最基础和常用的接口，定义类型的默认字符串表示
+2. **GoStringer**：提供 Go 语法格式的字符串表示，主要用于调试
+3. **Formatter**：高级接口，支持根据格式化动词和标志进行复杂的格式化控制
+4. **State**：提供格式化状态信息，包括宽度、精度和标志位
+
+合理使用这些接口可以让你的类型在使用 `fmt` 包函数时获得更好的输出效果。
+
+## 相关资源
+
+- [Go 官方文档 - fmt](https://pkg.go.dev/fmt)
+- [Go Blog: Go's workspaces](https://go.dev/blog/workspaces)
+
+---
+
+[← sort 接口](./sort.mdx) | [继续：context 接口 →](./context.mdx)
