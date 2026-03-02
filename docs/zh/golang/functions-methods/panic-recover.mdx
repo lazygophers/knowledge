@@ -192,7 +192,7 @@ import (
 var ErrNotFound = errors.New("not found")
 var ErrPermission = errors.New("permission denied")
 
-// 包装错误
+// 返回错误
 func getUser(id int) (*User, error) {
     // 模拟数据库查询失败
     return nil, ErrNotFound
