@@ -20,7 +20,7 @@
 - [Naming Conventions](./fundamentals/naming-conventions.mdx): Go naming conventions including identifiers, package names, constants, and file naming.
 - [Variables](./fundamentals/variables.mdx): Variable declaration methods, zero values, initialization, scope, and shadowing.
 - [Type System](./fundamentals/type-system.mdx): Go type system overview with value types, reference types, and type conversion diagrams.
-- [Functions and Methods](./fundamentals/functions-methods.mdx): Functions and methods in Go including parameters, return values, closures, defer, and method receivers.
+- [Functions and Methods](./fundamentals/functions-methods.mdx): Functions and methods in Go including parameters, return values, multiple return values, variadic functions, function types, higher-order functions, anonymous functions, closures, defer mechanism, generic functions (Go 1.18+), value vs pointer receivers, method values and expressions, and best practices.
 - [Package System](./fundamentals/package-system.mdx): Go package system, imports, visibility, init functions, go.mod, go.work, and dependency management.
 - [Variable Lifecycle](./fundamentals/variable-lifecycle.mdx): Variable scope, lexical scoping, closures, and lifetime with stack/heap allocation diagrams.
 - [Fundamentals Sidebar](./fundamentals/_meta.json): Navigation metadata for fundamentals subdirectory.
