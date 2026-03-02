@@ -6,7 +6,6 @@ import { Badge } from "@rspress/core/theme";
 
 良好的命名是代码可读性的基础。Go 语言有一套简洁明确的命名规则。
 
----
 
 ## <Badge text="核心规则" type="tip" />
 
@@ -32,7 +31,6 @@ func getUser() string {  // 私有函数
 
 <Badge text="规则" type="info" /> **首字母大写 = 公开（可导出）**，**首字母小写 = 私有（包内可见）**
 
----
 
 ## <Badge text="命名约定" type="info" />
 
@@ -120,7 +118,6 @@ type HttpClient interface {
 }
 ```
 
----
 
 ## <Badge text="缩写规则" type="warning" />
 
@@ -144,7 +141,6 @@ var xmlContent []byte       // 不是 XMLContent
 - **Url** → Url
 - **Sql** → Sql
 
----
 
 ## <Badge text="命名最佳实践" type="warning" outline />
 
@@ -190,7 +186,6 @@ func check() bool { }
 const n = 100
 ```
 
----
 
 ## <Badge text="常见错误" type="danger" />
 
@@ -232,7 +227,6 @@ var userCount int
 func processData() { }
 ```
 
----
 
 ## 命名决策树
 
@@ -258,7 +252,6 @@ flowchart TD
     style I fill:#e1f5ff
 ```
 
----
 
 ## 快速参考
 
@@ -271,6 +264,5 @@ flowchart TD
 | 接口 | 动词+er 或描述性 | `Reader`, `HttpClient` |
 | 缩写词 | 首字母大写 | `HttpServer`, `userId` |
 
----
 
 [← 返回基础概念](overview/) | [继续：声明与初始化 →](variables-constants/)

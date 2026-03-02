@@ -6,7 +6,6 @@ import { Badge } from "@rspress/core/theme";
 
 理解作用域是掌握 Go 语言的关键，它决定了变量的可见范围和生命周期。
 
----
 
 ## <Badge text="作用域层次" type="tip" />
 
@@ -71,7 +70,6 @@ func main() {
 }
 ```
 
----
 
 ## <Badge text="词法作用域" type="info" />
 
@@ -135,7 +133,6 @@ func main() {
 
 <Badge text="警告" type="danger" /> **变量遮蔽**可能导致难以发现的 bug，应尽量避免。
 
----
 
 ## <Badge text="块作用域" type="info" />
 
@@ -214,7 +211,6 @@ func main() {
 }
 ```
 
----
 
 ## <Badge text="变量生命周期" type="warning" />
 
@@ -295,7 +291,6 @@ func main() {
 }
 ```
 
----
 
 ## <Badge text="闭包与作用域" type="warning" outline />
 
@@ -357,7 +352,6 @@ func main() {
 }
 ```
 
----
 
 ## <Badge text="作用域最佳实践" type="danger" />
 
@@ -429,7 +423,6 @@ func process(data string) error {
 }
 ```
 
----
 
 ## 作用域速查表
 
@@ -440,7 +433,6 @@ func process(data string) error {
 | 块作用域 | 代码块 | 块执行期 | `if { var z }` |
 | 循环作用域 | 单次迭代 | 迭代期 | `for i := 0; ...` |
 
----
 
 ## 练习
 
@@ -448,6 +440,5 @@ func process(data string) error {
 2. **创建闭包函数**，演示外部变量的捕获和修改
 3. **实现计数器**，使用闭包维护状态
 
----
 
 [← 返回基础概念](overview/) | [包系统](package-system/) | [返回模块概览](overview/)

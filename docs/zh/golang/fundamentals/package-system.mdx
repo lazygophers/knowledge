@@ -6,7 +6,6 @@ import { Badge } from "@rspress/core/theme";
 
 包是 Go 代码组织和复用的基本单位，理解包系统对于构建可维护的项目至关重要。
 
----
 
 ## <Badge text="包基础" type="tip" />
 
@@ -78,7 +77,6 @@ flowchart LR
     style E fill:#fff9c4
 ```
 
----
 
 ## <Badge text="包的可见性" type="info" />
 
@@ -135,7 +133,6 @@ func main() {
 }
 ```
 
----
 
 ## <Badge text="init 函数" type="warning" />
 
@@ -203,7 +200,6 @@ func main() {
 2. 同一包内：按文件名字母顺序
 3. 不同包间：按导入顺序
 
----
 
 ## <Badge text="包别名" type="info" />
 
@@ -237,7 +233,6 @@ func main() {
 | 空白导入 | 仅执行 init | `import _ "database/sql"` |
 | 点导入 | 直接访问 | `import . "math"` |
 
----
 
 ## <Badge text="依赖管理" type="warning" />
 
@@ -293,7 +288,6 @@ go list -m -versions github.com/gin-gonic/gin
 go mod tidy
 ```
 
----
 
 ## <Badge text="包设计原则" type="warning" outline />
 
@@ -342,7 +336,6 @@ user/
 └── doc.go           // 包文档（可选）
 ```
 
----
 
 ## <Badge text="标准库包" type="danger" />
 
@@ -400,7 +393,6 @@ func main() {
 }
 ```
 
----
 
 ## 包速查表
 
@@ -414,7 +406,6 @@ func main() {
 | 更新依赖 | `go get -u ./...` |
 | 验证依赖 | `go mod verify` |
 
----
 
 ## 练习
 
@@ -422,6 +413,5 @@ func main() {
 2. **使用 init 函数**实现配置自动加载
 3. **编写示例代码**展示你的包的用法
 
----
 
 [← 返回基础概念](overview/) | [函数与方法](functions-methods/) | [继续：作用域 →](variable-lifecycle/)

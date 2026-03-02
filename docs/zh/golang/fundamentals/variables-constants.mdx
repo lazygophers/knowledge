@@ -6,7 +6,6 @@ import { Badge } from "@rspress/core/theme";
 
 理解 Go 中变量和常量的声明方式是编写代码的基础。
 
----
 
 ## <Badge text="变量声明" type="tip" />
 
@@ -52,7 +51,6 @@ flowchart TD
     style G fill:#fff9c4
 ```
 
----
 
 ## <Badge text="零值机制" type="info" />
 
@@ -102,7 +100,6 @@ func main() {
 
 <Badge text="重要" type="warning" /> **Go 没有未初始化的变量**，声明后自动获得零值，避免了"未定义行为"。
 
----
 
 ## <Badge text="常量声明" type="info" />
 
@@ -135,7 +132,6 @@ func main() {
 | 类型推断 | 支持 | 支持 |
 | 计算时机 | 运行时 | 编译时 |
 
----
 
 ## <Badge text="iota 枚举" type="warning" />
 
@@ -217,7 +213,6 @@ func main() {
 - 每新增一行，`iota` 自动加 1
 - 同一行的多个常量共享相同的 `iota` 值
 
----
 
 ## <Badge text="批量声明" type="warning" outline />
 
@@ -269,7 +264,6 @@ func main() {
 }
 ```
 
----
 
 ## <Badge text="变量作用域" type="danger" />
 
@@ -332,7 +326,6 @@ func main() {
 
 <Badge text="警告" type="danger" /> **变量遮蔽**可能导致难以发现的 bug，建议使用不同的变量名避免遮蔽。
 
----
 
 ## 快速参考
 
@@ -344,7 +337,6 @@ func main() {
 | 常量声明 | `const name = value` | 不可改变的值 |
 | iota 枚举 | `const ( A = iota )` | 相关常量序列 |
 
----
 
 ## 练习
 
@@ -352,6 +344,5 @@ func main() {
 2. **使用 iota 定义一周的七天**
 3. **编写函数返回两数之和与积**
 
----
 
 [← 返回基础概念](overview/) | [命名规则](naming-conventions/) | [继续：类型系统 →](type-system/)
