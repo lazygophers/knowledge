@@ -10,6 +10,7 @@ Go 是静态类型语言，每个变量都有明确的类型，类型系统是 G
 ## <Badge text="类型系统概览" type="tip" />
 
 ```mermaid
+%%{init: {'theme':'base', 'themeVariables': { 'lineColor':'#3b82f6', 'primaryColor':'#e3f2fd', 'primaryTextColor':'#0d47a1'}}}%%
 flowchart TD
     A[Go 类型系统] --> B[基础类型]
     A --> C[复合类型]
@@ -33,12 +34,11 @@ flowchart TD
     E --> E1[type 定义]
     E --> E2[type 别名]
 
-    linkStyle default stroke:#3b82f6,stroke-width:2px
-    classDef root fill:#e3f2fd,stroke:#1976d2,color:#0d47a1
-    classDef basic fill:#bbdefb,stroke:#1976d2,color:#0d47a1
-    classDef composite fill:#fff7ed,stroke:#f59e0b,color:#78350f
-    classDef reference fill:#f3e5f5,stroke:#7c3aed,color:#4c1d95
-    classDef custom fill:#e8f5e9,stroke:#059669,color:#064e3b
+    classDef root fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#0d47a1
+    classDef basic fill:#bbdefb,stroke:#1976d2,stroke-width:2px,color:#0d47a1
+    classDef composite fill:#fff7ed,stroke:#f59e0b,stroke-width:2px,color:#78350f
+    classDef reference fill:#f3e5f5,stroke:#7c3aed,stroke-width:2px,color:#4c1d95
+    classDef custom fill:#e8f5e9,stroke:#059669,stroke-width:2px,color:#064e3b
 
     class A root
     class B basic

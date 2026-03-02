@@ -12,16 +12,17 @@ import { Badge } from "@rspress/core/theme";
 ### 作用域层级
 
 ```mermaid
+%%{init: {'theme':'base', 'themeVariables': { 'lineColor':'#3b82f6', 'primaryColor':'#e3f2fd', 'primaryTextColor':'#0d47a1'}}}%%
 flowchart TD
     A[全局作用域<br/>Package Level] --> B[函数作用域<br/>Function Level]
     B --> C[块作用域<br/>Block Level]
     C --> D[内部块作用域<br/>Nested Blocks]
 
     linkStyle default stroke:#3b82f6,stroke-width:2px
-    classDef globalScope fill:#e3f2fd,stroke:#1976d2,color:#0d47a1
-    classDef functionScope fill:#bbdefb,stroke:#1976d2,color:#0d47a1
-    classDef blockScope fill:#90caf9,stroke:#1976d2,color:#0d47a1
-    classDef nestedScope fill:#64b5f6,stroke:#1565c0,color:#ffffff
+    classDef globalScope fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#0d47a1
+    classDef functionScope fill:#bbdefb,stroke:#1976d2,stroke-width:2px,color:#0d47a1
+    classDef blockScope fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#0d47a1
+    classDef nestedScope fill:#64b5f6,stroke:#1565c0,stroke-width:2px,color:#ffffff
 
     class A globalScope
     class B functionScope
@@ -230,6 +231,7 @@ func main() {
 ### 逃逸分析
 
 ```mermaid
+%%{init: {'theme':'base', 'themeVariables': { 'lineColor':'#3b82f6', 'primaryColor':'#e3f2fd', 'primaryTextColor':'#0d47a1'}}}%%
 flowchart TD
     A[变量声明] --> B{逃逸分析}
     B --> C[栈上分配<br/>Stack Allocation]
@@ -243,10 +245,10 @@ flowchart TD
     I[返回地址/闭包引用] --> D
 
     linkStyle default stroke:#3b82f6,stroke-width:2px
-    classDef stackAlloc fill:#c8e6c9,stroke:#2e7d32,color:#064e3b
-    classDef heapAlloc fill:#ffcdd2,stroke:#d32f2f,color:#7f0000
-    classDef cleanup fill:#a5d6a7,stroke:#065f46,color:#ffffff
-    classDef gcCollect fill:#ef9a9a,stroke:#dc2626,color:#ffffff
+    classDef stackAlloc fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px,color:#064e3b
+    classDef heapAlloc fill:#ffcdd2,stroke:#d32f2f,stroke-width:2px,color:#7f0000
+    classDef cleanup fill:#a5d6a7,stroke:#065f46,stroke-width:2px,color:#ffffff
+    classDef gcCollect fill:#ef9a9a,stroke:#dc2626,stroke-width:2px,color:#ffffff
 
     class C stackAlloc
     class D heapAlloc

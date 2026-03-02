@@ -231,6 +231,7 @@ func processData() { }
 ## 命名决策树
 
 ```mermaid
+%%{init: {'theme':'base', 'themeVariables': { 'lineColor':'#3b82f6', 'primaryColor':'#e3f2fd', 'primaryTextColor':'#0d47a1'}}}%%
 flowchart TD
     A[需要命名] --> B{是包名吗?}
     B -->|是| C[小写、简短、单次]
@@ -246,11 +247,11 @@ flowchart TD
     G -->|否| I[驼峰命名法<br/>UserName]
 
     linkStyle default stroke:#3b82f6,stroke-width:2px
-    classDef pkgName fill:#c8e6c9,stroke:#2e7d32,color:#064e3b
-    classDef exported fill:#fff9c4,stroke:#f59e0b,color:#78350f
-    classDef private fill:#ffcdd2,stroke:#d32f2f,color:#7f0000
-    classDef abbrev fill:#e1f5ff,stroke:#1976d2,color:#0d47a1
-    classDef camel fill:#e1f5ff,stroke:#1976d2,color:#0d47a1
+    classDef pkgName fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px,color:#064e3b
+    classDef exported fill:#fff9c4,stroke:#f59e0b,stroke-width:2px,color:#78350f
+    classDef private fill:#ffcdd2,stroke:#d32f2f,stroke-width:2px,color:#7f0000
+    classDef abbrev fill:#e1f5ff,stroke:#1976d2,stroke-width:2px,color:#0d47a1
+    classDef camel fill:#e1f5ff,stroke:#1976d2,stroke-width:2px,color:#0d47a1
 
     class C pkgName
     class E exported

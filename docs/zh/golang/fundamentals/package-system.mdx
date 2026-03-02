@@ -57,6 +57,7 @@ func main() {
 ### 包导入关系图
 
 ```mermaid
+%%{init: {'theme':'base', 'themeVariables': { 'lineColor':'#3b82f6', 'primaryColor':'#e3f2fd', 'primaryTextColor':'#0d47a1'}}}%%
 flowchart LR
     A[main package] --> B[fmt package]
     A --> C[net/http package]
@@ -71,10 +72,10 @@ flowchart LR
     E --> I
 
     linkStyle default stroke:#3b82f6,stroke-width:2px
-    classDef mainPkg fill:#c8e6c9,stroke:#2e7d32,color:#064e3b
-    classDef stdLib fill:#e1f5ff,stroke:#1976d2,color:#0d47a1
-    classDef thirdParty fill:#fff7ed,stroke:#f59e0b,color:#78350f
-    classDef localPkg fill:#f3e5f5,stroke:#7c3aed,color:#4c1d95
+    classDef mainPkg fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px,color:#064e3b
+    classDef stdLib fill:#e1f5ff,stroke:#1976d2,stroke-width:2px,color:#0d47a1
+    classDef thirdParty fill:#fff7ed,stroke:#f59e0b,stroke-width:2px,color:#78350f
+    classDef localPkg fill:#f3e5f5,stroke:#7c3aed,stroke-width:2px,color:#4c1d95
 
     class A mainPkg
     class B,E stdLib

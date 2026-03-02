@@ -19,6 +19,7 @@ import { Badge } from "@rspress/core/theme";
 ## 学习路径
 
 ```mermaid
+%%{init: {'theme':'base', 'themeVariables': { 'lineColor':'#3b82f6', 'primaryColor':'#e3f2fd', 'primaryTextColor':'#0d47a1'}}}%%
 flowchart LR
     A[命名规则] --> B[声明与初始化]
     B --> C[类型系统]
@@ -26,10 +27,9 @@ flowchart LR
     D --> E[包系统]
     E --> F[作用域]
 
-    linkStyle default stroke:#3b82f6,stroke-width:2px
-    classDef step1 fill:#e3f2fd,stroke:#1976d2,color:#0d47a1
-    classDef step2 fill:#bbdefb,stroke:#1976d2,color:#0d47a1
-    classDef step3 fill:#90caf9,stroke:#1976d2,color:#0d47a1
+    classDef step1 fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#0d47a1
+    classDef step2 fill:#bbdefb,stroke:#1976d2,stroke-width:2px,color:#0d47a1
+    classDef step3 fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#0d47a1
 
     class A,B step1
     class C,D step2

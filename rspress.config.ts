@@ -2,6 +2,7 @@ import * as path from 'node:path';
 import { defineConfig } from '@rspress/core';
 import mermaid from 'rspress-plugin-mermaid';
 import { pluginLlms } from '@rspress/plugin-llms';
+import { pluginTwoslash } from '@rspress/plugin-twoslash';
 
 const ghPagesBase = '/knowledge/';
 
@@ -53,6 +54,7 @@ export default defineConfig({
         content: 'https://github.com/lazygophers/knowledge',
       },
     ],
+    llmsUI: true
   },
   plugins:[
     mermaid({
@@ -61,5 +63,9 @@ export default defineConfig({
       },
     }),
     pluginLlms(),
+    pluginTwoslash({
+      explicitTrigger: false,
+      cache: true,
+    })
   ]
 });
