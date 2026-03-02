@@ -1,0 +1,32 @@
+[
+  {
+    "type": "file",
+    "name": "goroutine",
+    "label": "Goroutine"
+  },
+  {
+    "type": "file",
+    "name": "channel",
+    "label": "Channel"
+  },
+  {
+    "type": "file",
+    "name": "channel-patterns",
+    "label": "Channel 模式"
+  },
+  {
+    "type": "file",
+    "name": "sync",
+    "label": "Sync 包"
+  },
+  {
+    "type": "file",
+    "name": "atomic",
+    "label": "Atomic"
+  },
+  {
+    "type": "file",
+    "name": "best-practices",
+    "label": "最佳实践"
+  }
+]

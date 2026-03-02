@@ -1,0 +1,866 @@
+import Badge from '@theme/Badge';
+import Callout from '@theme/Callout';
+
+[← 返回并发](./)
+
+# 最佳实践
+
+<Badge variant="info" text="必读" />
+
+编写高效、安全的并发代码需要遵循一定的设计原则和最佳实践。本文总结了 Go 并发编程的核心原则、常见陷阱和优化技巧。
+
+## 并发设计原则
+
+### 原则 1：通过通信共享内存
+
+Go 的核心理念："不要通过共享内存来通信，而要通过通信来共享内存"。
+
+**❌ 不推荐：共享内存 + 锁**
+
+```go
+package main
+
+import (
+    "sync"
+)
+
+type SharedCounter struct {
+    mu    sync.Mutex
+    count int
+}
+
+func (sc *SharedCounter) Increment() {
+    sc.mu.Lock()
+    defer sc.mu.Unlock()
+    sc.count++
+}
+
+func main() {
+    counter := &SharedCounter{}
+
+    for i := 0; i < 1000; i++ {
+        go counter.Increment()
+    }
+}
+```
+
+**✅ 推荐：通过 channel 通信**
+
+```go
+package main
+
+func main() {
+    counter := make(chan int, 1000)
+    done := make(chan struct{})
+
+    // 启动 counter goroutine
+    go func() {
+        count := 0
+        for range counter {
+            count++
+        }
+        println("Final count:", count)
+        close(done)
+    }()
+
+    // 发送增量请求
+    for i := 0; i < 1000; i++ {
+        counter <- 1
+    }
+    close(counter)
+
+    <-done
+}
+```
+
+<Callout type="tip">
+  <strong>选择建议</strong>：
+  - 数据所有权明确 → 优先使用 channel
+  - 复杂的同步逻辑 → 考虑使用互斥锁
+  - 性能关键路径 → 使用 sync.Pool 或原子操作
+</Callout>
+
+### 原则 2：限制并发数量
+
+无限制的并发可能导致资源耗尽。
+
+**❌ 不推荐：无限制并发**
+
+```go
+package main
+
+import (
+    "io/ioutil"
+    "net/http"
+)
+
+func fetchURL(url string) {
+    resp, err := http.Get(url)
+    if err != nil {
+        return
+    }
+    defer resp.Body.Close()
+    body, _ := ioutil.ReadAll(resp.Body)
+    println("Fetched", url, "size:", len(body))
+}
+
+func main() {
+    urls := []string{"url1", "url2", /* ... 1000 个 URL */}
+
+    for _, url := range urls {
+        go fetchURL(url) // 同时启动 1000 个 goroutine
+    }
+}
+```
+
+**✅ 推荐：Worker Pool 模式**
+
+```go
+package main
+
+import (
+    "io/ioutil"
+    "net/http"
+    "sync"
+)
+
+func worker(id int, urls <-chan string, wg *sync.WaitGroup) {
+    defer wg.Done()
+    for url := range urls {
+        fetchURL(url)
+    }
+}
+
+func main() {
+    urls := []string{"url1", "url2", /* ... 1000 个 URL */}
+
+    urlChan := make(chan string, 100)
+    var wg sync.WaitGroup
+
+    // 启动固定数量的 worker
+    for i := 0; i < 10; i++ {
+        wg.Add(1)
+        go worker(i, urlChan, &wg)
+    }
+
+    // 发送任务
+    for _, url := range urls {
+        urlChan <- url
+    }
+    close(urlChan)
+
+    wg.Wait()
+}
+```
+
+### 原则 3：避免 Goroutine 泄漏
+
+确保每个 goroutine 都能够正常退出。
+
+**❌ 不推荐：可能泄漏**
+
+```go
+package main
+
+import "time"
+
+func leakyFunction() {
+    ch := make(chan int)
+
+    go func() {
+        val := <-ch // 永远阻塞
+        println("Received:", val)
+    }()
+}
+
+func main() {
+    leakyFunction()
+    time.Sleep(time.Second)
+    // goroutine 泄漏
+}
+```
+
+**✅ 推荐：确保退出**
+
+```go
+package main
+
+import "time"
+
+func safeFunction() {
+    ch := make(chan int)
+    done := make(chan struct{})
+
+    go func() {
+        defer close(done)
+        select {
+        case val := <-ch:
+            println("Received:", val)
+        case <-time.After(time.Second):
+            println("Timeout, exiting")
+        }
+    }()
+
+    <-done
+}
+
+func main() {
+    safeFunction()
+}
+```
+
+### 原则 4：使用 Context 控制生命周期
+
+`context.Context` 是控制 goroutine 生命周期的标准方式。
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "time"
+)
+
+func worker(ctx context.Context, id int) {
+    for {
+        select {
+        case <-ctx.Done():
+            fmt.Printf("Worker %d: %s\n", id, ctx.Err())
+            return
+        default:
+            fmt.Printf("Worker %d: working...\n", id)
+            time.Sleep(500 * time.Millisecond)
+        }
+    }
+}
+
+func main() {
+    ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+    defer cancel()
+
+    for i := 1; i <= 3; i++ {
+        go worker(ctx, i)
+    }
+
+    time.Sleep(3 * time.Second)
+    fmt.Println("Main exited")
+}
+```
+
+## 性能优化技巧
+
+### 技巧 1：使用 sync.Pool 复用对象
+
+减少内存分配，降低 GC 压力。
+
+```go
+package main
+
+import (
+    "bytes"
+    "sync"
+)
+
+var bufferPool = sync.Pool{
+    New: func() interface{} {
+        return new(bytes.Buffer)
+    },
+}
+
+func processData(data []byte) {
+    // 从 pool 获取 buffer
+    buf := bufferPool.Get().(*bytes.Buffer)
+    defer func() {
+        buf.Reset()
+        bufferPool.Put(buf)
+    }()
+
+    buf.Write(data)
+    // 使用 buffer...
+}
+```
+
+### 技巧 2：使用原子操作替代锁
+
+对于简单的计数器，原子操作比锁更高效。
+
+```go
+package main
+
+import (
+    "sync/atomic"
+)
+
+// ❌ 使用锁
+type CounterWithLock struct {
+    mu    sync.Mutex
+    count int64
+}
+
+func (c *CounterWithLock) Increment() {
+    c.mu.Lock()
+    c.count++
+    c.mu.Unlock()
+}
+
+// ✅ 使用原子操作
+type CounterWithAtomic struct {
+    count atomic.Int64
+}
+
+func (c *CounterWithAtomic) Increment() {
+    c.count.Add(1)
+}
+```
+
+### 技巧 3：减少锁的持有时间
+
+只在必要时持有锁。
+
+**❌ 不推荐：长时间持锁**
+
+```go
+func process() {
+    mu.Lock()
+    defer mu.Unlock()
+
+    data := loadData()      // 耗时操作
+    result := compute(data) // 耗时操作
+    save(result)            // 耗时操作
+}
+```
+
+**✅ 推荐：最小化临界区**
+
+```go
+func process() {
+    data := loadData()
+    result := compute(data)
+
+    mu.Lock()
+    save(result)
+    mu.Unlock()
+}
+```
+
+### 技巧 4：使用读写锁（RWMutex）
+
+对于读多写少的场景，读写锁更高效。
+
+```go
+package main
+
+import (
+    "sync"
+)
+
+type SafeMap struct {
+    mu   sync.RWMutex
+    data map[string]int
+}
+
+func (sm *SafeMap) Get(key string) (int, bool) {
+    sm.mu.RLock() // 读锁
+    defer sm.mu.RUnlock()
+
+    val, ok := sm.data[key]
+    return val, ok
+}
+
+func (sm *SafeMap) Set(key string, val int) {
+    sm.mu.Lock() // 写锁
+    defer sm.mu.Unlock()
+
+    sm.data[key] = val
+}
+```
+
+### 技巧 5：缓冲 channel 的合理容量
+
+根据生产者和消费者速度差异设置合适的缓冲区大小。
+
+```go
+// 无缓冲：强同步
+ch := make(chan int) // 生产者和消费者必须同时就绪
+
+// 小缓冲：弱同步
+ch := make(chan int, 10) // 允许少量积压
+
+// 大缓冲：异步
+ch := make(chan int, 1000) // 生产者可以持续生产
+```
+
+<Callout type="warning">
+  <strong>注意</strong>：缓冲区不是越大越好。过大的缓冲区会：
+  - 占用更多内存
+  - 增加延迟
+  - 隐藏性能问题
+</Callout>
+
+### 技巧 6：使用 once 确保单次执行
+
+```go
+package main
+
+import (
+    "sync"
+)
+
+var (
+    instance *Database
+    once     sync.Once
+)
+
+func GetDatabase() *Database {
+    once.Do(func() {
+        instance = &Database{}
+        instance.Connect()
+    })
+    return instance
+}
+```
+
+## 常见反模式
+
+### 反模式 1：在循环中创建过多 Goroutine
+
+**❌ 不推荐**
+
+```go
+for _, item := range items {
+    go processItem(item) // 可能创建数万个 goroutine
+}
+```
+
+**✅ 推荐：使用 Semaphore 或 Worker Pool**
+
+```go
+sem := make(chan struct{}, 100) // 最多 100 个并发
+
+for _, item := range items {
+    sem <- struct{}{} // 获取令牌
+    go func(i Item) {
+        defer func() { <-sem }() // 释放令牌
+        processItem(i)
+    }(item)
+}
+```
+
+### 反模式 2：忘记关闭 Channel
+
+**❌ 不推荐**
+
+```go
+func producer(ch chan int) {
+    for i := 0; i < 10; i++ {
+        ch <- i
+    }
+    // 忘记关闭 channel
+}
+
+func main() {
+    ch := make(chan int)
+    go producer(ch)
+
+    for val := range ch { // 死锁！
+        println(val)
+    }
+}
+```
+
+**✅ 推荐**
+
+```go
+func producer(ch chan int) {
+    defer close(ch) // 确保关闭
+    for i := 0; i < 10; i++ {
+        ch <- i
+    }
+}
+```
+
+### 反模式 3：向已关闭的 Channel 发送
+
+**❌ 不推荐**
+
+```go
+ch := make(chan int, 1)
+close(ch)
+ch <- 1 // panic
+```
+
+**✅ 推荐：使用 select + default**
+
+```go
+select {
+case ch <- value:
+    // 发送成功
+default:
+    // channel 已满或已关闭
+}
+```
+
+### 反模式 4：在循环中使用 defer
+
+**❌ 不推荐：defer 累积**
+
+```go
+func process(items []Item) {
+    for _, item := range items {
+        f, err := os.Open(item.Path)
+        if err != nil {
+            continue
+        }
+        defer f.Close() // 循环结束后才关闭，泄漏文件句柄
+
+        // 使用 f...
+    }
+    // 所有文件都在这里才关闭
+}
+```
+
+**✅ 推荐：立即关闭或使用函数**
+
+```go
+func process(items []Item) {
+    for _, item := range items {
+        func() {
+            f, err := os.Open(item.Path)
+            if err != nil {
+                return
+            }
+            defer f.Close() // 函数结束时立即关闭
+
+            // 使用 f...
+        }()
+    }
+}
+```
+
+### 反模式 5：忽略 Context 取消
+
+**❌ 不推荐**
+
+```go
+func worker(ctx context.Context) {
+    for {
+        // 不检查 ctx.Done()
+        doExpensiveWork()
+    }
+}
+```
+
+**✅ 推荐**
+
+```go
+func worker(ctx context.Context) {
+    for {
+        select {
+        case <-ctx.Done():
+            return
+        default:
+            doExpensiveWork()
+        }
+    }
+}
+```
+
+### 反模式 6：使用 time.Sleep 等待
+
+**❌ 不推荐**
+
+```go
+go func() {
+    doWork()
+    time.Sleep(time.Second) // 假设主函数会完成
+}()
+time.Sleep(2 * time.Second) // 祈祷够长
+```
+
+**✅ 推荐：使用 WaitGroup 或 Channel**
+
+```go
+var wg sync.WaitGroup
+wg.Add(1)
+
+go func() {
+    defer wg.Done()
+    doWork()
+}()
+
+wg.Wait()
+```
+
+## 调试和测试
+
+### 调试技巧 1：使用 runtime/pprof
+
+```go
+package main
+
+import (
+    "os"
+    "runtime/pprof"
+)
+
+func main() {
+    // CPU 分析
+    f, _ := os.Create("cpu.prof")
+    pprof.StartCPUProfile(f)
+    defer pprof.StopCPUProfile()
+
+    // 运行程序
+    doWork()
+
+    // 内存分析
+    f2, _ := os.Create("mem.prof")
+    pprof.WriteHeapProfile(f2)
+    f2.Close()
+}
+```
+
+使用工具查看：
+```bash
+go tool pprof cpu.prof
+```
+
+### 调试技巧 2：使用 -race 检测竞态
+
+```bash
+go run -race main.go
+```
+
+**输出示例：**
+```
+WARNING: DATA RACE
+Write at 0x... by goroutine 7:
+  main.increment()
+      main.go:15 +0x...
+```
+
+### 测试技巧 1：并发测试
+
+```go
+package main
+
+import (
+    "sync"
+    "testing"
+)
+
+func TestCounter(t *testing.T) {
+    var counter atomic.Int64
+    var wg sync.WaitGroup
+
+    iterations := 1000
+    goroutines := 100
+
+    wg.Add(goroutines)
+    for i := 0; i < goroutines; i++ {
+        go func() {
+            defer wg.Done()
+            for j := 0; j < iterations; j++ {
+                counter.Add(1)
+            }
+        }()
+    }
+
+    wg.Wait()
+
+    expected := int64(iterations * goroutines)
+    if counter.Load() != expected {
+        t.Errorf("expected %d, got %d", expected, counter.Load())
+    }
+}
+```
+
+### 测试技巧 2：超时测试
+
+```go
+func TestWithTimeout(t *testing.T) {
+    done := make(chan struct{})
+
+    go func() {
+        doWork()
+        close(done)
+    }()
+
+    select {
+    case <-done:
+        // 测试通过
+    case <-time.After(5 * time.Second):
+        t.Fatal("Test timed out")
+    }
+}
+```
+
+### 测试技巧 3：使用 testify/mock
+
+```go
+package main
+
+import (
+    "github.com/stretchr/testify/mock"
+)
+
+type MockDatabase struct {
+    mock.Mock
+}
+
+func (m *MockDatabase) Save(data string) error {
+    args := m.Called(data)
+    return args.Error(0)
+}
+
+func TestSaveData(t *testing.T) {
+    mockDB := new(MockDatabase)
+    mockDB.On("Save", "test").Return(nil)
+
+    err := saveData(mockDB, "test")
+
+    mockDB.AssertExpectations(t)
+    if err != nil {
+        t.Errorf("expected no error, got %v", err)
+    }
+}
+```
+
+## 并发安全的数据结构
+
+### 示例 1：并发安全的 Map（Go 1.9+）
+
+```go
+package main
+
+import "sync"
+
+type SafeMap struct {
+    sync.Map
+}
+
+func (sm *SafeMap) Get(key string) (interface{}, bool) {
+    return sm.Load(key)
+}
+
+func (sm *SafeMap) Set(key string, value interface{}) {
+    sm.Store(key, value)
+}
+
+func (sm *SafeMap) Delete(key string) {
+    sm.Delete(key)
+}
+```
+
+### 示例 2：并发安全的队列
+
+```go
+package main
+
+import "sync"
+
+type SafeQueue struct {
+    mu    sync.Mutex
+    items []interface{}
+}
+
+func (sq *SafeQueue) Push(item interface{}) {
+    sq.mu.Lock()
+    defer sq.mu.Unlock()
+    sq.items = append(sq.items, item)
+}
+
+func (sq *SafeQueue) Pop() interface{} {
+    sq.mu.Lock()
+    defer sq.mu.Unlock()
+
+    if len(sq.items) == 0 {
+        return nil
+    }
+
+    item := sq.items[0]
+    sq.items = sq.items[1:]
+    return item
+}
+```
+
+## 检查清单
+
+在提交并发代码前，确保：
+
+- [ ] 没有 goroutine 泄漏风险
+- [ ] 所有 channel 都会正确关闭
+- [ ] 使用了 `-race` 检查，无竞态条件
+- [ ] 限制了并发数量
+- [ ] 使用 context 控制 goroutine 生命周期
+- [ ] 锁的持有时间最小化
+- [ ] 考虑了性能和可维护性的平衡
+- [ ] 编写了充分的并发测试
+- [ ] 使用 pprof 分析了性能瓶颈
+- [ ] 文档说明了并发安全性
+
+## 性能基准测试
+
+```go
+package main
+
+import (
+    "sync"
+    "sync/atomic"
+    "testing"
+)
+
+func BenchmarkMutexCounter(b *testing.B) {
+    var mu sync.Mutex
+    var count int64
+
+    b.RunParallel(func(pb *testing.PB) {
+        for pb.Next() {
+            mu.Lock()
+            count++
+            mu.Unlock()
+        }
+    })
+}
+
+func BenchmarkAtomicCounter(b *testing.B) {
+    var count atomic.Int64
+
+    b.RunParallel(func(pb *testing.PB) {
+        for pb.Next() {
+            count.Add(1)
+        }
+    })
+}
+```
+
+运行基准测试：
+```bash
+go test -bench=. -benchmem
+```
+
+## 工具推荐
+
+| 工具 | 用途 | 安装 |
+|-----|------|------|
+| `-race` | 竞态检测 | 内置 |
+| `pprof` | 性能分析 | 内置 |
+| `dlv` | 调试器 | `go install github.com/go-delve/delve/cmd/dlv@latest` |
+| `go-staticcheck` | 静态分析 | `go install honnef.co/go/tools/cmd/staticcheck@latest` |
+
+## 总结
+
+Go 并发编程的核心要点：
+
+1. **设计原则**：通过通信共享内存、限制并发、避免泄漏
+2. **性能优化**：使用 sync.Pool、原子操作、减少锁持有时间
+3. **避免反模式**：不过度创建 goroutine、正确关闭 channel、处理 context
+4. **测试调试**：使用 `-race`、`pprof`、编写并发测试
+
+<Callout type="success">
+  <strong>记住</strong>：并发代码的正确性比性能更重要。在优化性能之前，先确保代码正确、清晰、可维护。
+</Callout>
+
+---
+
+[← Atomic](./atomic.mdx)

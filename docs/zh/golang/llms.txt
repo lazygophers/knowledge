@@ -50,6 +50,17 @@
 - [Interface Sidebar](./interface/_meta.json): Navigation metadata for interface subdirectory.
 - [Interface LLMs Index](./interface/llms.txt): English index for interface subdirectory.
 
+## Concurrency
+
+- [Goroutine](./concurrency/goroutine.mdx): Lightweight threads, Go scheduler (G-M-P model), goroutine lifecycle, and common pitfalls.
+- [Channel](./concurrency/channel.mdx): Channel creation, buffered vs unbuffered, channel directions, range, select, timeout control, common patterns, and pitfalls.
+- [Channel Patterns](./concurrency/channel-patterns.mdx): Fan-in, fan-out, worker pool, quit channel, timeout, and producer-consumer patterns.
+- [Sync Package](./concurrency/sync.mdx): Mutex, RWMutex, WaitGroup, Once, Cond, Map, and Pool synchronization primitives.
+- [Atomic](./concurrency/atomic.mdx): Atomic operations, atomic types, atomic values, memory ordering, and common use cases.
+- [Best Practices](./concurrency/best-practices.mdx): Concurrency design principles, performance optimization, anti-patterns, debugging, and testing.
+- [Concurrency Sidebar](./concurrency/_meta.json): Navigation metadata for concurrency subdirectory.
+- [Concurrency LLMs Index](./concurrency/llms.txt): English index for concurrency subdirectory.
+
 ## Functions and Methods
 
 - [Function Basics](./functions-methods/function-basics.mdx): Function declaration syntax, parameter lists, return value mechanisms, function call flow, basic code examples, and common errors for beginners.
