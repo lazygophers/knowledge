@@ -20,6 +20,6 @@
     {
         "type": "file",
         "name": "hello",
-        "label": "02 Hello World"
+        "label": "Hello World"
     }
 ]
