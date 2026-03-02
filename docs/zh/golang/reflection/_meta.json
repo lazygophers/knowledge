@@ -6,6 +6,11 @@
     },
     {
         "type": "file",
+        "name": "generics",
+        "label": "泛型与反射"
+    },
+    {
+        "type": "file",
         "name": "type-reflection",
         "label": "类型反射"
     },

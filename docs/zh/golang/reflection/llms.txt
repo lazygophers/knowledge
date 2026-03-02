@@ -10,6 +10,16 @@ Go reflection (reflect package) provides runtime type inspection and manipulatio
 - Key concepts: reflect.TypeOf, reflect.ValueOf, CanSet, CanAddr
 - Use cases: generic functions, deep equality, dynamic slice creation
 - Performance considerations: reflection is 10-100x slower than direct calls
+- Go 1.20+ changes: SliceHeader/StringHeader deprecation, unsafe package alternatives
+
+### generics.mdx
+- **Generics and Reflection**: Combining Go 1.18+ generics with reflection for type-safe dynamic programming
+- Using reflection within generic functions: PrintTypeInfo, IsNil, type checking with generics
+- Reflecting instantiated generic types: Container[T], type parameter inference
+- Generic constraints with reflection: Ordered interface, Stringer interface, custom constraints
+- Performance comparison: generics (~5 ns/op) vs reflection (~500 ns/op), 100x difference
+- Real-world patterns: generic validators with reflection, ORM mapping, struct tag processing
+- Best practices: use generics for type safety and performance, use reflection for runtime details, cache reflection results
 
 ### type-reflection.mdx
 - **Type Reflection**: reflect.Type interface and type information queries

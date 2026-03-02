@@ -52,7 +52,8 @@
 
 ## Reflection
 
-- [Reflection Basics](./reflection/basics.mdx): Introduction to Go reflection, three laws of reflection, Type vs Value, Kind types, generic functions, deep equality, and performance considerations.
+- [Reflection Basics](./reflection/basics.mdx): Introduction to Go reflection, three laws of reflection, Type vs Value, Kind types, generic functions, deep equality, performance considerations, and Go 1.20+ changes (SliceHeader/StringHeader deprecation).
+- [Generics and Reflection](./reflection/generics.mdx): Combining Go 1.18+ generics with reflection for type-safe dynamic programming, using reflection within generic functions, reflecting instantiated generic types, generic constraints with reflection, performance comparison (100x difference), and real-world patterns (validators, ORM mapping).
 - [Type Reflection](./reflection/type-reflection.mdx): reflect.Type interface, type properties (Name, Kind, PkgPath), struct fields, struct tags, function types, interface methods, and type operations (Implements, AssignableTo, ConvertibleTo).
 - [Value Reflection](./reflection/value-reflection.mdx): reflect.Value for reading/modifying values, basic/composite type operations, CanSet/CanAddr, creating values (MakeSlice, MakeMap, MakeChan, New), and value operations (Compare, DeepEqual, IsZero).
 - [Struct Tags](./reflection/struct-tags.mdx): Struct tag syntax, Tag.Get/Tag.Lookup, parsing tags, JSON/XML serialization, database mapping (GORM), validation, custom tag processing, and best practices.

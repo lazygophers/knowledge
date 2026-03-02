@@ -466,6 +466,65 @@ func main() {
   </ul>
 </Callout>
 
+## 版本兼容性
+
+### Go 1.20+ 重要变化
+
+<Callout type="danger" title="SliceHeader/StringHeader 已弃用">
+  从 <strong>Go 1.20</strong> 开始，<code>reflect.SliceHeader</code> 和 <code>reflect.StringHeader</code> 已被弃用。
+  <br /><br />
+  <strong>原因：</strong> 这些类型不安全，可能导致 GC 问题。
+  <br /><br />
+  <strong>替代方案：</strong> 使用 <code>unsafe</code> 包的新函数：
+  <ul>
+    <li><code>unsafe.SliceData(slice []T) *T</code> - 获取切片底层数据指针</li>
+    <li><code>unsafe.StringData(s string) *byte</code> - 获取字符串底层数据指针</li>
+    <li><code>unsafe.String(ptr *byte, len int) string</code> - 从指针构造字符串</li>
+    <li><code>unsafe.Slice(ptr *T, len int) []T</code> - 从指针构造切片</li>
+  </ul>
+</Callout>
+
+```go
+package main
+
+import (
+    "fmt"
+    "unsafe"
+)
+
+func main() {
+    // ✅ Go 1.20+ 推荐方式
+    s := "hello"
+
+    // 获取字符串底层数据指针
+    ptr := unsafe.StringData(s)
+    fmt.Printf("Data pointer: %p\n", ptr)
+
+    // 从指针构造切片（谨慎使用）
+    b := unsafe.Slice(ptr, len(s))
+    fmt.Printf("Bytes: %v\n", b)  // [104 101 108 108 111]
+
+    // 切片操作
+    nums := []int{1, 2, 3, 4, 5}
+    data := unsafe.SliceData(nums)
+    fmt.Printf("Slice data: %p\n", data)
+
+    // 从指针构造切片
+    newSlice := unsafe.Slice(data, 3)
+    fmt.Printf("New slice: %v\n", newSlice)  // [1 2 3]
+}
+```
+
+<Callout type="warning" title="Unsafe 操作警告">
+  <code>unsafe</code> 包的操作绕过了 Go 的类型系统，使用时必须：
+  <ul>
+    <li>确保指针有效</li>
+    <li>遵守 GC 安全规则</li>
+    <li>理解内存布局</li>
+    <li>只在性能关键路径使用</li>
+  </ul>
+</Callout>
+
 ## 练习
 
 1. **通用序列化函数**：编写一个函数，将任意结构体序列化为 map
