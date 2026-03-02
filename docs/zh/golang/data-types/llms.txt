@@ -4,5 +4,12 @@
 
 ## Docs
 
-- [Data Types Reference](./index.mdx): Comprehensive reference manual for Go data types including numeric, string, array, slice, map, struct, pointer, and interface types.
+- [Numeric Types](./numeric.mdx): Integer and floating-point types, type selection guide, literals, and conversions.
+- [String Types](./string.mdx): String fundamentals, byte/rune conversions, immutability, common operations, and traversal.
+- [Array Types](./array.mdx): Fixed-length arrays, initialization, value type semantics, multi-dimensional arrays, and comparison.
+- [Slice Types](./slice.mdx): Dynamic slices, internal structure, append mechanism, common pitfalls, and operations.
+- [Map Types](./map.mdx): Hash tables, CRUD operations, traversal, concurrency safety, and usage patterns.
+- [Struct Types](./struct.mdx): Aggregate data types, struct tags, anonymous fields, comparison, memory layout, and common patterns.
+- [Pointer Types](./pointer.mdx): Memory addresses, pointer semantics, function parameters, best practices, and common pitfalls.
+- [Interface Types](./interface.mdx): Behavior contracts, implementation checks, empty interface, type assertions, and interface composition.
 - [Module Metadata](./_meta.json): Navigation metadata for data-types subdirectory.

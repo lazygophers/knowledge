@@ -1,7 +1,42 @@
 [
   {
     "type": "file",
-    "name": "index",
-    "label": "数据类型参考"
+    "name": "numeric",
+    "label": "数值类型"
+  },
+  {
+    "type": "file",
+    "name": "string",
+    "label": "字符串"
+  },
+  {
+    "type": "file",
+    "name": "array",
+    "label": "数组"
+  },
+  {
+    "type": "file",
+    "name": "slice",
+    "label": "切片"
+  },
+  {
+    "type": "file",
+    "name": "map",
+    "label": "映射"
+  },
+  {
+    "type": "file",
+    "name": "struct",
+    "label": "结构体"
+  },
+  {
+    "type": "file",
+    "name": "pointer",
+    "label": "指针"
+  },
+  {
+    "type": "file",
+    "name": "interface",
+    "label": "接口"
   }
 ]
