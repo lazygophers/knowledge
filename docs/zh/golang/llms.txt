@@ -36,9 +36,19 @@
 - [Map Types](./data-types/map.mdx): Hash tables, CRUD operations, traversal, concurrency safety, and usage patterns.
 - [Struct Types](./data-types/struct.mdx): Aggregate data types, struct tags, anonymous fields, comparison, memory layout, and common patterns including method chaining.
 - [Pointer Types](./data-types/pointer.mdx): Memory addresses, pointer semantics, function parameters, best practices, and common pitfalls.
-- [Interface Types](./data-types/interface.mdx): Behavior contracts, implementation checks, empty interface, type assertions, and interface composition.
+- [Generics](./data-types/generics.mdx): Go 1.18+ generics including type parameters, constraints, type inference, built-in constraints, and practical patterns.
 - [Data Types Sidebar](./data-types/_meta.json): Navigation metadata for data-types subdirectory.
 - [Data Types LLMs Index](./data-types/llms.txt): English index for data-types subdirectory.
+
+## Interface
+
+- [Interface Basics](./interface/interface-basics.mdx): Interface definition, implicit implementation, usage patterns, and compile-time implementation checks.
+- [Interface Values](./interface/interface-values.mdx): Interface value internal structure, nil interfaces, nil pointer in interfaces, interface comparison, and interface vs inheritance.
+- [Empty Interface](./interface/empty-interface.mdx): Empty interface (any), type assertions (safe/unsafe), type switches, and interface type assertions.
+- [Interface Composition](./interface/interface-composition.mdx): Interface embedding, multi-level composition, adding new methods, naming conventions, composition vs inheritance, and composition patterns.
+- [Best Practices](./interface/best-practices.mdx): Interface design principles, naming conventions, standard library interfaces, implementation patterns, anti-patterns, and code review checklist.
+- [Interface Sidebar](./interface/_meta.json): Navigation metadata for interface subdirectory.
+- [Interface LLMs Index](./interface/llms.txt): English index for interface subdirectory.
 
 ## Functions and Methods
 

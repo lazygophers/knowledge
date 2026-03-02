@@ -1,0 +1,510 @@
+import { Badge } from "@rspress/core/theme";
+
+# 空接口与类型断言 - Empty Interface
+
+[← 返回接口](./)
+
+空接口 `interface{}` 没有任何方法，所有类型都默认实现它。
+
+## <Badge text="空接口基础" type="tip" />
+
+### interface{} 与 any
+
+```go
+// 空接口没有任何方法，所有类型都实现它
+var i interface{}
+
+i = 42
+fmt.Printf("类型: %T, 值: %v\n", i, i)  // int, 42
+
+i = "hello"
+fmt.Printf("类型: %T, 值: %v\n", i, i)  // string, hello
+
+i = []int{1, 2, 3}
+fmt.Printf("类型: %T, 值: %v\n", i, i)  // []int, [1 2 3]
+
+i = struct{ Name string }{"Alice"}
+fmt.Printf("类型: %T, 值: %v\n", i, i)  // struct { Name string }, {Alice}
+```
+
+<Badge text="Go 1.18+" type="info" /> 推荐使用 `any` 代替 `interface{}`：
+
+```go
+// Go 1.18+ 引入 any 作为 interface{} 的别名
+var j any = "world"
+fmt.Println(j)  // world
+
+// any 和 interface{} 完全等价
+var _ any = interface{}(42)
+```
+
+### 空接口的用途
+
+```go
+// 1. 存储任意类型
+type Container struct {
+    data any
+}
+
+c := Container{data: 42}
+c.data = "now a string"
+
+// 2. 函数参数接受任意类型
+func PrintAnything(v any) {
+    fmt.Printf("值: %v, 类型: %T\n", v, v)
+}
+
+PrintAnything(42)        // 值: 42, 类型: int
+PrintAnything("hello")   // 值: hello, 类型: string
+PrintAnything([]int{1})  // 值: [1], 类型: []int
+
+// 3. Map 存储任意类型值
+settings := map[string]any{
+    "host":    "localhost",
+    "port":    8080,
+    "debug":   true,
+    "timeout": 30.5,
+}
+```
+
+<Badge text="警告" type="danger" /> 滥用空接口会<strong>失去类型安全</strong>：
+
+```go
+// ❌ 不好：使用空接口失去类型检查
+func Process(data any) {
+    // 不知道 data 的实际类型
+}
+
+// ✅ 好：使用具体类型或接口
+func Process(data []byte) error {
+    // 明确知道是 []byte 类型
+}
+```
+
+## <Badge text="类型断言" type="warning" />
+
+### 安全断言
+
+```go
+var i any = "hello, world"
+
+// 方式1：安全断言（推荐）
+s, ok := i.(string)
+if ok {
+    fmt.Println("字符串长度:", len(s))
+} else {
+    fmt.Println("不是字符串")
+}
+
+// 方式2：if 简写
+if s, ok := i.(string); ok {
+    fmt.Println("字符串:", s)
+}
+```
+
+### 直接断言
+
+```go
+var i any = "hello"
+
+// 方式3：直接断言（失败会 panic）
+s := i.(string)
+fmt.Println(s)  // hello
+
+// 如果类型不匹配会 panic
+// n := i.(int)  // panic: interface conversion
+```
+
+<Badge text="最佳实践" type="tip" /> 总是使用安全断言，除非你<strong>100% 确定</strong>类型：
+
+```go
+// ✅ 好：使用安全断言
+func HandleAny(v any) {
+    if s, ok := v.(string); ok {
+        fmt.Println("处理字符串:", s)
+        return
+    }
+    if n, ok := v.(int); ok {
+        fmt.Println("处理整数:", n)
+        return
+    }
+    fmt.Println("未知类型")
+}
+
+// ❌ 不好：直接断言可能 panic
+func HandleAnyBad(v any) {
+    s := v.(string)  // 可能 panic
+    fmt.Println(s)
+}
+```
+
+## <Badge text="类型 Switch" type="info" />
+
+### 基本用法
+
+```go
+func describe(i any) {
+    switch v := i.(type) {
+    case int:
+        fmt.Printf("整数: %d\n", v)
+    case int64:
+        fmt.Printf("64位整数: %d\n", v)
+    case string:
+        fmt.Printf("字符串: %s (长度: %d)\n", v, len(v))
+    case bool:
+        fmt.Printf("布尔: %v\n", v)
+    case []int:
+        fmt.Printf("整数切片: %v\n", v)
+    case map[string]any:
+        fmt.Printf("Map: %v\n", v)
+    default:
+        fmt.Printf("未知类型: %T\n", v)
+    }
+}
+
+describe(42)           // 整数: 42
+describe("hello")      // 字符串: hello (长度: 5)
+describe(true)         // 布尔: true
+describe([]int{1, 2})  // 整数切片: [1 2]
+```
+
+<Badge text="注意" type="warning" /> 类型 switch 中 `v` 的类型是<strong>每个 case 中声明的类型</strong>。
+
+### 多类型匹配
+
+```go
+func printValue(v any) {
+    switch v.(type) {
+    case int, int8, int16, int32, int64:
+        fmt.Println("这是一个整数类型")
+    case uint, uint8, uint16, uint32, uint64:
+        fmt.Println("这是一个无符号整数类型")
+    case float32, float64:
+        fmt.Println("这是一个浮点数类型")
+    case string:
+        fmt.Println("这是一个字符串")
+    case bool:
+        fmt.Println("这是一个布尔值")
+    default:
+        fmt.Println("未知类型")
+    }
+}
+```
+
+### 类型 Switch 赋值
+
+```go
+func getValue(v any) string {
+    switch s := v.(type) {
+    case string:
+        return s  // s 是 string 类型
+    case int:
+        return fmt.Sprintf("%d", s)  // s 是 int 类型
+    case fmt.Stringer:
+        return s.String()  // s 是 fmt.Stringer 接口
+    default:
+        return fmt.Sprintf("%v", v)
+    }
+}
+```
+
+## <Badge text="接口类型断言" type="warning" />
+
+### 断言为另一个接口
+
+```go
+type Speaker interface {
+    Speak() string
+}
+
+type Stringer interface {
+    String() string
+}
+
+type Dog struct {
+    Name string
+}
+
+func (d Dog) Speak() string {
+    return fmt.Sprintf("%s: 汪汪", d.Name)
+}
+
+func (d Dog) String() string {
+    return fmt.Sprintf("Dog(%s)", d.Name)
+}
+
+func main() {
+    var i any = Dog{Name: "Buddy"}
+
+    // 断言为 Speaker 接口
+    if s, ok := i.(Speaker); ok {
+        fmt.Println("Speaker:", s.Speak())
+    }
+
+    // 断言为 Stringer 接口
+    if s, ok := i.(Stringer); ok {
+        fmt.Println("Stringer:", s.String())
+    }
+}
+```
+
+### 接口类型 Switch
+
+```go
+func processInterface(i any) {
+    switch v := i.(type) {
+    case Speaker:
+        fmt.Println("Speaker:", v.Speak())
+    case Stringer:
+        fmt.Println("Stringer:", v.String())
+    case io.Reader:
+        fmt.Println("Reader 接口")
+    case io.Writer:
+        fmt.Println("Writer 接口")
+    default:
+        fmt.Println("其他类型:", v)
+    }
+}
+```
+
+## <Badge text="类型断言性能" type="warning" />
+
+### 断言开销
+
+```go
+// 类型断言非常高效
+// 编译器会优化为直接指针比较
+
+var i any = "hello"
+
+// 这两种方式性能相同
+s1, ok1 := i.(string)  // 安全断言
+s2 := i.(string)      // 直接断言
+
+// 内部实现：
+// 1. 检查 i.type 是否等于 string 类型
+// 2. 如果相等，返回 i.value
+// 3. 类型比较是 O(1) 操作
+```
+
+<Badge text="性能建议" type="tip" />
+- 类型断言是 O(1) 操作，性能开销很小
+- 不要因为性能问题避免使用类型断言
+- 在循环中频繁断言时，考虑重构代码结构
+
+## 练习
+
+1. 编写函数返回值的平方，支持多种数值类型
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// Square 返回值的平方
+func Square(v any) (any, error) {
+    switch val := v.(type) {
+    case int:
+        return val * val, nil
+    case int8:
+        return val * val, nil
+    case int16:
+        return val * val, nil
+    case int32:
+        return val * val, nil
+    case int64:
+        return val * val, nil
+    case uint:
+        return val * val, nil
+    case uint8:
+        return val * val, nil
+    case uint16:
+        return val * val, nil
+    case uint32:
+        return val * val, nil
+    case uint64:
+        return val * val, nil
+    case float32:
+        return val * val, nil
+    case float64:
+        return val * val, nil
+    default:
+        return nil, fmt.Errorf("不支持的数值类型: %T", v)
+    }
+}
+
+func main() {
+    values := []any{5, int8(3), float64(2.5), "hello"}
+
+    for _, v := range values {
+        result, err := Square(v)
+        if err != nil {
+            fmt.Printf("错误: %v\n", err)
+        } else {
+            fmt.Printf("%v 的平方: %v\n", v, result)
+        }
+    }
+}
+```
+
+**解释**：展示了使用类型 switch 处理多种数值类型。
+</details>
+
+2. 创建通用的 JSON 序列化函数
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import (
+    "encoding/json"
+    "fmt"
+)
+
+// ToJSON 将任意类型转换为 JSON 字符串
+func ToJSON(v any) (string, error) {
+    data, err := json.Marshal(v)
+    if err != nil {
+        return "", fmt.Errorf("JSON 序列化失败: %w", err)
+    }
+    return string(data), nil
+}
+
+// PrettyJSON 格式化 JSON 输出
+func PrettyJSON(v any) (string, error) {
+    data, err := json.MarshalIndent(v, "", "  ")
+    if err != nil {
+        return "", fmt.Errorf("JSON 序列化失败: %w", err)
+    }
+    return string(data), nil
+}
+
+func main() {
+    // 测试不同类型
+    cases := []any{
+        42,
+        "hello",
+        []int{1, 2, 3},
+        map[string]any{"name": "Alice", "age": 30},
+        struct {
+            Name string `json:"name"`
+            Age  int    `json:"age"`
+        }{"Bob", 25},
+    }
+
+    for _, c := range cases {
+        json, err := PrettyJSON(c)
+        if err != nil {
+            fmt.Printf("错误: %v\n", err)
+            continue
+        }
+        fmt.Printf("类型: %T\n%v\n\n", c, json)
+    }
+}
+```
+
+**解释**：展示了空接口在泛型处理中的应用。
+</details>
+
+3. 实现一个类型安全的容器
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// Container 类型安全的容器
+type Container struct {
+    data any
+    typ  string  // 记录预期类型
+}
+
+// NewContainer 创建容器
+func NewContainer(typ string) *Container {
+    return &Container{typ: typ}
+}
+
+// Set 设置值（带类型检查）
+func (c *Container) Set(v any) error {
+    switch c.typ {
+    case "int":
+        if _, ok := v.(int); !ok {
+            return fmt.Errorf("期望 int，得到 %T", v)
+        }
+    case "string":
+        if _, ok := v.(string); !ok {
+            return fmt.Errorf("期望 string，得到 %T", v)
+        }
+    case "bool":
+        if _, ok := v.(bool); !ok {
+            return fmt.Errorf("期望 bool，得到 %T", v)
+        }
+    }
+    c.data = v
+    return nil
+}
+
+// Get 获取值
+func (c *Container) Get() any {
+    return c.data
+}
+
+// MustGet 获取值（带类型断言）
+func (c *Container) MustInt() int {
+    if v, ok := c.data.(int); ok {
+        return v
+    }
+    panic("not an int")
+}
+
+func (c *Container) MustString() string {
+    if v, ok := c.data.(string); ok {
+        return v
+    }
+    panic("not a string")
+}
+
+func (c *Container) MustBool() bool {
+    if v, ok := c.data.(bool); ok {
+        return v
+    }
+    panic("not a bool")
+}
+
+func main() {
+    // 字符串容器
+    strContainer := NewContainer("string")
+    err := strContainer.Set("hello")
+    if err != nil {
+        fmt.Println("错误:", err)
+    } else {
+        fmt.Println("字符串:", strContainer.MustString())
+    }
+
+    // 尝试设置错误类型
+    err = strContainer.Set(42)
+    if err != nil {
+        fmt.Println("错误:", err)
+    }
+
+    // 整数容器
+    intContainer := NewContainer("int")
+    intContainer.Set(100)
+    fmt.Println("整数:", intContainer.MustInt())
+}
+```
+
+**解释**：展示了如何用空接口构建类型安全的容器。
+</details>
+
+---
+
+[← 接口值机制](./interface-values.mdx) | [继续：接口组合 →](./interface-composition.mdx)

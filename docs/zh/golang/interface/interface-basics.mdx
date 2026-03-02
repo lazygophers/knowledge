@@ -1,0 +1,305 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# 接口基础 - Interface Basics
+
+[← 返回接口](./)
+
+接口定义<strong>行为契约</strong>，是 Go 实现多态的核心。
+
+## <Badge text="定义接口" type="tip" />
+
+### 接口声明
+
+```go
+// 定义接口
+type Speaker interface {
+    Speak() string
+}
+
+// 实现接口（隐式，无需显式声明）
+type Dog struct {
+    Name string
+}
+
+func (d Dog) Speak() string {
+    return "汪汪"
+}
+
+type Cat struct {
+    Name string
+}
+
+func (c Cat) Speak() string {
+    return "喵喵"
+}
+```
+
+<Badge text="重要" type="danger" /> Go 的接口是<strong>隐式实现</strong>的：只要类型实现了接口要求的所有方法，就自动实现了该接口。
+
+### 使用接口
+
+```go
+// 接口变量可以持有任何实现该接口的类型
+var s Speaker
+
+s = Dog{Name: "Buddy"}
+fmt.Println(s.Speak())  // 汪汪
+
+s = Cat{Name: "Whiskers"}
+fmt.Println(s.Speak())  // 喵喵
+
+// 接口切片可以混合不同类型
+speakers := []Speaker{
+    Dog{Name: "旺财"},
+    Cat{Name: "咪咪"},
+}
+
+for _, speaker := range speakers {
+    fmt.Println(speaker.Speak())
+}
+// 输出：
+// 汪汪
+// 喵喵
+```
+
+## <Badge text="接口实现检查" type="warning" />
+
+<Callout type="warning" title={<Badge text="最佳实践" type="warning" />}>
+  <strong>接口实现必须使用 `var _` 编译时检查</strong>
+
+  ```go
+  // 编译时验证接口实现（使用指针形式）
+  var _ Speaker = (*Dog)(nil)
+  var _ Speaker = (*Cat)(nil)
+
+  // 如果接口未实现，编译时会报错：
+  // cannot use (*Dog)(nil) (type *Dog) as type Speaker in assignment
+  ```
+
+  **为什么使用 `(*Dog)(nil)`？**
+  - `*Dog` 是指针类型，确保方法集包含指针接收者的方法
+  - `nil` 表示不创建实际实例，只做类型检查
+  - 编译器会验证 `*Dog` 的方法集是否完全满足 `Speaker` 接口
+</Callout>
+
+### 方法集与接口实现
+
+<Badge text="专业开发者" type="danger" /> 理解方法集对接口实现的影响：
+
+```go
+type Speaker interface {
+    Speak() string
+}
+
+// Dog 使用值接收者
+type Dog struct{}
+
+func (d Dog) Speak() string {
+    return "汪汪"
+}
+
+// Cat 使用指针接收者
+type Cat struct{}
+
+func (c *Cat) Speak() string {
+    return "喵喵"
+}
+
+// Dog 的方法集：{Speak} - 值和指针都可以
+var s1 Speaker = Dog{}      // ✓
+var s2 Speaker = &Dog{}     // ✓
+
+// Cat 的方法集：{*Cat} 只有指针可以
+var s3 Speaker = &Cat{}     // ✓
+var s4 Speaker = Cat{}      // ✗ 编译错误
+```
+
+<Callout type="tip" title="经验法则">
+  <strong>接收者选择建议</strong>
+
+  • 如果方法需要修改接收者，使用指针接收者<br/>
+  • 如果结构体较大（> 256 字节），使用指针接收者避免复制<br/>
+  • 否则，使用值接收者<br/>
+  • 保持一致性：同一类型的方法要么都用值接收者，要么都用指针接收者
+</Callout>
+
+## <Badge text="多接口实现" type="info" />
+
+### 一个类型实现多个接口
+
+```go
+type Reader interface {
+    Read(p []byte) (n int, err error)
+}
+
+type Writer interface {
+    Write(p []byte) (n int, err error)
+}
+
+type ReadWriter interface {
+    Reader
+    Writer
+}
+
+// File 同时实现 Reader 和 Writer
+type File struct {
+    data []byte
+    pos  int
+}
+
+func (f *File) Read(p []byte) (n int, err error) {
+    if f.pos >= len(f.data) {
+        return 0, nil
+    }
+    n = copy(p, f.data[f.pos:])
+    f.pos += n
+    return n, nil
+}
+
+func (f *File) Write(p []byte) (n int, err error) {
+    f.data = append(f.data, p...)
+    n = len(p)
+    return n, nil
+}
+
+// 编译时检查
+var _ Reader = &File{}
+var _ Writer = &File{}
+var _ ReadWriter = &File{}
+```
+
+## 练习
+
+1. 定义 Drawable 接口，包含 Draw() 方法
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// Drawable 可绘制接口
+type Drawable interface {
+    Draw() string
+}
+```
+
+**解释**：定义了接口，任何实现了 `Draw()` 方法的类型都自动实现该接口。
+</details>
+
+2. 实现 Circle 和 Rectangle 结构体的 Draw 方法
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// Drawable 可绘制接口
+type Drawable interface {
+    Draw() string
+}
+
+// Circle 圆形结构体
+type Circle struct {
+    Radius float64
+}
+
+// Draw 绘制圆形
+func (c Circle) Draw() string {
+    return fmt.Sprintf("绘制半径为 %.1f 的圆形", c.Radius)
+}
+
+// Rectangle 矩形结构体
+type Rectangle struct {
+    Width  float64
+    Height float64
+}
+
+// Draw 绘制矩形
+func (r Rectangle) Draw() string {
+    return fmt.Sprintf("绘制宽 %.1f x 高 %.1f 的矩形", r.Width, r.Height)
+}
+
+// 编译时检查
+var _ Drawable = Circle{}
+var _ Drawable = Rectangle{}
+
+func main() {
+    shapes := []Drawable{
+        Circle{Radius: 5},
+        Rectangle{Width: 4, Height: 6},
+    }
+
+    for _, shape := range shapes {
+        fmt.Println(shape.Draw())
+    }
+}
+```
+
+**解释**：展示了接口的隐式实现和多态特性。
+</details>
+
+3. 创建一个接受 Drawable 接口的函数，批量绘制
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// Drawable 可绘制接口
+type Drawable interface {
+    Draw() string
+}
+
+type Circle struct {
+    Radius float64
+}
+
+func (c Circle) Draw() string {
+    return fmt.Sprintf("绘制半径为 %.1f 的圆形", c.Radius)
+}
+
+type Rectangle struct {
+    Width  float64
+    Height float64
+}
+
+func (r Rectangle) Draw() string {
+    return fmt.Sprintf("绘制宽 %.1f x 高 %.1f 的矩形", r.Width, r.Height)
+}
+
+// DrawAll 批量绘制图形
+func DrawAll(drawables []Drawable) {
+    fmt.Println("=== 开始绘制 ===")
+    for i, d := range drawables {
+        fmt.Printf("%d. %s\n", i+1, d.Draw())
+    }
+    fmt.Println("=== 绘制完成 ===")
+}
+
+func main() {
+    shapes := []Drawable{
+        Circle{Radius: 5},
+        Rectangle{Width: 4, Height: 6},
+        Circle{Radius: 10},
+    }
+
+    DrawAll(shapes)
+}
+```
+
+**解释**：展示了接口作为函数参数的用法，实现多态处理。
+</details>
+
+---
+
+[← 返回接口](./) | [继续：接口值机制 →](./interface-values.mdx)
