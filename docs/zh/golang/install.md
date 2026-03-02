@@ -259,7 +259,6 @@ brew cleanup
 - ✅ 真正的跨平台支持（Windows/macOS/Linux）
 - ✅ 一行命令安装，无需预装 Go
 - ✅ 支持项目级版本锁定（`.go-version` 文件）
-- ✅ 国内镜像支持（`GOUP_GO_HOST` 环境变量）
 - ✅ 现代化设计，受 Rustup 启发
 
 ##### 安装 goup
@@ -273,13 +272,6 @@ source ~/.go/env
 
 # 验证安装
 goup version
-```
-
-##### 国内用户安装
-
-```bash
-# 使用国内镜像加速
-GOUP_GO_HOST=golang.google.cn goup install
 ```
 
 ##### 基本使用
@@ -529,7 +521,6 @@ sudo snap remove go
 - ✅ 真正的跨平台支持（Windows/macOS/Linux）
 - ✅ 一行命令安装，无需预装 Go
 - ✅ 支持项目级版本锁定（`.go-version` 文件）
-- ✅ 国内镜像支持（`GOUP_GO_HOST` 环境变量）
 
 ##### 安装 goup
 
@@ -542,13 +533,6 @@ source ~/.go/env
 
 # 验证安装
 goup version
-```
-
-##### 国内用户安装
-
-```bash
-# 使用国内镜像加速
-GOUP_GO_HOST=golang.google.cn goup install
 ```
 
 ##### 基本使用
@@ -593,8 +577,7 @@ export PATH="$HOME/.go/current/bin:$PATH"
 export GOROOT="$HOME/.go/current/"
 export GOPATH="$HOME/.go/GOPATH/"
 
-# 国内用户
-export GOUP_GO_HOST=golang.google.cn
+# 国内用户设置 Go 代理
 export GOPROXY=https://goproxy.cn,direct
 ```
 
@@ -685,9 +668,6 @@ export PATH=$PATH:$HOME/go/bin
 go env -w GOPROXY=https://goproxy.cn,direct
 # 或
 go env -w GOPROXY=https://goproxy.io,direct
-
-# goup 用户同时设置 Go 下载镜像
-export GOUP_GO_HOST=golang.google.cn
 ```
 
 **国内 Go 代理服务**：
@@ -783,7 +763,6 @@ git clone https://github.com/LazyVim/starter ~/.config/nvim
   # 或
   go env -w GOPROXY=https://goproxy.io,direct
   ```
-- goup 用户设置：`export GOUP_GO_HOST=golang.google.cn`
 
 ### Q: 如何卸载 Go
 **A**: 每种安装方式都有对应的卸载方法，请查看对应平台的"卸载方法"章节。
