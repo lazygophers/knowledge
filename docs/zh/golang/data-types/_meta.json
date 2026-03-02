@@ -1,6 +1,16 @@
 [
   {
     "type": "file",
+    "name": "bool",
+    "label": "Bool"
+  },
+  {
+    "type": "file",
+    "name": "constants",
+    "label": "Constants"
+  },
+  {
+    "type": "file",
     "name": "numeric",
     "label": "数值类型"
   },
