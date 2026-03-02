@@ -1,4 +1,4 @@
-import { Badge, Tabs, Tab } from '@rspress/core/theme';
+import { Badge } from "@rspress/core/theme";
 
 # Hello World - 第一个 Go 程序
 
@@ -7,6 +7,7 @@ import { Badge, Tabs, Tab } from '@rspress/core/theme';
 ## 📋 前置要求
 
 在开始之前，请确保你已经：
+
 - ✅ 安装了 Go 语言（[安装指南](/golang/install/install)）
 - ✅ 验证安装成功（`go version` 命令可用）
 
@@ -60,6 +61,7 @@ hello.exe      # Windows
 ```
 
 **预期输出**：
+
 ```
 Hello, World!
 ```
@@ -88,367 +90,359 @@ func main() {
 
 ### 关键概念
 
-<Tabs groupId="concept-level">
-  <Tab value="basic" label="基础概念">
-    #### 1. package（包）
-    - `package main`：表示这是一个可执行程序
-    - 其他包：`package utils`、`package models` 等
+#### <Badge text="基础概念" type="tip" />
 
-    #### 2. import（导入）
-    - 用于引入其他包的功能
-    - `fmt`：格式化 I/O 包（输入输出）
+**1. package（包）**
+- `package main`：表示这是一个可执行程序
+- 其他包：`package utils`、`package models` 等
 
-    #### 3. func（函数）
-    - `main()`：特殊函数，程序入口
-    - 格式：`func 函数名() { }`
+**2. import（导入）**
+- 用于引入其他包的功能
+- `fmt`：格式化 I/O 包（输入输出）
 
-    #### 4. Println（打印）
-    - `fmt.Println()`：打印一行文本，自动换行
-  </Tab>
+**3. func（函数）**
+- `main()`：特殊函数，程序入口
+- 格式：`func 函数名() { }`
 
-  <Tab value="advanced" label="进阶知识">
-    #### main 包的特殊性
-    - `package main`：可执行程序的入口
-    - `func main()`：程序开始执行的地方
-    - 没有 main 函数的程序无法作为独立程序运行
-
-    #### 导入多个包
-    ```go
-    import (
-        "fmt"
-        "os"
-        "strings"
-    )
-    ```
-
-    #### 格式化打印
-    - `fmt.Printf()`：格式化打印（类似 C 的 printf）
-    ```go
-    fmt.Printf("Hello, %s!\n", "World")
-    ```
-  </Tab>
-
-  <Tab value="expert" label="深入理解">
-    #### Go 编译过程
-    ```
-    源代码 (.go)
-        ↓
-    词法分析
-        ↓
-    语法分析
-        ↓
-    类型检查
-        ↓
-    优化
-        ↓
-    代码生成
-        ↓
-    可执行文件
-    ```
-
-    #### 查看编译细节
-    ```bash
-    # 查看汇编代码
-    go tool compile -S main.go
-
-    # 查看编译优化详情
-    go build -gcflags="-m" main.go
-    ```
-  </Tab>
-</Tabs>
+**4. Println（打印）**
+- `fmt.Println()`：打印一行文本，自动换行
 
 ---
 
-## 🎯 按读者水平深入学习
+#### <Badge text="进阶知识" type="info" />
 
-<Tabs groupId="user-level">
-  <Tab value="beginner" label={<><Badge text="无技术背景" type="tip" /> <span style={{ fontSize: '14px' }}>详细讲解</span></>}>
-    
+**main 包的特殊性**
+- `package main`：可执行程序的入口
+- `func main()`：程序开始执行的地方
+- 没有 main 函数的程序无法作为独立程序运行
 
-      ### 什么是编程？
+**导入多个包**
+```go
+import (
+    "fmt"
+    "os"
+    "strings"
+)
+```
 
-      编程就是用计算机能理解的语言，告诉计算机要做什么。
+**格式化打印**
+- `fmt.Printf()`：格式化打印（类似 C 的 printf）
+```go
+fmt.Printf("Hello, %s!\n", "World")
+```
 
-      ### 本程序做了什么？
+---
 
-      1. **包声明**：告诉 Go 这是一个独立程序
-      2. **导入工具**：引入打印工具（fmt 包）
-      3. **定义任务**：在 main 函数中写具体要做什么
-      4. **执行任务**：打印 "Hello, World!"
+#### <Badge text="深入理解" type="warning" outline />
 
-      ### 为什么要从 Hello World 开始？
+**Go 编译过程**
 
-      - ✅ 最简单的程序
-      - ✅ 验证环境配置正确
-      - ✅ 了解基本程序结构
-      - ✅ 获得第一个成就感！
+```mermaid
+graph TD
+    A[源代码 .go] --> B[词法分析]
+    B --> C[语法分析]
+    C --> D[类型检查]
+    D --> E[优化]
+    E --> F[代码生成]
+    F --> G[可执行文件]
 
-    </div>
-  </Tab>
+    style A fill:#e1f5ff
+    style G fill:#c8e6c9
+```
 
-  <Tab value="developer" label={<><Badge text="初级开发者" type="info" /> <span style={{ fontSize: '14px' }}>常见错误</span></>}>
-    
+**查看编译细节**
+```bash
+# 查看汇编代码
+go tool compile -S main.go
 
-      ### Go 程序的基本结构
+# 查看编译优化详情
+go build -gcflags="-m" main.go
+```
 
-      ```
-      Go 程序
-      ├── 包声明 (package)
-      ├── 导入包 (import)
-      └── 函数定义 (func)
-          └── 语句和表达式
-      ```
+---
 
-      ### 常见错误
+## 深入学习
 
-      **错误1：缺少 main 函数**
-      ```go
-      package main
+### <Badge text="编程入门" type="tip" />
 
-      import "fmt"
+**什么是编程？**
 
-      // 缺少 func main() - 无法运行
-      ```
+编程就是用计算机能理解的语言，告诉计算机要做什么。
 
-      **错误2：包名不是 main**
-      ```go
-      package hello  // 错误：不是 main 包
+**本程序做了什么？**
 
-      import "fmt"
+1. **包声明**：告诉 Go 这是一个独立程序
+2. **导入工具**：引入打印工具（fmt 包）
+3. **定义任务**：在 main 函数中写具体要做什么
+4. **执行任务**：打印 "Hello, World!"
 
-      func main() {
-          fmt.Println("Hello, World!")
-      }
-      ```
+**为什么要从 Hello World 开始？**
 
-      **错误3：大小写错误**
-      ```go
-      package main
+- ✅ 最简单的程序
+- ✅ 验证环境配置正确
+- ✅ 了解基本程序结构
+- ✅ 获得第一个成就感！
 
-      import "fmt"
+---
 
-      func Main() {  // 错误：main 必须小写
-          fmt.Println("Hello, World!")
-      }
-      ```
+### <Badge text="常见错误" type="info" />
 
-    </div>
-  </Tab>
+**Go 程序的基本结构**
 
-  <Tab value="intermediate" label={<><Badge text="中级开发者" type="warning" /> <span style={{ fontSize: '14px' }}>Go Modules</span></>}>
-    
+```
+Go 程序
+├── 包声明 (package)
+├── 导入包 (import)
+└── 函数定义 (func)
+    └── 语句和表达式
+```
 
-      ### Go Modules 基础
+**常见错误**
 
-      Go Modules 是 Go 的依赖管理系统，类似于：
-      - JavaScript 的 npm
-      - Python 的 pip
-      - Java 的 Maven
+*错误1：缺少 main 函数*
+```go
+package main
 
-      #### go.mod 文件
+import "fmt"
 
-      初始化时生成的 `go.mod` 文件：
+// 缺少 func main() - 无法运行
+```
 
-      ```go title="go.mod"
-      module example.com/hello-go
+*错误2：包名不是 main*
+```go
+package hello  // 错误：不是 main 包
 
-      go 1.26
-      ```
+import "fmt"
 
-      **说明**：
-      - `module`：模块名称（通常是项目路径）
-      - `go 1.26`：最低 Go 版本要求
+func main() {
+    fmt.Println("Hello, World!")
+}
+```
 
-      #### 常用命令
+*错误3：大小写错误*
+```go
+package main
 
-      ```bash
-      # 初始化模块
-      go mod init example.com/myproject
+import "fmt"
 
-      # 下载依赖
-      go mod download
+func Main() {  // 错误：main 必须小写
+    fmt.Println("Hello, World!")
+}
+```
 
-      # 整理依赖
-      go mod tidy
+---
 
-      # 查看依赖
-      go list -m all
-      ```
+---
 
-      ### 程序运行方式
+### <Badge text="Go Modules" type="warning" />
 
-      <Badge text="go run" type="info" /> 直接运行，不生成可执行文件，适合快速测试
+**Go Modules 基础**
 
-      <Badge text="go build" type="info" /> 生成可执行文件，编译一次多次运行，适合部署
+Go Modules 是 Go 的依赖管理系统，类似于：
+- JavaScript 的 npm
+- Python 的 pip
+- Java 的 Maven
 
-      <Badge text="go install" type="info" /> 编译并安装到 `$GOPATH/bin`，可全局运行
+*go.mod 文件*
 
-      ### 变量和类型
+初始化时生成的 `go.mod` 文件：
 
-      ```go
-      package main
+```go title="go.mod"
+module example.com/hello-go
 
-      import "fmt"
+go 1.26
+```
 
-      func main() {
-          // 变量声明
-          var name string = "Go"
-          var version = 1.26  // 类型推断
-          year := 2026        // 简短声明（只能在函数内使用）
+**说明**：
+- `module`：模块名称（通常是项目路径）
+- `go 1.26`：最低 Go 版本要求
 
-          // 打印变量
-          fmt.Println("Language:", name)
-          fmt.Println("Version:", version)
-          fmt.Println("Year:", year)
+*常用命令*
 
-          // 格式化输出
-          fmt.Printf("Welcome to %s %g in %d\n", name, version, year)
-      }
-      ```
-
-    </div>
-  </Tab>
-
-  <Tab value="advanced" label={<><Badge text="高级开发者" type="warning" outline /> <span style={{ fontSize: '14px' }}>性能优化</span></>}>
-    
-
-      ### 内存布局
-
-      ```go
-      package main
-
-      import "fmt"
-
-      func main() {
-          // 栈上分配（小对象，逃逸分析）
-          x := 42
-
-          // 堆上分配（大对象或逃逸）
-          data := make([]byte, 1024*1024)
-
-          fmt.Printf("x: %p, data: %p\n", &x, &data)
-      }
-      ```
-
-      ### 性能优化技巧
-
-      ```go
-      package main
-
-      import "strings"
-
-      // ❌ 低效版本
-      func slowConcat(n int) string {
-          s := ""
-          for i := 0; i < n; i++ {
-              s += "a"  // 每次都创建新字符串
-          }
-          return s
-      }
-
-      // ✅ 高效版本
-      func fastConcat(n int) string {
-          var b strings.Builder
-          b.Grow(n)
-          for i := 0; i < n; i++ {
-              b.WriteString("a")
-          }
-          return b.String()
-      }
-      ```
-
-    </div>
-  </Tab>
-
-  <Tab value="enterprise" label={<><Badge text="专业开发者" type="danger" /> <span style={{ fontSize: '14px' }}>最佳实践</span></>}>
-    
-
-      ### 项目结构
-
-      ```
-      hello-go/                    # 项目根目录
-      ├── go.mod                   # 模块定义
-      ├── go.sum                   # 依赖校验和锁定
-      ├── main.go                  # 程序入口（小型项目可放根目录）
-      ├── internal/                # 内部包（不可被外部导入）
-      │   └── core/                # 核心业务逻辑
-      ├── pkg/                     # 公共包（可被外部导入）
-      │   ├── utils/               # 工具函数
-      │   └── api/                 # API 定义和类型
-      ├── cmd/                     # 多个可执行程序时使用
-      │   ├── hello/               # hello 命令
-      │   └── server/              # server 命令
-      ├── scripts/                 # 构建和部署脚本
-      ├── configs/                 # 配置文件
-      └── deployments/             # 部署配置（Docker、K8s）
-      ```
-
-      **关键规则**：
-      - 小型项目：`main.go` 可放在根目录
-      - 多个可执行程序：使用 `cmd/` 目录，每个子目录包含一个 `main.go`
-      - `pkg/utils/`：通用工具函数，可被外部导入
-      - `internal/core/`：核心业务逻辑，仅限内部使用
-
-      ### 错误处理
-
-      ```go
-      package main
-
-      import (
-          "errors"
-          "fmt"
-      )
-
-      func greet(name string) (string, error) {
-          if name == "" {
-              return "", errors.New("name cannot be empty")
-          }
-          return "Hello, " + name, nil
-      }
-
-      func main() {
-          msg, err := greet("World")
-          if err != nil {
-              fmt.Println("Error:", err)
-              return
-          }
-          fmt.Println(msg)
-      }
-      ```
-
-      ### 测试
-
-      ```go title="main_test.go"
-      package main
-
-      import "testing"
-
-      func TestGreet(t *testing.T) {
-          msg, err := greet("World")
-          if err != nil {
-              t.Fatalf("unexpected error: %v", err)
-          }
-          if msg != "Hello, World" {
-              t.Errorf("expected 'Hello, World', got '%s'", msg)
-          }
-      }
-
-      func BenchmarkGreet(b *testing.B) {
-          for i := 0; i < b.N; i++ {
-              greet("World")
-          }
-      }
-      ```
-
-      运行测试：
-      ```bash
-      go test -v
-      go test -bench=.
-      ```
-
-    </div>
-  </Tab>
-</Tabs>
+```bash
+# 初始化模块
+go mod init example.com/myproject
+
+# 下载依赖
+go mod download
+
+# 整理依赖
+go mod tidy
+
+# 查看依赖
+go list -m all
+```
+
+**程序运行方式**
+
+<Badge text="go run" type="info" /> 直接运行，不生成可执行文件，适合快速测试
+
+<Badge text="go build" type="info" /> 生成可执行文件，编译一次多次运行，适合部署
+
+<Badge text="go install" type="info" /> 编译并安装到 `$GOPATH/bin`，可全局运行
+
+**变量和类型**
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    // 变量声明
+    var name string = "Go"
+    var version = 1.26  // 类型推断
+    year := 2026        // 简短声明（只能在函数内使用）
+
+    // 打印变量
+    fmt.Println("Language:", name)
+    fmt.Println("Version:", version)
+    fmt.Println("Year:", year)
+
+    // 格式化输出
+    fmt.Printf("Welcome to %s %g in %d\n", name, version, year)
+}
+```
+
+---
+
+---
+
+### <Badge text="性能优化" type="warning" outline />
+
+**内存布局**
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    // 栈上分配（小对象，逃逸分析）
+    x := 42
+
+    // 堆上分配（大对象或逃逸）
+    data := make([]byte, 1024*1024)
+
+    fmt.Printf("x: %p, data: %p\n", &x, &data)
+}
+```
+
+**性能优化技巧**
+
+```go
+package main
+
+import "strings"
+
+// ❌ 低效版本
+func slowConcat(n int) string {
+    s := ""
+    for i := 0; i < n; i++ {
+        s += "a"  // 每次都创建新字符串
+    }
+    return s
+}
+
+// ✅ 高效版本
+func fastConcat(n int) string {
+    var b strings.Builder
+    b.Grow(n)
+    for i := 0; i < n; i++ {
+        b.WriteString("a")
+    }
+    return b.String()
+}
+```
+
+---
+
+---
+
+### <Badge text="项目结构" type="danger" />
+
+**项目结构**
+
+```
+hello-go/                    # 项目根目录
+├── go.mod                   # 模块定义
+├── go.sum                   # 依赖校验和锁定
+├── main.go                  # 程序入口（小型项目可放根目录）
+├── internal/                # 内部包（不可被外部导入）
+│   └── core/                # 核心业务逻辑
+├── pkg/                     # 公共包（可被外部导入）
+│   ├── utils/               # 工具函数
+│   └── api/                 # API 定义和类型
+├── cmd/                     # 多个可执行程序时使用
+│   ├── hello/               # hello 命令
+│   └── server/              # server 命令
+├── scripts/                 # 构建和部署脚本
+├── configs/                 # 配置文件
+└── deployments/             # 部署配置（Docker、K8s）
+```
+
+**关键规则**：
+- 小型项目：`main.go` 可放在根目录
+- 多个可执行程序：使用 `cmd/` 目录，每个子目录包含一个 `main.go`
+- `pkg/utils/`：通用工具函数，可被外部导入
+- `internal/core/`：核心业务逻辑，仅限内部使用
+
+**错误处理**
+
+```go
+package main
+
+import (
+    "errors"
+    "fmt"
+)
+
+func greet(name string) (string, error) {
+    if name == "" {
+        return "", errors.New("name cannot be empty")
+    }
+    return "Hello, " + name, nil
+}
+
+func main() {
+    msg, err := greet("World")
+    if err != nil {
+        fmt.Println("Error:", err)
+        return
+    }
+    fmt.Println(msg)
+}
+```
+
+**测试**
+
+```go title="main_test.go"
+package main
+
+import "testing"
+
+func TestGreet(t *testing.T) {
+    msg, err := greet("World")
+    if err != nil {
+        t.Fatalf("unexpected error: %v", err)
+    }
+    if msg != "Hello, World" {
+        t.Errorf("expected 'Hello, World', got '%s'", msg)
+    }
+}
+
+func BenchmarkGreet(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        greet("World")
+    }
+}
+```
+
+运行测试：
+```bash
+go test -v
+go test -bench=.
+```
 
 ---
 
