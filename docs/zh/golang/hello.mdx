@@ -89,83 +89,71 @@ func main() {
 ### 关键概念
 
 <Tabs groupId="concept-level">
-  <Tab value="basic" label={<><Badge text="基础概念" type="tip" /> <span style={{ fontSize: '14px' }}>必读</span></>}>
-    <div style={{ marginTop: '16px' }}>
+  <Tab value="basic" label="基础概念">
+    #### 1. package（包）
+    - `package main`：表示这是一个可执行程序
+    - 其他包：`package utils`、`package models` 等
 
-      #### 1. package（包）
-      - `package main`：表示这是一个可执行程序
-      - 其他包：`package utils`、`package models` 等
+    #### 2. import（导入）
+    - 用于引入其他包的功能
+    - `fmt`：格式化 I/O 包（输入输出）
 
-      #### 2. import（导入）
-      - 用于引入其他包的功能
-      - `fmt`：格式化 I/O 包（输入输出）
+    #### 3. func（函数）
+    - `main()`：特殊函数，程序入口
+    - 格式：`func 函数名() { }`
 
-      #### 3. func（函数）
-      - `main()`：特殊函数，程序入口
-      - 格式：`func 函数名() { }`
-
-      #### 4. Println（打印）
-      - `fmt.Println()`：打印一行文本，自动换行
-
-    </div>
+    #### 4. Println（打印）
+    - `fmt.Println()`：打印一行文本，自动换行
   </Tab>
 
-  <Tab value="advanced" label={<><Badge text="进阶知识" type="info" /> <span style={{ fontSize: '14px' }}>扩展</span></>}>
-    <div style={{ marginTop: '16px' }}>
+  <Tab value="advanced" label="进阶知识">
+    #### main 包的特殊性
+    - `package main`：可执行程序的入口
+    - `func main()`：程序开始执行的地方
+    - 没有 main 函数的程序无法作为独立程序运行
 
-      #### main 包的特殊性
-      - `package main`：可执行程序的入口
-      - `func main()`：程序开始执行的地方
-      - 没有 main 函数的程序无法作为独立程序运行
+    #### 导入多个包
+    ```go
+    import (
+        "fmt"
+        "os"
+        "strings"
+    )
+    ```
 
-      #### 导入多个包
-      ```go
-      import (
-          "fmt"
-          "os"
-          "strings"
-      )
-      ```
-
-      #### 格式化打印
-      - `fmt.Printf()`：格式化打印（类似 C 的 printf）
-      ```go
-      fmt.Printf("Hello, %s!\n", "World")
-      ```
-
-    </div>
+    #### 格式化打印
+    - `fmt.Printf()`：格式化打印（类似 C 的 printf）
+    ```go
+    fmt.Printf("Hello, %s!\n", "World")
+    ```
   </Tab>
 
-  <Tab value="expert" label={<><Badge text="深入理解" type="warning" outline /> <span style={{ fontSize: '14px' }}>高级</span></>}>
-    <div style={{ marginTop: '16px' }}>
+  <Tab value="expert" label="深入理解">
+    #### Go 编译过程
+    ```
+    源代码 (.go)
+        ↓
+    词法分析
+        ↓
+    语法分析
+        ↓
+    类型检查
+        ↓
+    优化
+        ↓
+    代码生成
+        ↓
+    可执行文件
+    ```
 
-      #### Go 编译过程
-      ```
-      源代码 (.go)
-          ↓
-      词法分析
-          ↓
-      语法分析
-          ↓
-      类型检查
-          ↓
-      优化
-          ↓
-      代码生成
-          ↓
-      可执行文件
-      ```
+    #### 查看编译细节
+    ```bash
+    # 查看汇编代码
+    go tool compile -S main.go
 
-      #### 查看编译细节
-      ```bash
-      # 查看汇编代码
-      go tool compile -S main.go
-
-      # 查看编译优化详情
-      go build -gcflags="-m" main.go
-      ```
-
-    </div>
+    # 查看编译优化详情
+    go build -gcflags="-m" main.go
+    ```
   </Tab>
 </Tabs>
 
@@ -175,7 +163,7 @@ func main() {
 
 <Tabs groupId="user-level">
   <Tab value="beginner" label={<><Badge text="无技术背景" type="tip" /> <span style={{ fontSize: '14px' }}>详细讲解</span></>}>
-    <div style={{ marginTop: '16px' }}>
+    
 
       ### 什么是编程？
 
@@ -199,7 +187,7 @@ func main() {
   </Tab>
 
   <Tab value="developer" label={<><Badge text="初级开发者" type="info" /> <span style={{ fontSize: '14px' }}>常见错误</span></>}>
-    <div style={{ marginTop: '16px' }}>
+    
 
       ### Go 程序的基本结构
 
@@ -248,7 +236,7 @@ func main() {
   </Tab>
 
   <Tab value="intermediate" label={<><Badge text="中级开发者" type="warning" /> <span style={{ fontSize: '14px' }}>Go Modules</span></>}>
-    <div style={{ marginTop: '16px' }}>
+    
 
       ### Go Modules 基础
 
@@ -322,7 +310,7 @@ func main() {
   </Tab>
 
   <Tab value="advanced" label={<><Badge text="高级开发者" type="warning" outline /> <span style={{ fontSize: '14px' }}>性能优化</span></>}>
-    <div style={{ marginTop: '16px' }}>
+    
 
       ### 内存布局
 
@@ -373,7 +361,7 @@ func main() {
   </Tab>
 
   <Tab value="enterprise" label={<><Badge text="专业开发者" type="danger" /> <span style={{ fontSize: '14px' }}>最佳实践</span></>}>
-    <div style={{ marginTop: '16px' }}>
+    
 
       ### 项目结构
 
