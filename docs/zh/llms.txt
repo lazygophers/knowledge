@@ -17,16 +17,16 @@ This file maps all Chinese source documents and navigation metadata into English
 - [Go Install on Windows](./golang/install/windows.mdx): Windows installation methods (MSI, Chocolatey, Scoop, ZIP, goup).
 - [Go Install on macOS](./golang/install/macos.mdx): macOS installation methods (PKG, Homebrew, goup, source).
 - [Go Install on Linux](./golang/install/linux.mdx): Linux installation methods (binary, apt, yum, snap, goup).
-- [Hello World - First Go Program](./golang/hello.md): Step-by-step guide to writing and running the first Go application.
+- [Hello World - First Go Program](./golang/hello.mdx): Interactive tutorial with RPress Tabs for different skill levels. Step-by-step guide to writing and running the first Go application.
 - [Golang Sidebar Metadata](./golang/_meta.json): Sidebar structure and labels for Golang module pages.
 - [Golang LLMs Index](./golang/llms.txt): English machine-readable index for the Golang subdirectory.
 
 ## Golang Install
 
-- [Go Installation Guide](./golang/install/index.md): Cross-platform Go installation overview and next steps.
-- [Go Installation on Linux](./golang/install/linux.md): Linux installation methods including binaries and package managers.
-- [Go Installation on macOS](./golang/install/macos.md): macOS installation options using PKG, Homebrew, and source.
-- [Go Installation on Windows](./golang/install/windows.md): Windows installation options with MSI, package managers, and ZIP.
+- [Go Installation Guide](./golang/install/install.mdx): Cross-platform Go installation overview with RPress Tabs and Badge components.
+- [Go Installation on Linux](./golang/install/linux.mdx): Linux installation methods with interactive Tabs.
+- [Go Installation on macOS](./golang/install/macos.mdx): macOS installation methods with interactive Tabs.
+- [Go Installation on Windows](./golang/install/windows.mdx): Windows installation methods with interactive Tabs.
 - [Install Section Metadata](./golang/install/_meta.json): Navigation metadata for installation subpages.
 - [Install LLMs Index](./golang/install/llms.txt): English machine-readable index for the install subdirectory.
 
