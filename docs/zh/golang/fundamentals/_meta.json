@@ -1,0 +1,37 @@
+[
+  {
+    "type": "file",
+    "name": "index",
+    "label": "基础概览"
+  },
+  {
+    "type": "dir",
+    "name": "naming",
+    "label": "命名规则"
+  },
+  {
+    "type": "dir",
+    "name": "declarations",
+    "label": "声明与初始化"
+  },
+  {
+    "type": "dir",
+    "name": "types",
+    "label": "类型系统"
+  },
+  {
+    "type": "dir",
+    "name": "functions",
+    "label": "函数与方法"
+  },
+  {
+    "type": "dir",
+    "name": "packages",
+    "label": "包系统"
+  },
+  {
+    "type": "dir",
+    "name": "scopes",
+    "label": "作用域"
+  }
+]

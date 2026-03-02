@@ -21,5 +21,14 @@
         "type": "file",
         "name": "hello",
         "label": "Hello World"
+    },
+    {
+        "type": "section-header",
+        "label": "基础概念"
+    },
+    {
+        "type": "dir",
+        "name": "fundamentals",
+        "label": "核心基础"
     }
 ]
