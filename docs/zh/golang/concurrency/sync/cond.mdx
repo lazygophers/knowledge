@@ -1,0 +1,277 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# sync.Cond - 条件变量
+
+<Badge text="高级" type="danger" /> <Badge text="Go 1.0+" type="info" />
+
+Cond 用于等待或通知条件变化的场景，通常与 Mutex 配合使用。
+
+## 定义
+
+```go
+type Cond struct {
+    // 包含非导出字段
+}
+```
+
+## 主要方法
+
+```go
+func NewCond(l Locker) *Cond           // 创建条件变量
+func (c *Cond) Wait()                  // 等待通知（自动释放锁）
+func (c *Cond) Signal()                // 唤醒一个等待的 goroutine
+func (c *Cond) Broadcast()             // 唤醒所有等待的 goroutine
+```
+
+## 使用场景
+
+- 生产者-消费者模式
+- 任务队列
+- 事件通知系统
+
+## 基础示例
+
+```go
+package main
+
+import (
+    "fmt"
+    "sync"
+    "time"
+)
+
+type Queue struct {
+    items []int
+    cond  *sync.Cond
+}
+
+func NewQueue() *Queue {
+    q := &Queue{
+        items: make([]int, 0),
+    }
+    q.cond = sync.NewCond(&sync.Mutex{})
+    return q
+}
+
+func (q *Queue) Push(item int) {
+    q.cond.L.Lock()
+    defer q.cond.L.Unlock()
+
+    q.items = append(q.items, item)
+    q.cond.Signal()  // 通知一个等待的消费者
+}
+
+func (q *Queue) Pop() int {
+    q.cond.L.Lock()
+    defer q.cond.L.Unlock()
+
+    for len(q.items) == 0 {
+        q.cond.Wait()  // 等待数据
+    }
+
+    item := q.items[0]
+    q.items = q.items[1:]
+    return item
+}
+
+func main() {
+    q := NewQueue()
+
+    // 消费者
+    go func() {
+        for i := 0; i < 5; i++ {
+            item := q.Pop()
+            fmt.Printf("消费: %d\n", item)
+        }
+    }()
+
+    // 生产者
+    for i := 1; i <= 5; i++ {
+        q.Push(i)
+        fmt.Printf("生产: %d\n", i)
+        time.Sleep(100 * time.Millisecond)
+    }
+
+    time.Sleep(time.Second)
+}
+```
+
+## Broadcast 示例
+
+```go
+package main
+
+import (
+    "fmt"
+    "sync"
+    "time"
+)
+
+func main() {
+    var mu sync.Mutex
+    cond := sync.NewCond(&mu)
+    ready := false
+
+    // 启动 3 个等待者
+    for i := 1; i <= 3; i++ {
+        go func(id int) {
+            mu.Lock()
+            for !ready {
+                cond.Wait()  // 等待就绪信号
+            }
+            mu.Unlock()
+            fmt.Printf("Goroutine %d: 开始执行\n", id)
+        }(i)
+    }
+
+    time.Sleep(time.Second)
+
+    // 唤醒所有等待者
+    mu.Lock()
+    ready = true
+    cond.Broadcast()  // 唤醒所有
+    mu.Unlock()
+
+    time.Sleep(time.Second)
+}
+```
+
+<Callout type="warning" title="重要">
+  <strong>Cond 使用注意事项</strong>：
+  - Wait() 必须在持有锁时调用
+  - Wait() 会自动释放锁并阻塞，被唤醒后重新获取锁
+  - Wait() 应该在循环中调用（防止虚假唤醒）
+  - Signal() 只唤醒一个 goroutine，Broadcast() 唤醒所有
+</Callout>
+
+## 练习
+
+1. **实现带超时的任务队列**：使用 Cond 实现生产者-消费者模式，支持超时
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import (
+    "fmt"
+    "sync"
+    "time"
+)
+
+type Task struct {
+    ID   int
+    Data string
+}
+
+type TaskQueue struct {
+    mu     sync.Mutex
+    cond   *sync.Cond
+    tasks  []Task
+    closed bool
+}
+
+func NewTaskQueue() *TaskQueue {
+    q := &TaskQueue{
+        tasks: make([]Task, 0),
+    }
+    q.cond = sync.NewCond(&q.mu)
+    return q
+}
+
+func (q *TaskQueue) Push(task Task) error {
+    q.mu.Lock()
+    defer q.mu.Unlock()
+
+    if q.closed {
+        return fmt.Errorf("queue is closed")
+    }
+
+    q.tasks = append(q.tasks, task)
+    q.cond.Signal()  // 通知一个等待的消费者
+    return nil
+}
+
+func (q *TaskQueue) Pop(timeout time.Duration) (Task, bool) {
+    q.mu.Lock()
+    defer q.mu.Unlock()
+
+    if len(q.tasks) == 0 && !q.closed {
+        // 使用 channel 实现超时
+        done := make(chan struct{})
+        go func() {
+            q.cond.Wait()
+            close(done)
+        }()
+
+        select {
+        case <-done:
+            // 被唤醒
+        case <-time.After(timeout):
+            // 超时，取消等待
+            q.cond.Broadcast()
+            return Task{}, false
+        }
+    }
+
+    if q.closed {
+        return Task{}, false
+    }
+
+    if len(q.tasks) == 0 {
+        return Task{}, false
+    }
+
+    task := q.tasks[0]
+    q.tasks = q.tasks[1:]
+    return task, true
+}
+
+func (q *TaskQueue) Close() {
+    q.mu.Lock()
+    defer q.mu.Unlock()
+
+    q.closed = true
+    q.cond.Broadcast()  // 唤醒所有等待者
+}
+
+func main() {
+    queue := NewTaskQueue()
+    var wg sync.WaitGroup
+
+    // 消费者
+    wg.Add(1)
+    go func() {
+        defer wg.Done()
+        for i := 0; i < 3; i++ {
+            task, ok := queue.Pop(2 * time.Second)
+            if !ok {
+                fmt.Printf("消费者: 获取任务超时或队列已关闭\n")
+                break
+            }
+            fmt.Printf("消费者: 处理任务 %d\n", task.ID)
+        }
+    }()
+
+    // 生产者
+    for i := 1; i <= 3; i++ {
+        time.Sleep(500 * time.Millisecond)
+        queue.Push(Task{ID: i, Data: fmt.Sprintf("Task %d", i)})
+        fmt.Printf("生产者: 添加任务 %d\n", i)
+    }
+
+    wg.Wait()
+    queue.Close()
+    fmt.Println("队列已关闭")
+}
+```
+
+**解释**：使用 Cond 实现任务队列，当队列为空时消费者等待，生产者添加任务后唤醒消费者。支持超时机制。
+
+</details>
+
+---
+
+[← Once](./once.mdx) | [Map →](./map.mdx)

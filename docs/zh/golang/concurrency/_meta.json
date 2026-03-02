@@ -15,7 +15,7 @@
     "label": "Channel 模式"
   },
   {
-    "type": "file",
+    "type": "dir",
     "name": "sync",
     "label": "Sync 包"
   },

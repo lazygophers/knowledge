@@ -1,0 +1,37 @@
+[
+  {
+    "type": "file",
+    "name": "mutex",
+    "label": "Mutex"
+  },
+  {
+    "type": "file",
+    "name": "rwmutex",
+    "label": "RWMutex"
+  },
+  {
+    "type": "file",
+    "name": "waitgroup",
+    "label": "WaitGroup"
+  },
+  {
+    "type": "file",
+    "name": "once",
+    "label": "Once"
+  },
+  {
+    "type": "file",
+    "name": "cond",
+    "label": "Cond"
+  },
+  {
+    "type": "file",
+    "name": "map",
+    "label": "Map"
+  },
+  {
+    "type": "file",
+    "name": "pool",
+    "label": "Pool"
+  }
+]

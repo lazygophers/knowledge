@@ -7,7 +7,7 @@ This module covers Go's concurrency primitives and patterns.
 - goroutine: Lightweight threads and the Go scheduler
 - channel: Buffered and unbuffered channels, channel operations
 - channel-patterns: Common channel patterns and idioms
-- sync: Mutex, WaitGroup, Once, and other synchronization primitives
+- sync (sync/): Mutex, RWMutex, WaitGroup, Once, Cond, Map, and Pool synchronization primitives
 - atomic: Atomic operations and memory ordering
 - best-practices: Concurrency best practices and anti-patterns
 
