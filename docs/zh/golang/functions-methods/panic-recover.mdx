@@ -121,12 +121,14 @@ package main
 import (
     "errors"
     "fmt"
+    "log"
 )
 
 // ✅ 法则1：不要忽略错误
 func readFile(filename string) ([]byte, error) {
     data, err := readFileHelper(filename)
     if err != nil {
+        log.Errorf("err:%s", err)
         return nil, err  // 必须处理错误
     }
     return data, nil
@@ -142,7 +144,8 @@ func readFileBad(filename string) []byte {
 func processUser(id int) (*User, error) {
     user, err := getUser(id)
     if err != nil {
-        return nil, fmt.Errorf("get user: %w", err)
+        log.Errorf("err:%s", err)
+        return nil, err
     }
 
     if !user.Active {
@@ -152,11 +155,12 @@ func processUser(id int) (*User, error) {
     return user, nil
 }
 
-// ✅ 法则3：添加上下文信息
+// ✅ 法则3：记录日志后返回原始错误
 func processData(id int) error {
     data, err := fetchFromDB(id)
     if err != nil {
-        return fmt.Errorf("fetch data for ID %d: %w", id, err)
+        log.Errorf("fetch data for ID %d err:%s", id, err)
+        return err
     }
     // 处理数据...
     return nil
@@ -191,7 +195,7 @@ var ErrPermission = errors.New("permission denied")
 // 包装错误
 func getUser(id int) (*User, error) {
     // 模拟数据库查询失败
-    return nil, fmt.Errorf("db query failed: %w", ErrNotFound)
+    return nil, ErrNotFound
 }
 
 func main() {
@@ -237,14 +241,15 @@ import (
     "fmt"
 )
 
-// ✅ 好的包装：添加有用的上下文
+// ✅ 好的做法：记录日志后返回原始错误
 func validateUser(id int) error {
     user, err := getUser(id)
     if err != nil {
-        return fmt.Errorf("validate user %d: %w", id, err)
+        log.Printf("validate user %d", id)
+        return err
     }
     if user.Age < 18 {
-        return fmt.Errorf("user %d is underage: %d", id, user.Age)
+        return errors.New("user is underage")
     }
     return nil
 }
@@ -332,7 +337,7 @@ func main() {
 
 func processUserData(data string) error {
     if data == "" {
-        return fmt.Errorf("process: %w", ErrInvalidInput)
+        return ErrInvalidInput
     }
     return nil
 }
@@ -539,14 +544,15 @@ var (
     ErrPermission      = errors.New("permission denied")
 )
 
-// ✅ 2. 使用错误包装添加上下文
+// ✅ 2. 记录日志后返回原始错误
 func getUser(id int) (*User, error) {
     user, err := db.QueryUser(id)
     if err != nil {
-        return nil, fmt.Errorf("query user %d: %w", id, err)
+        log.Errorf("query user %d err:%s", id, err)
+        return nil, err
     }
     if user == nil {
-        return nil, fmt.Errorf("user %d: %w", id, ErrUserNotFound)
+        return nil, ErrUserNotFound
     }
     return user, nil
 }
@@ -556,12 +562,13 @@ func processData(id int) error {
     user, err := getUser(id)
     if err != nil {
         // 记录日志并返回错误
-        log.Printf("Failed to get user %d: %v", id, err)
+        log.Errorf("Failed to get user %d err:%s", id, err)
         return err
     }
 
     if err := validateUser(user); err != nil {
-        return fmt.Errorf("validate user: %w", err)
+        log.Errorf("err:%s", err)
+        return err
     }
 
     return nil
@@ -581,11 +588,12 @@ func validateUser(user *User) error {
     return nil
 }
 
-// ✅ 5. 提供有用的错误信息
+// ✅ 5. 记录日志后返回原始错误
 func processFile(filename string) error {
     file, err := os.Open(filename)
     if err != nil {
-        return fmt.Errorf("open file %s: %w", filename, err)
+        log.Errorf("open file %s err:%s", filename, err)
+        return err
     }
     defer file.Close()
 
@@ -611,7 +619,8 @@ func badExample() {
 func goodExample() error {
     data, err := readFile("config.json")
     if err != nil {
-        return fmt.Errorf("read config: %w", err)
+        log.Errorf("err:%s", err)
+        return err
     }
 
     if data == nil {
@@ -633,7 +642,7 @@ flowchart TD
     B -->|外部依赖| E[包装错误]
 
     C --> F{需要添加上下文?}
-    F -->|是| G[使用 fmt.Errorf %w]
+    F -->|是| G[记录日志后返回错误]
     F -->|否| H[直接返回错误]
 
     D --> I{在主函数?}
@@ -653,7 +662,7 @@ flowchart TD
 |-----|---------|-----|
 | 简单错误 | `errors.New()` | `errors.New("invalid input")` |
 | 格式化错误 | `fmt.Errorf()` | `fmt.Errorf("user %d not found", id)` |
-| 错误包装 | `fmt.Errorf("%w", err)` | `fmt.Errorf("query failed: %w", err)` |
+| 错误处理 | 记录日志后返回原始错误 | `log.Printf("query failed"); return err` |
 | 错误判断 | `errors.Is()` | `errors.Is(err, ErrNotFound)` |
 | 错误提取 | `errors.As()` | `errors.As(err, &netErr)` |
 | 自定义错误 | 实现 `error` 接口 | `type AppError struct {...}` |
@@ -708,19 +717,22 @@ package main
 import (
     "fmt"
     "io"
+    "log"
     "os"
 )
 
 func readFile(filename string) ([]byte, error) {
     file, err := os.Open(filename)
     if err != nil {
-        return nil, fmt.Errorf("打开文件 %s 失败: %w", filename, err)
+        log.Errorf("err:%s", err)
+        return nil, err
     }
     defer file.Close()
 
     data, err := io.ReadAll(file)
     if err != nil {
-        return nil, fmt.Errorf("读取文件 %s 失败: %w", filename, err)
+        log.Errorf("err:%s", err)
+        return nil, err
     }
 
     return data, nil
@@ -736,7 +748,7 @@ func main() {
 }
 ```
 
-**解释**：使用 `fmt.Errorf` 和 `%w` 动词包装错误，添加文件名等上下文信息，便于定位问题。
+**解释**：直接返回原始错误，不进行包裹。如果需要记录上下文信息，应使用日志记录。
 
 </details>
 
@@ -802,6 +814,7 @@ package main
 import (
     "errors"
     "fmt"
+    "log"
 )
 
 var ErrUserNotFound = errors.New("user not found")
@@ -815,7 +828,8 @@ func getUserFromDB(id int) (*User, error) {
 func getUserService(id int) (*User, error) {
     user, err := getUserFromDB(id)
     if err != nil {
-        return nil, fmt.Errorf("获取用户 %d: %w", id, err)
+        log.Errorf("获取用户 %d err:%s", id, err)
+        return nil, err
     }
     return user, nil
 }
@@ -824,7 +838,8 @@ func getUserService(id int) (*User, error) {
 func handleUser(id int) error {
     user, err := getUserService(id)
     if err != nil {
-        return fmt.Errorf("处理用户请求: %w", err)
+        log.Errorf("err:%s", err)
+        return err
     }
     fmt.Printf("用户: %+v\n", user)
     return nil
@@ -870,7 +885,7 @@ import (
 func safeHandler(handler func() error) (err error) {
     defer func() {
         if r := recover(); r != nil {
-            log.Printf("捕获 panic: %v", r)
+            log.Errorf("捕获 panic err:%s", r)
             err = fmt.Errorf("内部错误: %v", r)
         }
     }()
@@ -917,14 +932,14 @@ func errorHandler(next Handler) Handler {
     return func(input string) error {
         defer func() {
             if r := recover(); r != nil {
-                log.Printf("[PANIC] 恢复: %v", r)
+                log.Errorf("[PANIC] 恢复 err:%s", r)
             }
         }()
 
         err := next(input)
         if err != nil {
-            log.Printf("[ERROR] 处理 '%s' 失败: %v", input, err)
-            return fmt.Errorf("处理失败: %w", err)
+            log.Errorf("[ERROR] 处理 '%s' 失败 err:%s", input, err)
+            return err
         }
         log.Printf("[INFO] 成功处理: %s", input)
         return nil

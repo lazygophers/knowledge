@@ -35,6 +35,8 @@ flowchart TD
 <Badge text="专业开发者" type="danger" /> 每个函数应该只做一件事，并做好这件事。
 
 ```go
+import "log"
+
 // ✅ 好的设计：职责单一
 func validateUserEmail(user *User) error {
     if user.Email == "" {
@@ -49,11 +51,20 @@ func validateUserEmail(user *User) error {
 func saveUserToDatabase(user *User) error {
     query := "INSERT INTO users (name, email) VALUES (?, ?)"
     _, err := db.Exec(query, user.Name, user.Email)
-    return err
+    if err != nil {
+        log.Errorf("err:%s", err)
+        return err
+    }
+    return nil
 }
 
 func sendWelcomeEmail(user *User) error {
-    return mailer.Send(user.Email, "Welcome!", "Welcome to our service!")
+    err := mailer.Send(user.Email, "Welcome!", "Welcome to our service!")
+    if err != nil {
+        log.Errorf("err:%s", err)
+        return err
+    }
+    return nil
 }
 
 // ❌ 不好的设计：职责混乱
@@ -66,6 +77,7 @@ func handleUserRegistration(user *User) error {
     query := "INSERT INTO users (name, email) VALUES (?, ?)"
     _, err := db.Exec(query, user.Name, user.Email)
     if err != nil {
+        log.Errorf("err:%s", err)
         return err
     }
     // 发送邮件
@@ -79,15 +91,18 @@ func handleUserRegistration(user *User) error {
 // ✅ 好的设计：函数短小精悍（< 50 行）
 func processOrder(order *Order) error {
     if err := validateOrder(order); err != nil {
-        return fmt.Errorf("validation failed: %w", err)
+        log.Errorf("err:%s", err)
+        return err
     }
 
     if err := reserveInventory(order); err != nil {
-        return fmt.Errorf("inventory reservation failed: %w", err)
+        log.Errorf("err:%s", err)
+        return err
     }
 
     if err := chargePayment(order); err != nil {
-        return fmt.Errorf("payment failed: %w", err)
+        log.Errorf("err:%s", err)
+        return err
     }
 
     return confirmOrder(order)
@@ -192,11 +207,14 @@ func getUser(id int64) (error, *User)  // error 应该在最后
 ### 错误处理最佳实践
 
 ```go
+import "log"
+
 // ✅ 尽早返回，减少嵌套
 func processUser(id int64) error {
     user, err := getUser(id)
     if err != nil {
-        return fmt.Errorf("failed to get user: %w", err)
+        log.Errorf("err:%s", err)
+        return err
     }
 
     if user.Status == "inactive" {
@@ -224,17 +242,18 @@ func processUser(id int64) error {
             return errors.New("user is inactive")
         }
     }
-    return fmt.Errorf("failed to get user: %w", err)
+    return err
 }
 ```
 
 ### 错误包装
 
 ```go
-// ✅ 好的设计：使用 fmt.Errorf 包装错误
+// ✅ 好的设计：记录日志后返回原始错误
 func saveUser(user *User) error {
     if err := db.Save(user); err != nil {
-        return fmt.Errorf("failed to save user %s: %w", user.Id, err)
+        log.Printf("failed to save user %s", user.Id)
+        return err
     }
     return nil
 }
@@ -485,7 +504,7 @@ func getUsers() []interface{} {
 func processFile(filename string) error {
     data, err := os.ReadFile(filename)
     if err != nil {
-        return fmt.Errorf("failed to read file: %w", err)
+        return err
     }
     // 处理数据...
     return nil
@@ -513,7 +532,7 @@ func processFile(filename string) error {
 
 - [ ] 所有错误都被处理
 - [ ] 错误信息清晰有用
-- [ ] 使用 fmt.Errorf 包装错误
+- [ ] 直接返回原始错误
 - [ ] error 返回值总是最后
 - [ ] 避免使用 panic 处理常规错误
 

@@ -293,7 +293,8 @@ func calculateWithRetry() (result int) {
 func processFile(filename string) (content string, err error) {
     defer func() {
         if r := recover(); r != nil {
-            err = fmt.Errorf("panic: %v", r)
+            log.Printf("panic: %v", r)
+            err = errors.New("panic occurred")
         }
     }()
 
@@ -749,7 +750,7 @@ func getData() (Data, error) {
 // ✅ 返回值有明确含义
 func divide(a, b int) (int, error) {
     if b == 0 {
-        return 0, fmt.Errorf("division by zero")
+        return 0, errors.New("division by zero")
     }
     return a / b, nil
 }
@@ -866,13 +867,6 @@ type Config struct {
 
 // 使用命名返回值的配置解析器
 func parseConfig() (cfg Config, err error) {
-    // 使用 defer 在返回前添加上下文
-    defer func() {
-        if err != nil {
-            err = fmt.Errorf("配置解析失败: %w", err)
-        }
-    }()
-
     cfg = Config{
         Host:     "localhost",
         Port:     8080,
@@ -884,7 +878,8 @@ func parseConfig() (cfg Config, err error) {
     if port := os.Getenv("PORT"); port != "" {
         cfg.Port, err = strconv.Atoi(port)
         if err != nil {
-            return cfg, fmt.Errorf("无效的端口: %w", err)
+            log.Printf("无效的端口: %v", err)
+            return cfg, err
         }
     }
 
@@ -900,7 +895,7 @@ func parseConfig() (cfg Config, err error) {
 
     // 验证配置
     if cfg.Port <= 0 || cfg.Port > 65535 {
-        return cfg, fmt.Errorf("端口必须在 1-65535 范围内")
+        return cfg, errors.New("端口必须在 1-65535 范围内")
     }
 
     return cfg, nil

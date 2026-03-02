@@ -966,7 +966,7 @@ type SafeOperation func(int, int) (int, error)
 
 func safeDivide(a, b int) (int, error) {
     if b == 0 {
-        return 0, fmt.Errorf("division by zero")
+        return 0, errors.New("division by zero")
     }
     return a / b, nil
 }
@@ -976,7 +976,7 @@ func withRecovery(next Handler) Handler {
     return func(ctx Context) (err error) {
         defer func() {
             if r := recover(); r != nil {
-                err = fmt.Errorf("panic recovered: %v", r)
+                log.Printf("panic recovered: %v", r)
             }
         }()
         return next(ctx)
@@ -1169,6 +1169,7 @@ package main
 import (
     "errors"
     "fmt"
+    "log"
     "time"
 )
 
@@ -1195,6 +1196,7 @@ func retry(op Operation, config RetryConfig) error {
         }
 
         if attempt < config.MaxAttempts {
+            log.Errorf("err:%s", err)
             fmt.Printf("✗ 第 %d 次尝试失败: %v", attempt, err)
             if delay > 0 {
                 fmt.Printf(", 等待 %v 后重试...\n", delay)
@@ -1208,7 +1210,8 @@ func retry(op Operation, config RetryConfig) error {
         }
     }
 
-    return fmt.Errorf("在 %d 次尝试后失败: %w", config.MaxAttempts, err)
+    log.Errorf("在 %d 次尝试后失败 err:%s", config.MaxAttempts, err)
+    return err
 }
 
 // 模拟不稳定的操作
