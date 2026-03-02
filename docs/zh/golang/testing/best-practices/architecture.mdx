@@ -1,0 +1,477 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# 测试架构
+
+<Badge text="专业" type="danger" /> <Badge text="Go 1.0+" type="info" />
+
+良好的测试架构确保测试的可维护性和有效性。
+
+## 测试金字塔
+
+```
+        /\
+       /  \        E2E Tests (10%)
+      /    \       - 慢速
+     /------\      - 昂贵
+    /  集成  \      - 脆弱
+   /  测试    \     (20%)
+  /------------\
+ /   单元测试    \   - 快速
+/                \  - 便宜
+------------------- (70%)
+```
+
+### 各层职责
+
+```go
+// 单元测试层：测试单个函数或方法
+func TestCalculator_Add(t *testing.T) {
+    result := Add(2, 3)
+    if result != 5 {
+        t.Errorf("got %d, want 5", result)
+    }
+}
+
+// 集成测试层：测试组件之间的交互
+func TestUserService_Integration(t *testing.T) {
+    db := setupTestDB(t)
+    defer db.Close()
+
+    repo := NewUserRepository(db)
+    service := NewUserService(repo)
+
+    user, err := service.CreateUser("Alice", "alice@example.com")
+    if err != nil {
+        t.Fatal(err)
+    }
+
+    if user.ID == 0 {
+        t.Error("ID should be set")
+    }
+}
+
+// E2E 测试层：测试完整的用户场景
+func TestAPI_Integration(t *testing.T) {
+    // 启动完整的应用
+    app := setupTestApp(t)
+    defer app.Close()
+
+    // 发送 HTTP 请求
+    resp, err := http.Post(app.URL+"/api/users", "application/json",
+        strings.NewReader(`{"name":"Alice","email":"alice@example.com"}`))
+    if err != nil {
+        t.Fatal(err)
+    }
+    defer resp.Body.Close()
+
+    if resp.StatusCode != 201 {
+        t.Errorf("got status %d, want 201", resp.StatusCode)
+    }
+}
+```
+
+## 分层测试策略
+
+### 依赖注入
+
+```go
+// 定义接口
+type UserRepository interface {
+    GetByID(id int) (*User, error)
+    Create(user *User) error
+}
+
+type UserService struct {
+    repo UserRepository
+    emailSender EmailSender
+}
+
+func NewUserService(repo UserRepository, emailSender EmailSender) *UserService {
+    return &UserService{
+        repo:        repo,
+        emailSender: emailSender,
+    }
+}
+
+// 单元测试：使用 mock
+func TestUserService_CreateUser_Unit(t *testing.T) {
+    mockRepo := new(MockRepository)
+    mockEmail := new(MockEmailSender)
+
+    mockRepo.On("Create", mock.AnythingOfType("*User")).Return(nil)
+    mockEmail.On("SendWelcome", mock.AnythingOfType("*User")).Return(nil)
+
+    service := NewUserService(mockRepo, mockEmail)
+    err := service.CreateUser("Alice", "alice@example.com")
+
+    assert.NoError(t, err)
+    mockRepo.AssertExpectations(t)
+    mockEmail.AssertExpectations(t)
+}
+
+// 集成测试：使用真实数据库
+func TestUserService_CreateUser_Integration(t *testing.T) {
+    db := setupTestDB(t)
+    defer db.Close()
+
+    repo := NewUserRepository(db)
+    emailSender := new(MockEmailSender)
+
+    service := NewUserService(repo, emailSender)
+    user, err := service.CreateUser("Alice", "alice@example.com")
+
+    assert.NoError(t, err)
+    assert.NotZero(t, user.ID)
+
+    // 验证数据库中的数据
+    dbUser, err := repo.GetByID(user.ID)
+    assert.NoError(t, err)
+    assert.Equal(t, "Alice", dbUser.Name)
+}
+```
+
+## 测试组织结构
+
+### 按功能组织
+
+```
+project/
+├── internal/
+│   ├── user/
+│   │   ├── user.go
+│   │   ├── user_test.go       # 单元测试
+│   │   ├── repository.go
+│   │   └── repository_test.go
+│   └── order/
+│       ├── order.go
+│       └── order_test.go
+└── tests/
+    ├── integration/           # 集成测试
+    │   ├── user_service_test.go
+    │   └── order_service_test.go
+    └── e2e/                   # E2E 测试
+        └── api_test.go
+```
+
+### 测试包组织
+
+```go
+// 内部测试：同包测试，可以访问未导出内容
+package calculator
+
+func Test_internalFunction(t *testing.T) {
+    result := internalAdd(2, 3) // 测试未导出函数
+}
+
+// 外部测试：独立包测试，只能测试公开 API
+package calculator_test
+
+import "yourmodule/calculator"
+
+func Test_PublicAPI(t *testing.T) {
+    result := calculator.Add(2, 3) // 只能测试公开函数
+}
+```
+
+## 表驱动测试架构
+
+### 通用测试结构
+
+```go
+// 定义通用的测试结构
+type TestCase struct {
+    Name    string
+    Input   interface{}
+    Want    interface{}
+    WantErr bool
+}
+
+// 定义通用的测试执行器
+func RunTests(t *testing.T, tests []TestCase, testFunc func(TestCase) (interface{}, error)) {
+    for _, tt := range tests {
+        t.Run(tt.Name, func(t *testing.T) {
+            got, err := testFunc(tt)
+
+            if (err != nil) != tt.WantErr {
+                t.Errorf("error = %v, wantErr %v", err, tt.WantErr)
+                return
+            }
+
+            if !tt.WantErr && !reflect.DeepEqual(got, tt.Want) {
+                t.Errorf("got %v, want %v", got, tt.Want)
+            }
+        })
+    }
+}
+
+// 使用通用测试执行器
+func TestParseInt(t *testing.T) {
+    tests := []TestCase{
+        {"valid number", "123", 123, false},
+        {"invalid", "abc", nil, true},
+        {"empty", "", nil, true},
+    }
+
+    RunTests(t, tests, func(tt TestCase) (interface{}, error) {
+        return strconv.ParseInt(tt.Input.(string), 10, 64)
+    })
+}
+```
+
+## 测试数据管理
+
+### 测试数据文件
+
+```
+tests/
+├──testdata/
+│   ├── users.json
+│   ├── invalid_users.json
+│   └── expected/
+│       └── users_golden.json
+└── integration_test.go
+```
+
+```go
+func TestWithTestData(t *testing.T) {
+    // 读取测试数据
+    data, err := os.ReadFile("testdata/users.json")
+    if err != nil {
+        t.Fatal(err)
+    }
+
+    var users []User
+    if err := json.Unmarshal(data, &users); err != nil {
+        t.Fatal(err)
+    }
+
+    // 测试逻辑
+    for _, user := range users {
+        result, err := ProcessUser(user)
+        if err != nil {
+            t.Errorf("ProcessUser(%v) error = %v", user, err)
+        }
+
+        if !isValid(result) {
+            t.Errorf("invalid result: %v", result)
+        }
+    }
+}
+```
+
+### Golden File 测试
+
+```go
+func TestGoldenFile(t *testing.T) {
+    input := &User{Name: "Alice", Email: "alice@example.com"}
+
+    // 生成输出
+    got := FormatUser(input)
+
+    // 读取期望输出
+    goldenFile := filepath.Join("testdata", fmt.Sprintf("%s.golden", t.Name()))
+    if *updateGolden {
+        os.WriteFile(goldenFile, []byte(got), 0644)
+        return
+    }
+
+    want, err := os.ReadFile(goldenFile)
+    if err != nil {
+        t.Fatal(err)
+    }
+
+    if got != string(want) {
+        t.Errorf("got:\n%s\nwant:\n%s", got, want)
+    }
+}
+```
+
+## 测试环境管理
+
+### 测试环境隔离
+
+```go
+// 使用环境变量控制测试行为
+func TestWithEnvironment(t *testing.T) {
+    if os.Getenv("CI") == "true" {
+        t.Skip("跳过需要本地资源的测试")
+    }
+
+    // 测试逻辑...
+}
+
+// 使用构建标签
+// +build !integration
+
+func TestUnitOnly(t *testing.T) {
+    // 只在非集成测试时运行
+}
+
+// +build integration
+
+func TestIntegrationOnly(t *testing.T) {
+    // 只在集成测试时运行
+}
+```
+
+### 测试配置
+
+```go
+type TestConfig struct {
+    DatabaseURL string
+    RedisURL    string
+    APIKey      string
+}
+
+func LoadTestConfig(t *testing.T) *TestConfig {
+    cfg := &TestConfig{
+        DatabaseURL: os.Getenv("TEST_DATABASE_URL"),
+        RedisURL:    os.Getenv("TEST_REDIS_URL"),
+        APIKey:      os.Getenv("TEST_API_KEY"),
+    }
+
+    // 设置默认值
+    if cfg.DatabaseURL == "" {
+        cfg.DatabaseURL = "sqlite::memory:"
+    }
+
+    return cfg
+}
+```
+
+<Callout type="info" title="测试架构原则">
+  <strong>独立性</strong>: 每个测试应该独立运行
+
+  <strong>可重复性</strong>: 测试结果应该可重复
+
+  <strong>快速反馈</strong>: 单元测试应该快速执行
+
+  <strong>清晰意图</strong>: 测试应该清楚表达其目的
+</Callout>
+
+## 练习
+
+1. **设计测试架构**：为一个用户认证服务设计测试架构
+
+<details>
+<summary>查看答案</summary>
+
+```
+project/
+├── internal/
+│   └── auth/
+│       ├── service.go          # 认证服务
+│       ├── service_test.go     # 单元测试（mock）
+│       ├── repository.go       # 数据访问
+│       └── repository_test.go  # 单元测试
+└── tests/
+    ├── integration/
+    │   └── auth_service_test.go   # 集成测试（真实数据库）
+    └── e2e/
+        └── auth_api_test.go        # E2E 测试（完整应用）
+```
+
+```go
+// internal/auth/service_test.go - 单元测试
+package auth_test
+
+import (
+    "testing"
+    "github.com/stretchr/testify/assert"
+)
+
+func TestAuthService_Login_Unit(t *testing.T) {
+    mockRepo := new(MockRepository)
+    mockHasher := new(MockHasher)
+
+    service := NewAuthService(mockRepo, mockHasher)
+
+    // 设置 mock 期望
+    mockRepo.On("GetByEmail", "user@example.com").
+        Return(&User{ID: 1, PasswordHash: "hashed"}, nil)
+    mockHasher.On("Verify", "password", "hashed").
+        Return(true)
+
+    // 测试登录
+    token, err := service.Login("user@example.com", "password")
+    assert.NoError(t, err)
+    assert.NotEmpty(t, token)
+
+    // 验证 mock 调用
+    mockRepo.AssertExpectations(t)
+    mockHasher.AssertExpectations(t)
+}
+
+// tests/integration/auth_service_test.go - 集成测试
+package integration_test
+
+import (
+    "testing"
+    "yourmodule/internal/auth"
+)
+
+func TestAuthService_Login_Integration(t *testing.T) {
+    // 使用真实数据库连接
+    db := setupTestDB(t)
+    defer db.Close()
+
+    repo := auth.NewUserRepository(db)
+    hasher := auth.NewBCryptHasher()
+    service := auth.NewAuthService(repo, hasher)
+
+    // 创建测试用户
+    user := &auth.User{
+        Email:    "user@example.com",
+        Password: "password",
+    }
+    err := service.Register(user)
+    assert.NoError(t, err)
+
+    // 测试登录
+    token, err := service.Login("user@example.com", "password")
+    assert.NoError(t, err)
+    assert.NotEmpty(t, token)
+
+    // 验证 token 有效性
+    claims, err := service.ValidateToken(token)
+    assert.NoError(t, err)
+    assert.Equal(t, "user@example.com", claims.Email)
+}
+
+// tests/e2e/auth_api_test.go - E2E 测试
+package e2e_test
+
+import (
+    "net/http"
+    "net/http/httptest"
+    "strings"
+    "testing"
+)
+
+func TestAuthAPI_E2E(t *testing.T) {
+    // 启动完整应用
+    app := setupTestApp(t)
+    defer app.Close()
+
+    // 测试注册
+    resp := registerRequest(t, app.URL, "user@example.com", "password")
+    assert.Equal(t, 201, resp.StatusCode)
+
+    // 测试登录
+    token := loginRequest(t, app.URL, "user@example.com", "password")
+    assert.NotEmpty(t, token)
+
+    // 测试受保护的端点
+    req, _ := http.NewRequest("GET", app.URL+"/api/users/me", nil)
+    req.Header.Set("Authorization", "Bearer "+token)
+
+    resp, err := http.DefaultClient.Do(req)
+    assert.NoError(t, err)
+    assert.Equal(t, 200, resp.StatusCode)
+}
+```
+
+**解释**：分层测试架构确保了各层的独立性和可维护性，单元测试快速反馈，集成测试验证组件交互，E2E 测试验证完整流程。
+
+</details>

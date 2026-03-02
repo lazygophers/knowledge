@@ -1,0 +1,17 @@
+[
+  {
+    "type": "file",
+    "name": "testify",
+    "label": "testify"
+  },
+  {
+    "type": "file",
+    "name": "gomock",
+    "label": "gomock"
+  },
+  {
+    "type": "file",
+    "name": "other-tools",
+    "label": "其他工具"
+  }
+]

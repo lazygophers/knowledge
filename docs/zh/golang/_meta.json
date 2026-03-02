@@ -50,5 +50,14 @@
         "type": "dir",
         "name": "concurrency",
         "label": "并发"
+    },
+    {
+        "type": "section-header",
+        "label": "测试"
+    },
+    {
+        "type": "dir",
+        "name": "testing",
+        "label": "测试"
     }
 ]

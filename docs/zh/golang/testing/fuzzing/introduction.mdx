@@ -1,0 +1,329 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# Fuzz 简介
+
+<Badge text="高级" type="danger" /> <Badge text="Go 1.18+" type="info" />
+
+模糊测试（Fuzzing）是一种自动化测试技术，通过随机输入发现代码中的 bug 和边界情况。
+
+## 什么是模糊测试
+
+模糊测试通过向程序提供大量随机或半随机的输入，来发现程序中的异常行为、崩溃、内存泄漏等问题。
+
+```go
+// 传统测试：只测试预期的输入
+func TestReverse(t *testing.T) {
+    got := Reverse("hello")
+    want := "olleh"
+    if got != want {
+        t.Errorf("got %q, want %q", got, want)
+    }
+}
+
+// 模糊测试：测试无数可能的输入
+func FuzzReverse(f *testing.F) {
+    f.Add("hello")  // 添加种子语料
+    f.Fuzz(func(t *testing.T, input string) {
+        // 测试逻辑
+        reversed := Reverse(input)
+        // 断言
+    })
+}
+```
+
+## 基本结构
+
+```go
+func FuzzFunctionName(f *testing.F) {
+    // 1. 添加种子语料
+    f.Add(input1, input2, ...)
+
+    // 2. 定义模糊测试函数
+    f.Fuzz(func(t *testing.T, input1 Type1, input2 Type2, ...) {
+        // 3. 测试逻辑
+        result := Function(input1, input2)
+        // 4. 断言
+        if result != expected {
+            t.Errorf("...")
+        }
+    })
+}
+```
+
+<Callout type="info" title="支持的类型">
+  Fuzzing 支持以下类型：
+  <ul>
+    <li><code>[]byte</code>, <code>string</code></li>
+    <li><code>bool</code></li>
+    <li><code>int</code>, <code>int8</code>...<code>int64</code></li>
+    <li><code>uint</code>, <code>uint8</code>...<code>uint64</code></li>
+    <li><code>float32</code>, <code>float64</code></li>
+  </ul>
+</Callout>
+
+## 简单示例
+
+```go
+// reverse.go
+package strings
+
+func Reverse(s string) string {
+    runes := []rune(s)
+    for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
+        runes[i], runes[j] = runes[j], runes[i]
+    }
+    return string(runes)
+}
+
+// reverse_test.go
+package strings_test
+
+import (
+    "testing"
+)
+
+func FuzzReverse(f *testing.F) {
+    // 添加种子语料
+    f.Add("hello")
+    f.Add("")
+    f.Add("123")
+
+    // 模糊测试函数
+    f.Fuzz(func(t *testing.T, input string) {
+        // 测试：两次反转应该等于原字符串
+        reversed := Reverse(input)
+        if Reverse(reversed) != input {
+            t.Errorf("Reverse(Reverse(%q)) = %q", input, reversed)
+        }
+
+        // 测试：反转前后长度不变
+        if len(Reverse(input)) != len(input) {
+            t.Errorf("Reverse(%q) changed length", input)
+        }
+    })
+}
+```
+
+### 运行模糊测试
+
+```bash
+# 运行模糊测试
+$ go test -fuzz=FuzzReverse
+fuzz: elapsed: 0s, gathering baseline coverage: 0/4 completed
+fuzz: elapsed: 0s, gathering baseline coverage: 4/4 completed, initial sync: 8
+fuzz: elapsed: 0s, execs: 100 (1000/s), new interesting: 8 (total: 8)
+fuzz: elapsed: 1s, execs: 50000 (50000/s), new interesting: 8 (total: 8)
+fuzz: elapsed: 2s, execs: 100000 (50000/s), new interesting: 8 (total: 8)
+...
+
+# 如果发现失败
+--- FAIL: FuzzReverse (0.12s)
+    --- FAIL: FuzzReverse (0.00s)
+        testing.go:1348: reverse.go:8: Reverse(Reverse("𝔫")) = "𝔫"
+    Failing input written to testdata/fuzz/FuzzReverse/a3b2c1d4
+    To re-run:
+    go test -run=FuzzReverse/a3b2c1d4
+```
+
+## 发现的问题
+
+### Unicode 问题
+
+```go
+// Reverse 函数可能对某些 Unicode 字符处理不正确
+// 例如：组合字符、变体选择器等
+
+// 添加测试用例
+func FuzzReverseUnicode(f *testing.F) {
+    f.Add("hello")
+    f.Add("𝔫")  // 添加问题字符
+
+    f.Fuzz(func(t *testing.T, input string) {
+        reversed := Reverse(input)
+        if Reverse(reversed) != input {
+            t.Errorf("Reverse(Reverse(%q)) != %q", input, reversed)
+        }
+    })
+}
+```
+
+### 边界情况
+
+```go
+func FuzzParseInt(f *testing.F) {
+    // 添加边界值
+    f.Add("0")
+    f.Add("-1")
+    f.Add("9223372036854775807") // int64 max
+    f.Add("-9223372036854775808") // int64 min
+
+    f.Fuzz(func(t *testing.T, input string) {
+        result, err := strconv.ParseInt(input, 10, 64)
+        // 测试不会 panic
+        _ = result
+        _ = err
+    })
+}
+```
+
+## 种子语料
+
+种子语料是预定义的测试输入，帮助模糊测试更快地发现问题。
+
+```go
+func FuzzURLParser(f *testing.F) {
+    // 添加各种 URL 格式作为种子
+    f.Add("https://example.com")
+    f.Add("http://localhost:8080/path")
+    f.Add("ftp://user:pass@host:21/dir")
+    f.Add("file:///path/to/file")
+    f.Add("mailto:user@example.com")
+
+    // 添加无效输入
+    f.Add("")
+    f.Add("not a url")
+    f.Add("http://")
+
+    f.Fuzz(func(t *testing.T, input string) {
+        u, err := url.Parse(input)
+        if err != nil {
+            return // 无效 URL 是可以的
+        }
+        // 验证解析结果的性质
+        if u.Scheme != "" && u.Host == "" {
+            t.Errorf("URL with scheme %q should have host", u.Scheme)
+        }
+    })
+}
+```
+
+## 使用场景
+
+```
+┌─────────────────────────────────────────┐
+│          模糊测试适用场景                 │
+├─────────────────────────────────────────┤
+│  ✅ 适合：                               │
+│  • 输入解析（JSON、XML、YAML）            │
+│  • 编解码（Base64、Hex、URL）             │
+│  • 字符串处理                            │
+│  • 协议解析                              │
+│  • 密码学算法                            │
+│                                          │
+│  ❌ 不适合：                             │
+│  • 需要数据库连接的测试                   │
+│  • 需要网络调用的测试                     │
+│  • 时间相关的测试                         │
+│  • 有副作用（写入文件、发送邮件）         │
+└─────────────────────────────────────────┘
+```
+
+## 限制和注意事项
+
+<Callout type="warning" title="模糊测试的限制">
+  <strong>类型限制</strong>
+  <ul>
+    <li>不支持自定义类型（除非是基本类型的别名）</li>
+    <li>不支持指针、通道、函数、map</li>
+    <li>不支持接口类型</li>
+  </ul>
+
+  <strong>使用建议</strong>
+  <ul>
+    <li>保持测试简单快速</li>
+    <li>避免外部依赖</li>
+    <li>关注纯函数逻辑</li>
+  </ul>
+</Callout>
+
+## 练习
+
+1. **Fuzz 字符串解析**：为 CSV 解析函数编写模糊测试
+
+<details>
+<summary>查看答案</summary>
+
+```go
+// csvparse.go
+package csvparse
+
+import (
+    "encoding/csv"
+    "strings"
+)
+
+type Record struct {
+    Fields []string
+}
+
+func Parse(input string) (*Record, error) {
+    reader := csv.NewReader(strings.NewReader(input))
+    fields, err := reader.Read()
+    if err != nil {
+        return nil, err
+    }
+    return &Record{Fields: fields}, nil
+}
+
+// csvparse_test.go
+package csvparse_test
+
+import (
+    "strings"
+    "testing"
+
+    "yourmodule/csvparse"
+)
+
+func FuzzCSVParser(f *testing.F) {
+    // 添加种子语料
+    f.Add("a,b,c")
+    f.Add('"quoted","value",here')
+    f.Add("field1,field2,field3")
+    f.Add("")
+    f.Add("single")
+    f.Add('a,"b\nline",c') // 包含换行符
+
+    f.Fuzz(func(t *testing.T, input string) {
+        record, err := csvparse.Parse(input)
+
+        // 验证：即使解析失败，也不应该 panic
+        _ = err
+        if err == nil {
+            // 如果解析成功，验证结果
+            if record == nil {
+                t.Error("record should not be nil when err is nil")
+            }
+            if len(record.Fields) == 0 {
+                // 空记录是可能的
+            }
+        }
+
+        // 验证：往返转换应该保持不变（在无错误时）
+        if err == nil {
+            reconstructed := strings.Join(record.Fields, ",")
+            record2, err2 := csvparse.Parse(reconstructed)
+            if err2 == nil {
+                if len(record.Fields) != len(record2.Fields) {
+                    t.Errorf("field count mismatch")
+                }
+            }
+        }
+    })
+}
+```
+
+运行模糊测试：
+```bash
+$ go test -fuzz=FuzzCSVParser
+fuzz: elapsed: 0s, gathering baseline coverage: 0/6 completed
+fuzz: elapsed: 3s, gathering baseline coverage: 6/6, initial sync: 25
+fuzz: minimizing 10-byte failing input file...
+fuzz: elapsed: 4s, minimizing: 8 bytes, minimized to: "a,b\"c"
+...
+```
+
+**解释**：模糊测试发现了一个包含未闭合引号的输入可能导致问题。
+
+</details>

@@ -1,0 +1,17 @@
+[
+  {
+    "type": "file",
+    "name": "introduction",
+    "label": "Fuzz 简介"
+  },
+  {
+    "type": "file",
+    "name": "writing-fuzz",
+    "label": "编写模糊测试"
+  },
+  {
+    "type": "file",
+    "name": "best-practices",
+    "label": "最佳实践"
+  }
+]

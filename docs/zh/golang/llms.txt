@@ -73,3 +73,62 @@
 - [Best Practices](./functions-methods/best-practices.mdx): Function design principles, naming conventions, error handling patterns, performance optimization techniques, testability design, common anti-patterns, and code review checklist.
 - [Functions and Methods Sidebar](./functions-methods/_meta.json): Navigation metadata for functions-methods subdirectory.
 - [Functions and Methods LLMs Index](./functions-methods/llms.txt): English index for functions-methods subdirectory.
+
+## Testing
+
+- [Testing Module](./testing/): Complete Go testing framework documentation covering unit tests, benchmarks, fuzzing, mocking tools, and best practices.
+
+### Basics
+
+- [Test Files](./testing/basics/test-files.mdx): Test file naming conventions (_test.go suffix), test function signatures (TestXxx, ExampleXxx, BenchmarkXxx, FuzzXxx), go test command usage, package structure (white-box vs black-box testing), and build tags.
+
+- [Assertions](./testing/basics/assertions.mdx): Using *testing.T methods (Error vs Fatal, Log/Skip, Cleanup, TempDir, Setenv, Parallel), helper functions with t.Helper(), and assertion patterns.
+
+- [Table-Driven Tests](./testing/basics/table-driven.mdx): Table-driven tests structure, anonymous vs named structs, t.Run() subtests, test case naming, loop variable capture (Go 1.22+ range-over-func), parallel table tests, and AAA pattern.
+
+- [Coverage](./testing/basics/coverage.mdx): -cover flag, -coverprofile generation, go tool cover (HTML/func reports), coverage modes (set, count, atomic), setting coverage targets, and coverage best practices.
+
+### Advanced
+
+- [Test Doubles](./testing/advanced/test-doubles.mdx): Test double types (Dummy, Stub, Spy, Fake, Mock), when to use each type, interface design for testing, and practical examples with Spy and Fake implementations.
+
+- [Mocking](./testing/advanced/mocking.mdx): testify/mock framework (On, Return, AssertExpectations), gomock code generation and usage (mockgen, Controller, EXPECT, matchers, InOrder), and mock comparison table.
+
+- [TestMain](./testing/advanced/test-main.mdx): TestMain(m *testing.M) signature, global setup/teardown, environment initialization, exit code handling, and lifecycle with t.Cleanup visualization.
+
+- [Parallel Tests](./testing/advanced/parallel.mdx): t.Parallel() for parallel tests, -parallel flag, race detection with -race, synchronization mechanisms, and worker pool patterns.
+
+### Benchmark
+
+- [Benchmark Basics](./testing/benchmark/basics.mdx): BenchmarkXxx(b *testing.B) signature, b.N mechanism, timing control (ResetTimer, StopTimer, StartTimer), ReportAllocs for memory statistics, and parallel benchmarks.
+
+- [Profiling](./testing/benchmark/profiling.mdx): CPU profiling (-cpuprofile), memory profiling (-memprofile), go tool pprof analysis, pprof commands (top, list, web), and optimization workflow.
+
+- [Optimization](./testing/benchmark/optimization.mdx): Reducing memory allocations (StringBuilder, preallocation), avoiding unnecessary conversions, concurrency optimization (worker pools), algorithm optimization, and inline optimization.
+
+### Fuzzing
+
+- [Fuzz Introduction](./testing/fuzzing/introduction.mdx): FuzzXxx(f *testing.F) signature (Go 1.18+), f.Add() seed corpus, f.Fuzz() function, supported types, use cases, and fuzzing limitations.
+
+- [Writing Fuzz](./testing/fuzzing/writing-fuzz.mdx): Fuzz test design principles, invariants, progressive validation, common patterns (input validation, algorithm verification, parser testing), and handling failures.
+
+- [Fuzz Best Practices](./testing/fuzzing/best-practices.mdx): Seed corpus selection (boundary cases, real-world inputs, file-based), assertion design, performance considerations, crasher management, and CI/CD integration.
+
+### Tools
+
+- [testify](./testing/tools/testify.mdx): testify/assert (Equal, NotEqual, True, False, NoError, Contains, HasPrefix), testify/mock framework, testify/suite for test organization (SetupSuite, TearDownSuite, SetupTest, TearDownTest), and HTTP assertions.
+
+- [gomock](./testing/tools/gomock.mdx): mockgen code generation, Controller lifecycle, EXPECT() API, matchers (Eq, Any, Len, Matcher), Times() call count verification, InOrder() verification, and Do/DoAndReturn callbacks.
+
+- [Other Tools](./testing/tools/other-tools.mdx): quicktest, gotestsum, testcontainers-go (PostgreSQL, Redis containers), godog (BDD testing), goleak (goroutine leak detection), httptest (HTTP server testing), and pprof (performance analysis).
+
+### Best Practices
+
+- [Conventions](./testing/best-practices/conventions.mdx): Test naming conventions (Test<Function><Scenario>), AAA pattern (Arrange-Act-Assert), test isolation principles, avoiding logic in tests, clear error messages, and test documentation.
+
+- [Architecture](./testing/best-practices/architecture.mdx): Test pyramid strategy (70% unit, 20% integration, 10% E2E), layered testing (unit vs integration vs E2E), dependency injection for testability, test organization structure, and golden file testing.
+
+- [CI/CD Integration](./testing/best-practices/ci-cd.mdx): GitHub Actions workflows (multi-version, parallel jobs, test reports), GitLab CI configuration, coverage gates, benchmark regression detection, fuzzing in CI, race detection, and pre-commit hooks.
+
+- [Testing Sidebar](./testing/_meta.json): Navigation metadata for testing subdirectory.
+- [Testing LLMs Index](./testing/llms.txt): English index for testing subdirectory.

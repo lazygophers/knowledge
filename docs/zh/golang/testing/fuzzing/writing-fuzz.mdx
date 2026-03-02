@@ -1,0 +1,355 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# 编写模糊测试
+
+<Badge text="高级" type="danger" /> <Badge text="Go 1.18+" type="info" />
+
+编写高质量的模糊测试需要一些技巧和最佳实践。
+
+## 设计原则
+
+### 保持简单
+
+```go
+// ❌ 太复杂：模糊测试难以发现真正的问题
+func FuzzComplex(f *testing.F) {
+    f.Fuzz(func(t *testing.T, a, b, c, d int, s string, b bool) {
+        // 太多参数，难以定位问题
+        result := ComplexCalculation(a, b, c, d)
+        result2 := AnotherCalculation(s, b)
+        if result != result2 {
+            t.Error("...")
+        }
+    })
+}
+
+// ✅ 简单：关注单一职责
+func FuzzSimple(f *testing.F) {
+    f.Fuzz(func(t *testing.T, input string) {
+        // 单一函数，清晰断言
+        result := Process(input)
+        if !isValid(result) {
+            t.Errorf("invalid result: %v", result)
+        }
+    })
+}
+```
+
+### 使用不变量
+
+```go
+func FuzzReverse(f *testing.F) {
+    f.Add("hello")
+    f.Add("")
+
+    f.Fuzz(func(t *testing.T, input string) {
+        // 不变量 1：两次反转等于原字符串
+        if Reverse(Reverse(input)) != input {
+            t.Errorf("double reverse failed for %q", input)
+        }
+
+        // 不变量 2：长度不变
+        if len(Reverse(input)) != len(input) {
+            t.Errorf("reverse changed length for %q", input)
+        }
+    })
+}
+```
+
+### 验证属性
+
+```go
+func FuzzJSONRoundtrip(f *testing.F) {
+    // 添加种子
+    f.Add(`{"name":"Alice","age":30}`)
+    f.Add(`[]`)
+    f.Add(`{}`)
+
+    f.Fuzz(func(t *testing.T, input string) {
+        // 属性：往返转换应该保持不变
+        var data1 interface{}
+        if err := json.Unmarshal([]byte(input), &data1); err != nil {
+            return // 无效 JSON 是允许的
+        }
+
+        output, err := json.Marshal(data1)
+        if err != nil {
+            t.Errorf("marshal failed: %v", err)
+            return
+        }
+
+        var data2 interface{}
+        if err := json.Unmarshal(output, &data2); err != nil {
+            t.Errorf("unmarshal failed: %v", err)
+            return
+        }
+
+        // 比较往返后的数据
+        if !reflect.DeepEqual(data1, data2) {
+            t.Errorf("roundtrip changed data")
+        }
+    })
+}
+```
+
+## 常见模式
+
+### 输入验证
+
+```go
+func FuzzInputValidation(f *testing.F) {
+    f.Add("valid@email.com")
+    f.Add("invalid")
+    f.Add("")
+    f.Add("a@b@c.com")
+
+    f.Fuzz(func(t *testing.T, email string) {
+        err := ValidateEmail(email)
+
+        // 如果格式明显无效，应该返回错误
+        if !strings.Contains(email, "@") {
+            if err == nil {
+                t.Errorf("email without @ should be invalid: %q", email)
+            }
+            return
+        }
+
+        // 如果有多个 @，应该返回错误
+        if strings.Count(email, "@") > 1 {
+            if err == nil {
+                t.Errorf("email with multiple @ should be invalid: %q", email)
+            }
+            return
+        }
+    })
+}
+```
+
+### 算法验证
+
+```go
+func FuzzSort(f *testing.F) {
+    f.Add([]int{3, 1, 4, 1, 5})
+    f.Add([]int{})
+    f.Add([]int{1})
+
+    f.Fuzz(func(t *testing.T, input []int) {
+        // 不要修改原输入
+        inputCopy := make([]int, len(input))
+        copy(inputCopy, input)
+
+        result := Sort(inputCopy)
+
+        // 验证：输出是升序的
+        for i := 1; i < len(result); i++ {
+            if result[i-1] > result[i] {
+                t.Errorf("not sorted: %v", result)
+                break
+            }
+        }
+
+        // 验证：输出包含所有输入元素
+        if !slicesEqual(input, result) {
+            t.Errorf("elements changed: input=%v, result=%v", input, result)
+        }
+    })
+}
+
+func slicesEqual(a, b []int) bool {
+    if len(a) != len(b) {
+        return false
+    }
+    for i := range a {
+        found := false
+        for j := range b {
+            if a[i] == b[j] {
+                found = true
+                break
+            }
+        }
+        if !found {
+            return false
+        }
+    }
+    return true
+}
+```
+
+### 解析器测试
+
+```go
+func FuzzURLParser(f *testing.F) {
+    f.Add("https://example.com/path?query=value#fragment")
+    f.Add("http://user:pass@host:8080/path")
+    f.Add("file:///path/to/file")
+    f.Add("invalid url")
+
+    f.Fuzz(func(t *testing.T, input string) {
+        u, err := url.Parse(input)
+        if err != nil {
+            return // 无效 URL 可以
+        }
+
+        // 验证：如果有 scheme，host 不应该为空
+        if u.Scheme != "" && u.Host == "" && u.Path == "" {
+            t.Errorf("URL with scheme %q missing host and path", u.Scheme)
+        }
+
+        // 验证：重新序列化应该包含原始信息
+        if u.String() == "" {
+            t.Errorf("empty URL from %q", input)
+        }
+    })
+}
+```
+
+## 严重性等级
+
+```go
+func FuzzSeverityLevels(f *testing.F) {
+    f.Fuzz(func(t *testing.T, input string) {
+        // 级别 1：不应该 panic
+        defer func() {
+            if r := recover(); r != nil {
+                t.Errorf("panic for input %q: %v", input, r)
+            }
+        }()
+
+        result, err := Process(input)
+
+        // 级别 2：错误应该有意义
+        if err != nil && err.Error() == "" {
+            t.Errorf("empty error message")
+        }
+
+        // 级别 3：结果应该合理
+        if err == nil && result == nil {
+            t.Errorf("nil result without error")
+        }
+    })
+}
+```
+
+## 处理失败输入
+
+```go
+// 当模糊测试发现失败时，输入会被保存到 testdata/fuzz/
+// 可以重放失败的输入
+
+func FuzzReproduce(f *testing.F) {
+    // 添加导致失败的输入
+    f.Add("specific-input-that-caused-failure")
+
+    f.Fuzz(func(t *testing.T, input string) {
+        // 测试逻辑
+        result := Process(input)
+        if hasBug(result) {
+            t.Errorf("found bug with input: %q", input)
+        }
+    })
+}
+```
+
+### 使用 -fuzztarget
+
+```bash
+# 使用保存的失败输入重新测试
+go test -run=FuzzReverse/a3b2c1d4
+
+# 或使用 fuzz 目标文件
+go test -fuzz=FuzzReverse -fuzztime=30s
+```
+
+## 多参数模糊测试
+
+```go
+func FuzzMultiParam(f *testing.F) {
+    // 添加多参数种子
+    f.Add(10, 20)
+    f.Add(-5, 15)
+    f.Add(0, 0)
+
+    f.Fuzz(func(t *testing.T, a, b int) {
+        result := Add(a, b)
+        expected := a + b
+        if result != expected {
+            t.Errorf("Add(%d, %d) = %d, want %d", a, b, result, expected)
+        }
+    })
+}
+```
+
+## 练习
+
+1. **Fuzz 编解码**：为 Base64 编解码编写模糊测试
+
+<details>
+<summary>查看答案</summary>
+
+```go
+// base64fuzz_test.go
+package base64_test
+
+import (
+    "encoding/base64"
+    "testing"
+)
+
+func FuzzBase64Roundtrip(f *testing.F) {
+    // 添加种子
+    f.Add([]byte("hello world"))
+    f.Add([]byte{})
+    f.Add([]byte{0x00, 0xff, 0x80})
+
+    f.Fuzz(func(t *testing.T, input []byte) {
+        // 编码
+        encoded := base64.StdEncoding.EncodeToString(input)
+
+        // 解码
+        decoded, err := base64.StdEncoding.DecodeString(encoded)
+        if err != nil {
+            t.Errorf("decode failed: %v", err)
+            return
+        }
+
+        // 验证：往返转换应该保持不变
+        if !equalBytes(input, decoded) {
+            t.Errorf("roundtrip failed: got %v, want %v", decoded, input)
+        }
+    })
+}
+
+func equalBytes(a, b []byte) bool {
+    if len(a) != len(b) {
+        return false
+    }
+    for i := range a {
+        if a[i] != b[i] {
+            return false
+        }
+    }
+    return true
+}
+
+func FuzzBase64Invalid(f *testing.F) {
+    // 添加无效的 Base64 字符串
+    f.Add("!!!")
+    f.Add("abc$")
+    f.Add("ab c") // 包含空格
+
+    f.Fuzz(func(t *testing.T, input string) {
+        // 解码应该优雅地处理无效输入
+        _, err := base64.StdEncoding.DecodeString(input)
+        if err != nil {
+            // 无效输入返回错误是正常的
+            return
+        }
+        // 如果没有错误，说明输入是有效的
+    })
+}
+```
+
+**解释**：模糊测试验证了 Base64 编解码的正确性，包括有效和无效输入。
+
+</details>
