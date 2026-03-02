@@ -273,9 +273,9 @@ flowchart TD
 | 含义 | 命名 | 类型 | 示例 |
 |-----|------|------|------|
 | 事件时刻 | `At` 后缀 | `int64` | `CreatedAt`, `UpdatedAt` |
-| 时间范围 | `Start/End` | `int64` | `StartTime`, `EndTime` |
+| 时间值 | `Time` 后缀 | `time.Time` | `StartTime`, `EndTime` |
 | 持续时间 | `Duration` | `time.Duration` | `Timeout`, `Delay` |
-| 截止/过期 | `Deadline/ExpiresAt` | `int64` | `Deadline`, `ExpiresAt` |
+| 过期时间 | `ExpiresAt` | `int64` | `ExpiresAt` |
 
 ```go
 // ✅ 推荐：At 后缀表示时间点（Unix 时间戳）
@@ -285,10 +285,10 @@ type User struct {
     DeletedAt int64  // 删除时间（0 表示未删除）
 }
 
-// 时间范围（Unix 时间戳）
+// Time 后缀使用 time.Time
 type Event struct {
-    StartTime int64  // 开始时间
-    EndTime   int64  // 结束时间
+    StartTime time.Time
+    EndTime   time.Time
 }
 
 // 持续时间（Duration 仍用 time.Duration）
@@ -303,10 +303,10 @@ type Task struct {
 | 后缀 | 推荐类型 | 允许类型 | 说明 |
 |-----|---------|---------|------|
 | `At` | `int64` | `int64`, `uint64`, `int32`, `uint32` | Unix 时间戳（秒或毫秒） |
-| `Time` | `int64` | `int64`, `uint64`, `int32`, `uint32` | Unix 时间戳 |
+| `Time` | `time.Time` | `time.Time` | Go 原生时间类型 |
 | `Duration` | `time.Duration` | `time.Duration` | 持续时间 |
 
-<Badge text="注意" type="danger" /> **不允许 `*time.Time`**，时间戳字段使用整数类型
+<Badge text="注意" type="danger" /> **`At` 后缀用 `int64` 时间戳，`Time` 后缀用 `time.Time`**
 
 ### 零值处理
 
@@ -329,7 +329,7 @@ type Order struct {
 }
 ```
 
-<Badge text="记忆" type="tip" /> **At/Time 用 int64 时间戳，Duration 用 time.Duration**
+<Badge text="记忆" type="tip" /> **`At` 用 int64 时间戳，`Time` 用 time.Time，`Duration` 用 time.Duration**
 
 
 ## <Badge text="常见错误" type="danger" />
@@ -419,7 +419,7 @@ flowchart TD
 | 单一状态 | `State` / `bool` | 枚举或布尔 | `Enabled`, `StateOn` |
 | 组合状态 | `Status` | 位运算组合多个状态 | `Status | StatusRunning`, `StatusReady | StatusError` |
 | 时间点 | `At` 后缀 | `int64` 时间戳 | `CreatedAt int64`, `UpdatedAt int64` |
-| 时间范围 | `Start/End` | `int64` 时间戳 | `StartTime int64`, `EndTime int64` |
+| 时间值 | `Time` 后缀 | `time.Time` | `StartTime time.Time`, `EndTime time.Time` |
 | 持续时间 | `Duration` | `time.Duration` | `Timeout time.Duration`, `Delay time.Duration` |
 
 
