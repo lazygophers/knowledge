@@ -4,9 +4,17 @@
 
 ## Docs
 
-- [Install Overview](./index.md): Cross-platform Go installation overview and setup checklist.
-- [Install on Linux](./linux.md): Linux installation methods with package and binary options.
-- [Install on macOS](./macos.md): macOS installation methods including PKG and Homebrew.
-- [Install on Windows](./windows.md): Windows installation methods including MSI and package managers.
+- [Install Overview](./install.mdx): Cross-platform Go installation overview with RPress Tabs and Badge components. Includes platform selection cards and user-level guidance.
+- [Install on Windows](./windows.mdx): Windows installation methods (MSI, Chocolatey, Scoop, ZIP, goup) with interactive Tabs and difficulty badges.
+- [Install on macOS](./macos.mdx): macOS installation methods (PKG, Homebrew, goup, source) with interactive Tabs and difficulty badges.
+- [Install on Linux](./linux.mdx): Linux installation methods (binary, apt, yum, snap, goup) with interactive Tabs and difficulty badges.
 - [Install Metadata](./_meta.json): Navigation metadata for installation pages.
 - [This LLMs File](./llms.txt): Machine-readable index for this install directory.
+
+## Design Notes
+
+All installation guides use RPress components:
+- **Tabs**: Switch between installation methods
+- **Badge**: Mark difficulty levels and recommendations
+- **Card**: Platform selection overview
+- User levels: Beginner (tip), Developer (info), Intermediate (warning), Advanced (warning outline), Enterprise (danger)

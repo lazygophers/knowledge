@@ -26,7 +26,7 @@ $ARGUMENTS
    4. 结果检查清单
    5. 确保内容都是最新的，没用过时的内容
 5. 根据需求，通过 Command(deep-research) 分析，确认需要添加、更新、完善的文档内容
-   1. 每一个知识点都需要根据所有的目标读者有单独的标题层级，用于针对不同的读者水平的用户区分内容、风格、复杂度等
+   1. 每一个知识点都需要根据所有目标读者水平的用户区分内容、风格、复杂度等
    2. 添加丰富的图例、图表，方便读者理解和记忆
    3. 对于复杂知识点，需要有类似于海报的可视化展示，帮助读者更直观地理解
 6. 更新 @docs/zh 中的文档内容
@@ -52,6 +52,7 @@ $ARGUMENTS
    4. [Frontmatter](https://rspress.rs/zh/guide/use-mdx/frontmatter)
    5. [主题](https://rspress.rs/zh/guide/theme)
    6. [其它组件](https://rspress.rs/zh/ui/components/)
+   7. [Badge](https://rspress.rs/zh/ui/components/badge)
 
 检查清单：
 

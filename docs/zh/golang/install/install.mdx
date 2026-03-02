@@ -1,8 +1,12 @@
+import { Badge, Tabs, TabItem } from '@rspress/core/theme';
+
 # Go 语言安装指南
 
 本指南将帮助你在各种操作系统上安装 Go 语言。
 
 [← 返回模块概览](../)
+
+---
 
 ## 🖥️ 快速选择你的平台
 
@@ -23,17 +27,96 @@
   </a>
 </div>
 
-### 各平台安装方式对比
+---
+
+## 📊 各平台安装方式对比
 
 | 操作系统    | 图形化安装    | 命令行安装 | 包管理器               | 便携版 | 多版本管理 |
 | ----------- | ------------- | ---------- | ---------------------- | ------ | ---------- |
-| **Windows** | ✅ MSI 安装包 | ✅         | Chocolatey / Scoop     | ✅ ZIP | ✅ goup    |
-| **macOS**   | ✅ PKG 安装包 | ✅         | Homebrew               | -      | ✅ goup    |
-| **Linux**   | -             | ✅ tar.gz  | apt / yum / dnf / Snap | ✅     | ✅ goup    |
+| **Windows** | <Badge text="MSI" type="tip" /> | <Badge text="✅" type="info" /> | Chocolatey / Scoop     | <Badge text="ZIP" type="info" /> | <Badge text="goup" type="warning" /> |
+| **macOS**   | <Badge text="PKG" type="tip" /> | <Badge text="✅" type="info" /> | Homebrew               | -      | <Badge text="goup" type="warning" /> |
+| **Linux**   | -             | <Badge text="tar.gz" type="info" /> | apt / yum / dnf / Snap | <Badge text="✅" type="info" /> | <Badge text="goup" type="warning" /> |
 
 > 💡 **提示**：如果你是第一次安装，推荐使用图形化安装或包管理器方式。
 >
-> 🌟 **goup** 是跨平台的 Go 版本管理工具，支持 Windows/macOS/Linux，适合需要管理多个 Go 版本的场景。
+> 🌟 <Badge text="goup" type="warning" /> 是跨平台的 Go 版本管理工具，支持 Windows/macOS/Linux，适合需要管理多个 Go 版本的场景。
+
+---
+
+## 📚 按读者水平选择安装方式
+
+<Tabs groupId="user-level">
+  <TabItem value="beginner" label="🟢 无技术背景">
+    <div style={{ marginTop: '16px' }}>
+
+      **适合人群**：第一次安装软件，希望使用图形界面
+
+      | 平台   | 推荐方式       | 特点                     |
+      | ------ | -------------- | ------------------------ |
+      | Windows | <Badge text="MSI 安装包" type="tip" /> | 双击安装，自动配置环境 |
+      | macOS   | <Badge text="PKG 安装包" type="tip" /> | 双击安装，自动配置环境 |
+      | Linux   | <Badge text="Snap/软件中心" type="tip" /> | 图形界面操作         |
+
+    </div>
+  </TabItem>
+
+  <TabItem value="developer" label="🔵 初级开发者">
+    <div style={{ marginTop: '16px' }}>
+
+      **适合人群**：熟悉命令行，希望方便更新
+
+      | 平台   | 推荐方式         | 特点                     |
+      | ------ | ---------------- | ------------------------ |
+      | Windows | <Badge text="Chocolatey" type="info" /> | 包管理器，一键安装更新 |
+      | macOS   | <Badge text="Homebrew" type="info" /> | 包管理器，一键安装更新 |
+      | Linux   | <Badge text="apt/yum/dnf" type="info" /> | 系统包管理器直接安装 |
+
+    </div>
+  </TabItem>
+
+  <TabItem value="intermediate" label="🟡 中级开发者">
+    <div style={{ marginTop: '16px' }}>
+
+      **适合人群**：需要在不同项目间切换 Go 版本
+
+      | 平台   | 推荐方式         | 特点                               |
+      | ------ | ---------------- | ---------------------------------- |
+      | 全平台 | <Badge text="goup" type="warning" /> | 跨平台版本管理，项目级版本锁定 |
+
+      **goup 优势**：
+      - ✅ 真正的跨平台支持（Windows/macOS/Linux）
+      - ✅ 一行命令安装，无需预装 Go
+      - ✅ 支持项目级版本锁定（`.go-version` 文件）
+
+    </div>
+  </TabItem>
+
+  <TabItem value="advanced" label="🟠 高级开发者">
+    <div style={{ marginTop: '16px' }}>
+
+      **适合人群**：需要自定义编译选项或贡献代码
+
+      | 平台   | 推荐方式           | 特点                     |
+      | ------ | ------------------ | ------------------------ |
+      | macOS   | <Badge text="源码编译" type="warning" outline /> | 自定义编译选项     |
+      | Linux   | <Badge text="源码编译" type="warning" outline /> | 自定义编译选项     |
+
+    </div>
+  </TabItem>
+
+  <TabItem value="enterprise" label="🔴 专业开发者">
+    <div style={{ marginTop: '16px' }}>
+
+      **适合人群**：企业级部署需求、CI/CD 集成
+
+      | 部署方式       | 说明                               |
+      | -------------- | ---------------------------------- |
+      | <Badge text="Docker" type="danger" /> | 容器化部署，环境隔离              |
+      | <Badge text="CI/CD" type="danger" />  | 自动化构建集成                    |
+
+    </div>
+  </TabItem>
+</Tabs>
 
 ---
 
@@ -179,7 +262,7 @@ git clone https://github.com/LazyVim/starter ~/.config/nvim
 
 ### Q: 多个 Go 版本冲突
 
-**A**: 使用 **goup** 版本管理工具统一管理多版本。goup 支持 Windows、macOS 和 Linux，提供一致的跨平台体验。
+**A**: 使用 <Badge text="goup" type="warning" /> 版本管理工具统一管理多版本。goup 支持 Windows、macOS 和 Linux，提供一致的跨平台体验。
 
 ### Q: goup 和其他版本管理工具的区别
 
@@ -187,8 +270,8 @@ git clone https://github.com/LazyVim/starter ~/.config/nvim
 
 | 特性           | goup                   | gvm                | g                  |
 | -------------- | ---------------------- | ------------------ | ------------------ |
-| **跨平台支持** | ✅ Windows/macOS/Linux | ❌ Unix/macOS only | ❌ Unix/macOS only |
-| **安装难度**   | ⭐ 一行命令            | ⭐⭐⭐⭐ 需要依赖  | ⭐ 一行命令        |
+| **跨平台支持** | <Badge text="✅ 全平台" type="tip" /> | ❌ Unix/macOS only | ❌ Unix/macOS only |
+| **安装难度**   | <Badge text="⭐ 简单" type="tip" /> | ⭐⭐⭐⭐ 需要依赖  | ⭐ 简单            |
 | **预装 Go**    | ❌ 不需要              | ✅ 需要            | ❌ 不需要          |
 
 ### Q: 中国用户下载慢

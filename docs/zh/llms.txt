@@ -12,7 +12,11 @@ This file maps all Chinese source documents and navigation metadata into English
 
 ## Golang
 
-- [Golang Module Overview](./golang/index.md): Learning path and audience-oriented introduction to Go basics.
+- [Golang Module Overview](./golang/index.mdx): Learning path and audience-oriented introduction to Go basics with RPress Badge components.
+- [Go Install Guide](./golang/install/install.mdx): Cross-platform installation guide with RPress Tabs and Badge components.
+- [Go Install on Windows](./golang/install/windows.mdx): Windows installation methods (MSI, Chocolatey, Scoop, ZIP, goup).
+- [Go Install on macOS](./golang/install/macos.mdx): macOS installation methods (PKG, Homebrew, goup, source).
+- [Go Install on Linux](./golang/install/linux.mdx): Linux installation methods (binary, apt, yum, snap, goup).
 - [Hello World - First Go Program](./golang/hello.md): Step-by-step guide to writing and running the first Go application.
 - [Golang Sidebar Metadata](./golang/_meta.json): Sidebar structure and labels for Golang module pages.
 - [Golang LLMs Index](./golang/llms.txt): English machine-readable index for the Golang subdirectory.

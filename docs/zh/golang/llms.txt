@@ -4,7 +4,11 @@
 
 ## Docs
 
-- [Module Overview](./index.md): Entry page describing the Go learning path and target audiences.
+- [Module Overview](./index.mdx): Entry page with RPress Badge components showing target audiences by skill level.
+- [Install Guide](./install/install.mdx): Cross-platform Go installation overview with RPress Tabs and Badge components.
+- [Install on Windows](./install/windows.mdx): Windows installation methods (MSI, Chocolatey, Scoop, ZIP, goup) with interactive Tabs.
+- [Install on macOS](./install/macos.mdx): macOS installation methods (PKG, Homebrew, goup, source) with interactive Tabs.
+- [Install on Linux](./install/linux.mdx): Linux installation methods (binary, apt, yum, snap, goup) with interactive Tabs.
 - [Hello World](./hello.md): Beginner tutorial for writing and running the first Go program.
 - [Sidebar Metadata](./_meta.json): Navigation metadata used by the Golang module sidebar.
 - [Install Submodule Index](./install/llms.txt): English index for the installation subdirectory.
