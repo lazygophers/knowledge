@@ -298,11 +298,11 @@ sequenceDiagram
 | 公开函数 | 首字母大写（PascalCase） | `func GetUser()` |
 | 私有函数 | 首字母小写（camelCase） | `func getUser()` |
 | 使用动词 | 表示动作 | `func Calculate()` |
-| 语义清晰 | 见名知意 | `func GetUserByID()` |
+| 语义清晰 | 见名知意 | `func GetUserById()` |
 
 ```go
 // ✅ 好的命名
-func getUserByID(id int64) (*User, error)
+func getUserById(id int64) (*User, error)
 func validateEmail(email string) bool
 func calculateTotal(items []Item) float64
 

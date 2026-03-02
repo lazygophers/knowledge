@@ -150,7 +150,7 @@ func createUser(name, email, phone, address string, age int, active bool) (*User
 
 ```go
 // ✅ 好的命名：动词开头，语义清晰
-func getUserByID(id int64) (*User, error)
+func getUserById(id int64) (*User, error)
 func validateEmail(email string) bool
 func calculateTotal(items []Item) float64
 func handleError(err error) error
