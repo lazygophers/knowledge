@@ -49,7 +49,7 @@ fmt.Println(u.Name)  // Bob
 
 ```go
 type User struct {
-    ID       int    `json:"id" db:"user_id"`
+    Id       int    `json:"id" db:"user_id"`
     Name     string `json:"name" db:"name"`
     Password string `json:"-" db:"password"`  // json:"-" 表示不序列化
 }
@@ -57,7 +57,7 @@ type User struct {
 // 通过反射获取标签
 import "reflect"
 t := reflect.TypeOf(User{})
-field, _ := t.FieldByName("ID")
+field, _ := t.FieldByName("Id")
 fmt.Println(field.Tag.Get("json"))  // id
 fmt.Println(field.Tag.Get("db"))    // user_id
 ```

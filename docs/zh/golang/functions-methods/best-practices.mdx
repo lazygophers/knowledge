@@ -234,7 +234,7 @@ func processUser(id int64) error {
 // ✅ 好的设计：使用 fmt.Errorf 包装错误
 func saveUser(user *User) error {
     if err := db.Save(user); err != nil {
-        return fmt.Errorf("failed to save user %s: %w", user.ID, err)
+        return fmt.Errorf("failed to save user %s: %w", user.Id, err)
     }
     return nil
 }
