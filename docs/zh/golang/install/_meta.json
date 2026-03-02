@@ -1,0 +1,6 @@
+[
+  { "type": "file", "name": "install", "label": "安装指南" },
+  { "type": "file", "name": "windows", "label": "Windows 平台" },
+  { "type": "file", "name": "macos", "label": "macOS 平台" },
+  { "type": "file", "name": "linux", "label": "Linux 平台" }
+]

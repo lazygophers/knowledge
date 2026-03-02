@@ -1,5 +1,8 @@
 import * as path from 'node:path';
 import { defineConfig } from '@rspress/core';
+import mermaid from 'rspress-plugin-mermaid';
+import { pluginLlms } from '@rspress/plugin-llms';
+import { pluginTwoslash } from '@rspress/plugin-twoslash';
 
 const ghPagesBase = '/knowledge/';
 
@@ -32,7 +35,9 @@ export default defineConfig({
   globalStyles: path.join(__dirname, 'docs/styles/theme.css'),
   markdown: {
     showLineNumbers: true,
-    defaultWrapCode: true,
+    defaultWrapCode: false, 
+    // 需要禁用 mdxRs 以便使用 remark 插件（包括 mermaid）
+    mdxRs: false,
   },
   themeConfig: {
     localeRedirect: 'only-default-lang',
@@ -48,5 +53,31 @@ export default defineConfig({
         content: 'https://github.com/lazygophers/knowledge',
       },
     ],
+    llmsUI: true
   },
+  plugins:[
+    mermaid({
+      mermaidConfig: {
+        theme: 'forest',
+      },
+    }),
+    pluginLlms({
+      // 生成 llms.txt
+      llmsTxt: {
+        name: 'llms.txt',
+      },
+      // 生成 llms-full.txt
+      llmsFullTxt: {
+        name: 'llms-full.txt',
+      },
+      // 生成 MD 文件（SSG-MD 功能）
+      mdFiles: {
+        mdxToMd: true,
+      },
+    }),
+    pluginTwoslash({
+      explicitTrigger: false,
+      cache: true,
+    })
+  ]
 });

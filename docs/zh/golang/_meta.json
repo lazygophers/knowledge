@@ -1,6 +1,34 @@
 [
-  { "type": "section-header", "label": "快速入门" },
-  { "type": "file", "name": "index", "label": "模块概览" },
-  { "type": "file", "name": "install", "label": "01 环境搭建" },
-  { "type": "file", "name": "hello", "label": "02 Hello World" }
+    {
+        "type": "section-header",
+        "label": "快速入门"
+    },
+    {
+        "type": "file",
+        "name": "index",
+        "label": "模块概览"
+    },
+    {
+        "type": "dir",
+        "name": "install",
+        "label": "环境搭建"
+    },
+    {
+        "type": "section-header",
+        "label": "编程入门"
+    },
+    {
+        "type": "file",
+        "name": "hello",
+        "label": "Hello World"
+    },
+    {
+        "type": "section-header",
+        "label": "基础概念"
+    },
+    {
+        "type": "dir",
+        "name": "fundamentals",
+        "label": "核心基础"
+    }
 ]

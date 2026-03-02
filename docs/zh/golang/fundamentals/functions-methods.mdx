@@ -1,0 +1,500 @@
+import { Badge } from "@rspress/core/theme";
+
+# 函数与方法 - Go 的函数与方法
+
+[← 返回基础概念](overview/)
+
+函数是 Go 代码的基本构建块，理解函数的各种特性对于编写高质量的 Go 代码至关重要。
+
+## <Badge text="函数基础" type="tip" />
+
+### 函数声明
+
+```go
+package main
+
+import "fmt"
+
+// 基本函数
+func greet() {
+    fmt.Println("Hello, World!")
+}
+
+// 带参数的函数
+func greetUser(name string) {
+    fmt.Printf("Hello, %s!\\n", name)
+}
+
+// 带返回值的函数
+func add(a int, b int) int {
+    return a + b
+}
+
+// 参数类型相同时可简写
+func subtract(a, b int) int {
+    return a - b
+}
+
+// 多返回值
+func divide(a, b int) (int, int) {
+    quotient := a / b
+    remainder := a % b
+    return quotient, remainder
+}
+
+func main() {
+    greet()
+    greetUser("Alice")
+    fmt.Println(add(5, 3))
+    q, r := divide(10, 3)
+    fmt.Printf("10 / 3 = %d ... %d\\n", q, r)
+}
+```
+
+### 命名返回值
+
+```go
+package main
+
+import "fmt"
+
+// 命名返回值
+func divideWithNamed(a, b int) (quotient int, remainder int) {
+    quotient = a / b
+    remainder = a % b
+    return  // 隐式返回（返回所有命名返回值）
+}
+
+func main() {
+    q, r := divideWithNamed(10, 3)
+    fmt.Printf("10 / 3 = %d ... %d\\n", q, r)
+}
+```
+
+<Badge text="建议" type="info" /> 命名返回值可以提高代码可读性，特别是在多个返回值的情况下。
+
+
+## <Badge text="多返回值" type="info" />
+
+### 错误处理模式
+
+```go
+package main
+
+import (
+    "errors"
+    "fmt"
+)
+
+// Go 的惯用错误处理
+func divideSafe(a, b int) (int, error) {
+    if b == 0 {
+        return 0, errors.New("division by zero")
+    }
+    return a / b, nil
+}
+
+func main() {
+    result, err := divideSafe(10, 0)
+    if err != nil {
+        fmt.Println("错误:", err)
+        return
+    }
+    fmt.Println("结果:", result)
+}
+```
+
+### 忽略返回值
+
+```go
+package main
+
+import "fmt"
+
+func getValues() (int, string, bool) {
+    return 42, "hello", true
+}
+
+func main() {
+    // 使用 _ 忽略不需要的返回值
+    num, _, _ := getValues()
+    fmt.Println("数字:", num)
+}
+```
+
+
+## <Badge text="可变参数" type="info" />
+
+### 可变参数函数
+
+```go
+package main
+
+import "fmt"
+
+// 可变参数：...int 表示可以接收任意数量的 int 参数
+func sum(numbers ...int) int {
+    total := 0
+    for _, num := range numbers {
+        total += num
+    }
+    return total
+}
+
+// 混合参数：可变参数必须是最后一个
+func greet(prefix string, names ...string) {
+    for _, name := range names {
+        fmt.Printf("%s, %s!\\n", prefix, name)
+    }
+}
+
+func main() {
+    fmt.Println(sum(1, 2, 3))        // 6
+    fmt.Println(sum(1, 2, 3, 4, 5))  // 15
+
+    greet("Hello", "Alice", "Bob", "Charlie")
+}
+```
+
+### 传递切片给可变参数
+
+```go
+package main
+
+import "fmt"
+
+func sum(numbers ...int) int {
+    total := 0
+    for _, num := range numbers {
+        total += num
+    }
+    return total
+}
+
+func main() {
+    nums := []int{1, 2, 3, 4, 5}
+    // 使用 ... 展开切片
+    fmt.Println(sum(nums...))  // 15
+}
+```
+
+
+## <Badge text="匿名函数与闭包" type="warning" />
+
+### 匿名函数
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    // 定义并立即调用匿名函数
+    func(msg string) {
+        fmt.Println(msg)
+    }("Hello from anonymous function!")
+
+    // 将匿名函数赋值给变量
+    add := func(a, b int) int {
+        return a + b
+    }
+    fmt.Println(add(5, 3))
+}
+```
+
+### 闭包
+
+```go
+package main
+
+import "fmt"
+
+// 闭包：函数可以访问其外部作用域的变量
+func makeAdder(x int) func(int) int {
+    return func(y int) int {
+        return x + y  // 访问外部变量 x
+    }
+}
+
+func main() {
+    add5 := makeAdder(5)
+    add10 := makeAdder(10)
+
+    fmt.Println(add5(3))   // 8 (5 + 3)
+    fmt.Println(add10(3))  // 13 (10 + 3)
+}
+```
+
+### 闭包陷阱
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    // 错误示例：闭包捕获循环变量
+    var funcs []func()
+    for i := 0; i < 3; i++ {
+        funcs = append(funcs, func() {
+            fmt.Println(i)  // 所有闭包共享同一个 i
+        })
+    }
+
+    for _, f := range funcs {
+        f()  // 输出: 3 3 3 (不是 0 1 2!)
+    }
+
+    // 正确示例：为每次迭代创建新变量
+    var funcs2 []func()
+    for i := 0; i < 3; i++ {
+        i := i  // 创建新的局部变量
+        funcs2 = append(funcs2, func() {
+            fmt.Println(i)
+        })
+    }
+
+    for _, f := range funcs2 {
+        f()  // 输出: 0 1 2
+    }
+}
+```
+
+
+## <Badge text="defer 机制" type="warning" />
+
+### defer 基础
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    // defer 会在函数返回前执行
+    defer fmt.Println("最后执行")
+    fmt.Println("首先执行")
+
+    // 多个 defer 按后进先出（LIFO）顺序执行
+    defer fmt.Println("1")
+    defer fmt.Println("2")
+    defer fmt.Println("3")
+
+    fmt.Println("中间代码")
+
+    // 输出顺序：
+    // 首先执行
+    // 中间代码
+    // 3
+    // 2
+    // 1
+    // 最后执行
+}
+```
+
+### defer 实际应用
+
+```go
+package main
+
+import (
+    "fmt"
+    "os"
+)
+
+// 资源清理
+func processFile(filename string) error {
+    file, err := os.Open(filename)
+    if err != nil {
+        return err
+    }
+    // 确保文件最终被关闭
+    defer file.Close()
+
+    // 处理文件...
+    fmt.Printf("处理文件: %s\\n", filename)
+    return nil
+}
+
+// panic 恢复
+func safeExecute() {
+    defer func() {
+        if r := recover(); r != nil {
+            fmt.Println("从 panic 恢复:", r)
+        }
+    }()
+
+    // 可能引发 panic 的代码
+    panic("出错了!")
+}
+
+func main() {
+    processFile("example.txt")
+    safeExecute()
+    fmt.Println("程序继续执行")
+}
+```
+
+### defer 的注意事项
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    // defer 语句会立即计算参数值
+    x := 10
+    defer fmt.Println(x)  // 输出 10，不是 20
+    x = 20
+    fmt.Println(x)
+
+    // defer 中修改返回值（使用命名返回值）
+    fmt.Println(f())  // 输出 20
+}
+
+func f() (result int) {
+    defer func() {
+        result = 20  // 修改返回值
+    }()
+    return 10  // 实际返回 20
+}
+```
+
+
+## <Badge text="方法" type="warning" outline />
+
+### 方法基础
+
+```go
+package main
+
+import "fmt"
+
+// 定义结构体
+type Rectangle struct {
+    width  float64
+    height float64
+}
+
+// 值接收者方法
+func (r Rectangle) Area() float64 {
+    return r.width * r.height
+}
+
+// 指针接收者方法
+func (r *Rectangle) Scale(factor float64) {
+    r.width *= factor
+    r.height *= factor
+}
+
+func main() {
+    rect := Rectangle{width: 3, height: 4}
+
+    // 调用值接收者方法
+    fmt.Println("面积:", rect.Area())  // 12
+
+    // 调用指针接收者方法
+    rect.Scale(2)
+    fmt.Printf("缩放后: %.1f x %.1f\\n", rect.width, rect.height)  // 6.0 x 8.0
+}
+```
+
+### 值接收者 vs 指针接收者
+
+```go
+package main
+
+import "fmt"
+
+type Counter struct {
+    count int
+}
+
+// 值接收者：不会修改原始值
+func (c Counter) IncrementValue() int {
+    c.count++
+    return c.count  // 返回副本的值
+}
+
+// 指针接收者：会修改原始值
+func (c *Counter) IncrementPointer() int {
+    c.count++
+    return c.count
+}
+
+func main() {
+    c := Counter{count: 0}
+
+    fmt.Println(c.IncrementValue())  // 1
+    fmt.Println(c.count)             // 0 (原始值未变)
+
+    fmt.Println(c.IncrementPointer())  // 1
+    fmt.Println(c.count)              // 1 (原始值已修改)
+}
+```
+
+<Badge text="选择指南" type="info" />
+| 场景 | 使用值接收者 | 使用指针接收者 |
+|-----|-------------|---------------|
+| 需要修改接收者 | ❌ | ✅ |
+| 结构体较大 | ❌ | ✅ |
+| 一致性要求 | - | ✅ 通常全部使用 |
+| 只读操作 | ✅ | ❌ |
+
+### 方法集
+
+```go
+package main
+
+import "fmt"
+
+type InterfaceA interface {
+    MethodA()
+}
+
+type InterfaceB interface {
+    MethodB()
+}
+
+type MyType struct{}
+
+func (m MyType) MethodA() { fmt.Println("MethodA") }
+func (m *MyType) MethodB() { fmt.Println("MethodB") }
+
+func main() {
+    var m MyType
+    var p *MyType = &m
+
+    // 值可以使用值接收者和指针接收者的方法
+    m.MethodA()  // ✅
+    m.MethodB()  // ✅ (自动取地址)
+
+    // 指针也可以使用两种方法
+    p.MethodA()  // ✅ (自动解引用)
+    p.MethodB()  // ✅
+}
+```
+
+
+## 函数类型速查
+
+| 类型 | 语法 | 示例 |
+|-----|------|-----|
+| 无参数无返回值 | `func()` | `func greet()` |
+| 单参数 | `func(T)` | `func square(n int)` |
+| 多参数 | `func(T1, T2)` | `func add(a, b int)` |
+| 单返回值 | `func(...) T` | `func getName() string` |
+| 多返回值 | `func(...) (T1, T2)` | `func divide() (int, int)` |
+| 命名返回值 | `func(...) (name T)` | `func get() (result int)` |
+| 可变参数 | `func(...T)` | `func sum(nums ...int)` |
+
+
+## 练习
+
+1. **编写函数判断一个数是否为质数**
+2. **实现一个计算器函数**，支持加减乘除和错误处理
+3. **创建一个 BankAccount 类型**，使用方法实现存款、取款、查询余额
+
+
+[← 返回基础概念](overview/) | [类型系统](type-system/) | [继续：包系统 →](package-system/)

@@ -1,0 +1,15 @@
+# Golang Module (Chinese Source)
+
+> English llms.txt for files under `docs/zh/golang`.
+
+## Docs
+
+- [Module Overview](./index.mdx): Entry page with RPress Badge components showing target audiences by skill level.
+- [Install Guide](./install/install.mdx): Cross-platform Go installation overview with RPress Tabs and Badge components.
+- [Install on Windows](./install/windows.mdx): Windows installation methods (MSI, Chocolatey, Scoop, ZIP, goup) with interactive Tabs.
+- [Install on macOS](./install/macos.mdx): macOS installation methods (PKG, Homebrew, goup, source) with interactive Tabs.
+- [Install on Linux](./install/linux.mdx): Linux installation methods (binary, apt, yum, snap, goup) with interactive Tabs.
+- [Hello World](./hello.mdx): Interactive first Go program tutorial with RPress Tabs for different skill levels.
+- [Sidebar Metadata](./_meta.json): Navigation metadata used by the Golang module sidebar.
+- [Install Submodule Index](./install/llms.txt): English index for the installation subdirectory.
+- [This LLMs File](./llms.txt): Machine-readable index for this Golang directory.

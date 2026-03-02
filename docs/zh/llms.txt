@@ -1,0 +1,51 @@
+# Engineering Knowledge Base (Chinese Docs Index)
+
+> English llms.txt for every file under `docs/zh`.
+
+This file maps all Chinese source documents and navigation metadata into English descriptions for LLM retrieval.
+
+## Root
+
+- [Home Page](./index.md): Landing page for the Chinese knowledge base with module shortcuts.
+- [Top Navigation](./_nav.json): Global navigation config for Home, Golang, MySQL, and Redis sections.
+- [LLMs Index](./llms.txt): English machine-readable index for all files in this `docs/zh` tree.
+
+## Golang
+
+- [Golang Module Overview](./golang/index.mdx): Learning path and audience-oriented introduction to Go basics with RPress Badge components.
+- [Go Install Guide](./golang/install/install.mdx): Cross-platform installation guide with RPress Tabs and Badge components.
+- [Go Install on Windows](./golang/install/windows.mdx): Windows installation methods (MSI, Chocolatey, Scoop, ZIP, goup).
+- [Go Install on macOS](./golang/install/macos.mdx): macOS installation methods (PKG, Homebrew, goup, source).
+- [Go Install on Linux](./golang/install/linux.mdx): Linux installation methods (binary, apt, yum, snap, goup).
+- [Hello World - First Go Program](./golang/hello.mdx): Interactive tutorial with RPress Tabs for different skill levels. Step-by-step guide to writing and running the first Go application.
+- [Golang Sidebar Metadata](./golang/_meta.json): Sidebar structure and labels for Golang module pages.
+- [Golang LLMs Index](./golang/llms.txt): English machine-readable index for the Golang subdirectory.
+
+## Golang Install
+
+- [Go Installation Guide](./golang/install/install.mdx): Cross-platform Go installation overview with RPress Tabs and Badge components.
+- [Go Installation on Linux](./golang/install/linux.mdx): Linux installation methods with interactive Tabs.
+- [Go Installation on macOS](./golang/install/macos.mdx): macOS installation methods with interactive Tabs.
+- [Go Installation on Windows](./golang/install/windows.mdx): Windows installation methods with interactive Tabs.
+- [Install Section Metadata](./golang/install/_meta.json): Navigation metadata for installation subpages.
+- [Install LLMs Index](./golang/install/llms.txt): English machine-readable index for the install subdirectory.
+
+## MySQL
+
+- [MySQL Module Overview](./mysql/index.md): Overview of modeling, performance governance, and operations workflow.
+- [MySQL Schema Design](./mysql/schema-design.md): Core schema and table design principles for maintainable systems.
+- [MySQL Transactions and Locks](./mysql/transactions-locks.md): Isolation levels, lock behavior, and deadlock troubleshooting path.
+- [MySQL Performance Tuning](./mysql/performance-tuning.md): SQL tuning order and index-focused optimization checklist.
+- [MySQL Operations Checklist](./mysql/operations-checklist.md): Pre-release, runtime, and post-incident operational checks.
+- [MySQL Sidebar Metadata](./mysql/_meta.json): Sidebar grouping and labels for MySQL knowledge pages.
+- [MySQL LLMs Index](./mysql/llms.txt): English machine-readable index for the MySQL subdirectory.
+
+## Redis
+
+- [Redis Module Overview](./redis/index.md): Overview of caching, reliability, and high-availability practices.
+- [Redis Data Structures](./redis/data-structures.md): Scenario-based data structure selection guidance.
+- [Redis Cache Patterns](./redis/cache-patterns.md): Common caching patterns and risk mitigation strategies.
+- [Redis Persistence](./redis/persistence.md): RDB and AOF tradeoffs with durability recommendations.
+- [Redis High Availability](./redis/high-availability.md): Sentinel/Cluster architecture choices and critical metrics.
+- [Redis Sidebar Metadata](./redis/_meta.json): Sidebar grouping and labels for Redis knowledge pages.
+- [Redis LLMs Index](./redis/llms.txt): English machine-readable index for the Redis subdirectory.
