@@ -12,10 +12,10 @@ from lib.utils.env import get_project_dir
 
 prompt = {
     "SessionStart": [
-        "及时通过 Command(git:commit) 提交所有的文件(包括并非你变更的文件)",
 		"默认只更新中文部分",
 	],
     "UserPromptSubmit": [
+        "完成后，通过 Command(git:commit) 提交所有的文件(包括并非你变更的文件)",
 	],
 }
 

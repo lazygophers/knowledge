@@ -13,7 +13,7 @@ import { Badge } from "@rspress/core/theme";
 
 ```mermaid
 %%{init: {'theme':'base', 'themeVariables': { 'lineColor':'#3b82f6', 'primaryColor':'#e3f2fd', 'primaryTextColor':'#0d47a1'}}}%%
-flowchart TD
+flowchart LR
     A[全局作用域<br/>Package Level] --> B[函数作用域<br/>Function Level]
     B --> C[块作用域<br/>Block Level]
     C --> D[内部块作用域<br/>Nested Blocks]
