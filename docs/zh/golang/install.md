@@ -764,9 +764,6 @@ git clone https://github.com/LazyVim/starter ~/.config/nvim
   go env -w GOPROXY=https://goproxy.io,direct
   ```
 
-### Q: 如何卸载 Go
-**A**: 每种安装方式都有对应的卸载方法，请查看对应平台的"卸载方法"章节。
-
 ---
 
 ## 📚 下一步
