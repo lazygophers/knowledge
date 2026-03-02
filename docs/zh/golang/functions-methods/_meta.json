@@ -1,11 +1,6 @@
 [
   {
     "type": "file",
-    "name": "index",
-    "label": "学习路径"
-  },
-  {
-    "type": "file",
     "name": "function-basics",
     "label": "函数基础"
   },

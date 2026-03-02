@@ -42,7 +42,6 @@
 
 ## Functions and Methods
 
-- [Functions and Methods Overview](./functions-methods/index.mdx): Module overview, learning roadmap, dependency relationships, reader level guide, and practice project summary.
 - [Function Basics](./functions-methods/function-basics.mdx): Function declaration syntax, parameter lists, return value mechanisms, function call flow, basic code examples, and common errors for beginners.
 - [Methods System](./functions-methods/methods.mdx): Method declaration syntax, value vs pointer receivers, method values vs expressions, method set rules, interface implementation, and receiver selection decision tree.
 - [Advanced Parameters](./functions-methods/advanced-parameters.mdx): Variadic functions, named return values, multiple return value patterns, parameter passing mechanism, and performance considerations.
