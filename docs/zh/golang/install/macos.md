@@ -16,7 +16,7 @@
    - 访问 [Go 官方下载页](https://go.dev/dl/)
    - 选择你的芯片类型：
      - Intel Mac：`go1.26.0.darwin-amd64.pkg`
-     - Apple Silicon (M1/M2/M3)：`go1.26.0.darwin-arm64.pkg`
+     - Apple Silicon (M1/M2/M3/M4)：`go1.26.0.darwin-arm64.pkg`
 
 2. **运行安装程序**
    - 双击 `.pkg` 文件
@@ -28,16 +28,20 @@
 3. **验证安装**
    - 打开"终端"应用
    - 输入：
+
    ```bash
    go version
    ```
+
    - 看到类似输出即成功：
+
    ```
    go version go1.26.0 darwin/arm64
    ```
 
 ### 如何确认芯片类型
-- 点击菜单栏  → "关于本机"
+
+- 点击菜单栏 → "关于本机"
 - 查看"芯片"或"处理器"信息
 
 ### 🔸 卸载方法
@@ -63,6 +67,7 @@ source ~/.zshrc   # Zsh
 **适合人群**：熟悉终端命令，希望方便更新
 
 ### 安装步骤
+
 ```bash
 # 1. 安装 Go
 brew install go
@@ -75,6 +80,7 @@ brew info go
 ```
 
 ### 更新 Go
+
 ```bash
 brew upgrade go
 ```
@@ -100,6 +106,7 @@ brew cleanup
 ### 方案：使用 goup（跨平台）
 
 **优势**：
+
 - ✅ 真正的跨平台支持（Windows/macOS/Linux）
 - ✅ 一行命令安装，无需预装 Go
 - ✅ 支持项目级版本锁定（`.go-version` 文件）
@@ -193,6 +200,7 @@ source ~/.zshrc   # Zsh
 **适合人群**：需要自定义编译选项或贡献代码
 
 ### 编译步骤
+
 ```bash
 # 1. 安装依赖
 brew install go
@@ -241,6 +249,7 @@ go env -w GOPROXY=https://goproxy.io,direct
 ```
 
 **国内 Go 代理服务**：
+
 - [https://goproxy.cn](https://goproxy.cn) - 七牛云提供的 Go 模块代理
 - [https://goproxy.io](https://goproxy.io) - 全球知名的 Go 模块代理
 
@@ -249,15 +258,19 @@ go env -w GOPROXY=https://goproxy.io,direct
 ## ❓ macOS 常见问题
 
 ### Q: 安装后提示 "command not found: go"
+
 **A**: PATH 环境变量未正确配置，请检查上述配置步骤。
 
 ### Q: 多个 Go 版本冲突
+
 **A**: 使用 **goup** 版本管理工具统一管理多版本。goup 支持 Windows、macOS 和 Linux，提供一致的跨平台体验。
 
 ### Q: Apple Silicon Mac 安装 Intel 版本
+
 **A**: 可以通过 Rosetta 2 运行，但建议使用 ARM 原生版本以获得最佳性能。
 
 ### Q: Homebrew 安装的 Go 版本较旧
+
 **A**: 使用 `brew upgrade go` 更新，或直接从官网下载最新 PKG 安装包。
 
 ---
