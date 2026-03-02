@@ -1,0 +1,11 @@
+# Golang Module (Chinese Source)
+
+> English llms.txt for files under `docs/zh/golang`.
+
+## Docs
+
+- [Module Overview](./index.md): Entry page describing the Go learning path and target audiences.
+- [Hello World](./hello.md): Beginner tutorial for writing and running the first Go program.
+- [Sidebar Metadata](./_meta.json): Navigation metadata used by the Golang module sidebar.
+- [Install Submodule Index](./install/llms.txt): English index for the installation subdirectory.
+- [This LLMs File](./llms.txt): Machine-readable index for this Golang directory.

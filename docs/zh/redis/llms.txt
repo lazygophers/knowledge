@@ -1,0 +1,13 @@
+# Redis Module (Chinese Source)
+
+> English llms.txt for files under `docs/zh/redis`.
+
+## Docs
+
+- [Module Overview](./index.md): Overview of Redis cache design, reliability, and availability topics.
+- [Data Structures](./data-structures.md): Scenario-based selection guide for Redis data structures.
+- [Cache Patterns](./cache-patterns.md): Caching patterns and mitigation for common cache risks.
+- [Persistence](./persistence.md): RDB and AOF tradeoffs and durability recommendations.
+- [High Availability](./high-availability.md): Sentinel and Cluster choices with key operating metrics.
+- [Sidebar Metadata](./_meta.json): Navigation metadata for Redis module pages.
+- [This LLMs File](./llms.txt): Machine-readable index for this Redis directory.

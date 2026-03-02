@@ -45,6 +45,13 @@ $ARGUMENTS
    - 专业开发者
 4. 要注意技术版本问题，确保文档内容与最新的技术版本保持一致，且对于旧版本的兼容性有明确的说明
 5. 自行决定使用哪一个 agent 执行，不要询问我。允许使用多个 agent 完成任务，当时最多同时只允许一个 agent 执行
+6. 文档系统基于 https://rspress.rs/ 构建，可以通过内置的各种组件来美化输出等
+   1. [容器](https://rspress.rs/zh/guide/use-mdx/container)
+   2. [代码块](https://rspress.rs/zh/guide/use-mdx/code-block)
+   3. [链接](https://rspress.rs/zh/guide/use-mdx/link)
+   4. [Frontmatter](https://rspress.rs/zh/guide/use-mdx/frontmatter)
+   5. [主题](https://rspress.rs/zh/guide/theme)
+   6. [其它组件](https://rspress.rs/zh/ui/components/)
 
 检查清单：
 

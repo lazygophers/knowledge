@@ -1,0 +1,13 @@
+# MySQL Module (Chinese Source)
+
+> English llms.txt for files under `docs/zh/mysql`.
+
+## Docs
+
+- [Module Overview](./index.md): Overview of MySQL modeling, performance, and operations practices.
+- [Schema Design](./schema-design.md): Table and schema design principles for consistent data models.
+- [Transactions and Locks](./transactions-locks.md): Isolation levels, lock behavior, and deadlock diagnosis.
+- [Performance Tuning](./performance-tuning.md): Query and index optimization priorities for MySQL.
+- [Operations Checklist](./operations-checklist.md): Operational checks before release and during incidents.
+- [Sidebar Metadata](./_meta.json): Navigation metadata for MySQL module pages.
+- [This LLMs File](./llms.txt): Machine-readable index for this MySQL directory.

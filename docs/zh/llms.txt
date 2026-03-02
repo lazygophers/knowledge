@@ -1,0 +1,47 @@
+# Engineering Knowledge Base (Chinese Docs Index)
+
+> English llms.txt for every file under `docs/zh`.
+
+This file maps all Chinese source documents and navigation metadata into English descriptions for LLM retrieval.
+
+## Root
+
+- [Home Page](./index.md): Landing page for the Chinese knowledge base with module shortcuts.
+- [Top Navigation](./_nav.json): Global navigation config for Home, Golang, MySQL, and Redis sections.
+- [LLMs Index](./llms.txt): English machine-readable index for all files in this `docs/zh` tree.
+
+## Golang
+
+- [Golang Module Overview](./golang/index.md): Learning path and audience-oriented introduction to Go basics.
+- [Hello World - First Go Program](./golang/hello.md): Step-by-step guide to writing and running the first Go application.
+- [Golang Sidebar Metadata](./golang/_meta.json): Sidebar structure and labels for Golang module pages.
+- [Golang LLMs Index](./golang/llms.txt): English machine-readable index for the Golang subdirectory.
+
+## Golang Install
+
+- [Go Installation Guide](./golang/install/index.md): Cross-platform Go installation overview and next steps.
+- [Go Installation on Linux](./golang/install/linux.md): Linux installation methods including binaries and package managers.
+- [Go Installation on macOS](./golang/install/macos.md): macOS installation options using PKG, Homebrew, and source.
+- [Go Installation on Windows](./golang/install/windows.md): Windows installation options with MSI, package managers, and ZIP.
+- [Install Section Metadata](./golang/install/_meta.json): Navigation metadata for installation subpages.
+- [Install LLMs Index](./golang/install/llms.txt): English machine-readable index for the install subdirectory.
+
+## MySQL
+
+- [MySQL Module Overview](./mysql/index.md): Overview of modeling, performance governance, and operations workflow.
+- [MySQL Schema Design](./mysql/schema-design.md): Core schema and table design principles for maintainable systems.
+- [MySQL Transactions and Locks](./mysql/transactions-locks.md): Isolation levels, lock behavior, and deadlock troubleshooting path.
+- [MySQL Performance Tuning](./mysql/performance-tuning.md): SQL tuning order and index-focused optimization checklist.
+- [MySQL Operations Checklist](./mysql/operations-checklist.md): Pre-release, runtime, and post-incident operational checks.
+- [MySQL Sidebar Metadata](./mysql/_meta.json): Sidebar grouping and labels for MySQL knowledge pages.
+- [MySQL LLMs Index](./mysql/llms.txt): English machine-readable index for the MySQL subdirectory.
+
+## Redis
+
+- [Redis Module Overview](./redis/index.md): Overview of caching, reliability, and high-availability practices.
+- [Redis Data Structures](./redis/data-structures.md): Scenario-based data structure selection guidance.
+- [Redis Cache Patterns](./redis/cache-patterns.md): Common caching patterns and risk mitigation strategies.
+- [Redis Persistence](./redis/persistence.md): RDB and AOF tradeoffs with durability recommendations.
+- [Redis High Availability](./redis/high-availability.md): Sentinel/Cluster architecture choices and critical metrics.
+- [Redis Sidebar Metadata](./redis/_meta.json): Sidebar grouping and labels for Redis knowledge pages.
+- [Redis LLMs Index](./redis/llms.txt): English machine-readable index for the Redis subdirectory.

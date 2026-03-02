@@ -1,0 +1,12 @@
+# Golang Install Submodule (Chinese Source)
+
+> English llms.txt for files under `docs/zh/golang/install`.
+
+## Docs
+
+- [Install Overview](./index.md): Cross-platform Go installation overview and setup checklist.
+- [Install on Linux](./linux.md): Linux installation methods with package and binary options.
+- [Install on macOS](./macos.md): macOS installation methods including PKG and Homebrew.
+- [Install on Windows](./windows.md): Windows installation methods including MSI and package managers.
+- [Install Metadata](./_meta.json): Navigation metadata for installation pages.
+- [This LLMs File](./llms.txt): Machine-readable index for this install directory.
