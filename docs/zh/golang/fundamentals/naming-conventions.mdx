@@ -270,42 +270,66 @@ flowchart TD
 
 ### 核心原则
 
-| 含义 | 命名 | 示例 |
-|-----|------|------|
-| 事件时刻 | `At` 后缀 | `CreatedAt`, `UpdatedAt`, `DeletedAt` |
-| 时间范围 | `Start/End` | `StartTime`, `EndTime` |
-| 持续时间 | `Duration` | `Timeout`, `Delay` |
-| 截止/过期 | `Deadline/ExpiresAt` | `Deadline`, `ExpiresAt` |
+| 含义 | 命名 | 类型 | 示例 |
+|-----|------|------|------|
+| 事件时刻 | `At` 后缀 | `int64` | `CreatedAt`, `UpdatedAt` |
+| 时间范围 | `Start/End` | `int64` | `StartTime`, `EndTime` |
+| 持续时间 | `Duration` | `time.Duration` | `Timeout`, `Delay` |
+| 截止/过期 | `Deadline/ExpiresAt` | `int64` | `Deadline`, `ExpiresAt` |
 
 ```go
-// ✅ 推荐：At 后缀表示时间点
+// ✅ 推荐：At 后缀表示时间点（Unix 时间戳）
 type User struct {
-    CreatedAt time.Time  // 创建时间
-    UpdatedAt time.Time  // 更新时间
-    DeletedAt *time.Time // 删除时间（可空）
+    CreatedAt int64  // 创建时间（Unix 秒）
+    UpdatedAt int64  // 更新时间（Unix 秒）
+    DeletedAt int64  // 删除时间（0 表示未删除）
 }
 
-// 时间范围
+// 时间范围（Unix 时间戳）
 type Event struct {
-    StartTime time.Time
-    EndTime   time.Time
+    StartTime int64  // 开始时间
+    EndTime   int64  // 结束时间
 }
 
-// 持续时间
+// 持续时间（Duration 仍用 time.Duration）
 type Task struct {
     Duration time.Duration  // 持续时长
     Timeout  time.Duration  // 超时时长
 }
 ```
 
-### Time vs Timestamp
+### 类型选择
 
-| 类型 | 使用 | 场景 |
-|-----|------|------|
-| `Time` | `time.Time` | Go 内部使用（推荐） |
-| `Timestamp` | `int64` | Unix 时间戳，API 交互 |
+| 后缀 | 推荐类型 | 允许类型 | 说明 |
+|-----|---------|---------|------|
+| `At` | `int64` | `int64`, `uint64`, `int32`, `uint32` | Unix 时间戳（秒或毫秒） |
+| `Time` | `int64` | `int64`, `uint64`, `int32`, `uint32` | Unix 时间戳 |
+| `Duration` | `time.Duration` | `time.Duration` | 持续时间 |
 
-<Badge text="记忆" type="tip" /> **时间点用 At，范围用 Start/End，持续用 Duration**
+<Badge text="注意" type="danger" /> **不允许 `*time.Time`**，时间戳字段使用整数类型
+
+### 零值处理
+
+```go
+// 使用 0 表示未设置
+type User struct {
+    DeletedAt int64  // 0 = 未删除，非 0 = 删除时间戳
+}
+
+// 检查是否已删除
+if user.DeletedAt != 0 {
+    // 已删除
+}
+
+// 使用负数表示特殊含义（可选）
+const TimestampNotSet = -1
+
+type Order struct {
+    PaidAt int64  // -1 = 未支付，0 = 未知，>0 = 支付时间
+}
+```
+
+<Badge text="记忆" type="tip" /> **At/Time 用 int64 时间戳，Duration 用 time.Duration**
 
 
 ## <Badge text="常见错误" type="danger" />
@@ -394,9 +418,9 @@ flowchart TD
 | 缩写词 | 首字母大写 | `HttpServer`, `userId` |
 | 单一状态 | `State` / `bool` | 枚举或布尔 | `Enabled`, `StateOn` |
 | 组合状态 | `Status` | 位运算组合多个状态 | `Status | StatusRunning`, `StatusReady | StatusError` |
-| 时间点 | `At` 后缀 | `CreatedAt`, `UpdatedAt` |
-| 时间范围 | `Start/End` | `StartTime`, `EndTime` |
-| 持续时间 | `Duration` | `Timeout`, `Delay` |
+| 时间点 | `At` 后缀 | `int64` 时间戳 | `CreatedAt int64`, `UpdatedAt int64` |
+| 时间范围 | `Start/End` | `int64` 时间戳 | `StartTime int64`, `EndTime int64` |
+| 持续时间 | `Duration` | `time.Duration` | `Timeout time.Duration`, `Delay time.Duration` |
 
 
 [← 返回基础概念](overview/) | [继续：声明与初始化 →](variables-constants/)
