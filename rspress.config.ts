@@ -34,6 +34,8 @@ export default defineConfig({
   markdown: {
     showLineNumbers: true,
     defaultWrapCode: false,
+    // @ts-ignore
+    mermaid: true,
   },
   themeConfig: {
     localeRedirect: 'only-default-lang',
