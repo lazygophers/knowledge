@@ -187,6 +187,93 @@ const n = 100
 ```
 
 
+## <Badge text="State vs Status" type="warning" />
+
+### 核心区别
+
+| 类型 | 含义 | 使用场景 | 示例 |
+|-----|------|---------|------|
+| **State** | 单一状态值 | 枚举、布尔值 | `On/Off`, `Running/Paused` |
+| **Status** | 复合状态结构 | 包含多个字段的状态 | `Status{Code, Message}` |
+
+```go
+// State - 单一状态
+type State int
+const (
+    StateOff State = iota
+    StateOn
+)
+
+// Status - 复合状态
+type Status struct {
+    Code    int
+    Message string
+}
+```
+
+<Badge text="记忆" type="tip" /> **State** = 单一值 / **Status** = 复合结构
+
+### 快速判断
+
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': { 'lineColor':'#3b82f6', 'primaryColor':'#e3f2fd', 'primaryTextColor':'#0d47a1'}}}%%
+flowchart TD
+    A[需要状态] --> B{单一值还是复合?}
+    B -->|单一| C[State / bool]
+    B -->|复合| D[Status 结构]
+    C --> E[Enabled, Active<br/>StateOn/Off]
+    D --> F[Status{Code, Message}<br/>HealthStatus, TaskStatus]
+
+    linkStyle default stroke:#3b82f6,stroke-width:2px
+    classDef state fill:#e1f5ff,stroke:#1976d2,stroke-width:2px,color:#0d47a1
+    classDef status fill:#fff9c4,stroke:#f59e0b,stroke-width:2px,color:#78350f
+    class C,E state
+    class D,F status
+```
+
+
+## <Badge text="时间字段命名" type="warning" />
+
+### 核心原则
+
+| 含义 | 命名 | 示例 |
+|-----|------|------|
+| 事件时刻 | `At` 后缀 | `CreatedAt`, `UpdatedAt`, `DeletedAt` |
+| 时间范围 | `Start/End` | `StartTime`, `EndTime` |
+| 持续时间 | `Duration` | `Timeout`, `Delay` |
+| 截止/过期 | `Deadline/ExpiresAt` | `Deadline`, `ExpiresAt` |
+
+```go
+// ✅ 推荐：At 后缀表示时间点
+type User struct {
+    CreatedAt time.Time  // 创建时间
+    UpdatedAt time.Time  // 更新时间
+    DeletedAt *time.Time // 删除时间（可空）
+}
+
+// 时间范围
+type Event struct {
+    StartTime time.Time
+    EndTime   time.Time
+}
+
+// 持续时间
+type Task struct {
+    Duration time.Duration  // 持续时长
+    Timeout  time.Duration  // 超时时长
+}
+```
+
+### Time vs Timestamp
+
+| 类型 | 使用 | 场景 |
+|-----|------|------|
+| `Time` | `time.Time` | Go 内部使用（推荐） |
+| `Timestamp` | `int64` | Unix 时间戳，API 交互 |
+
+<Badge text="记忆" type="tip" /> **时间点用 At，范围用 Start/End，持续用 Duration**
+
+
 ## <Badge text="常见错误" type="danger" />
 
 ### 错误1：使用下划线命名
@@ -271,6 +358,11 @@ flowchart TD
 | 变量/常量 | 驼峰命名 | `userName`, `maxCount` |
 | 接口 | 动词+er 或描述性 | `Reader`, `HttpClient` |
 | 缩写词 | 首字母大写 | `HttpServer`, `userId` |
+| 单一状态 | `State` / `bool` | `Enabled`, `StateOn` |
+| 复合状态 | `Status` 结构 | `Status{Code, Message}` |
+| 时间点 | `At` 后缀 | `CreatedAt`, `UpdatedAt` |
+| 时间范围 | `Start/End` | `StartTime`, `EndTime` |
+| 持续时间 | `Duration` | `Timeout`, `Delay` |
 
 
 [← 返回基础概念](overview/) | [继续：声明与初始化 →](variables-constants/)
