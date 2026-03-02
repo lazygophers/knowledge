@@ -1,6 +1,7 @@
 import * as path from 'node:path';
 import { defineConfig } from '@rspress/core';
 import mermaid from 'rspress-plugin-mermaid';
+import { pluginLlms } from '@rspress/plugin-llms';
 
 const ghPagesBase = '/knowledge/';
 
@@ -59,5 +60,6 @@ export default defineConfig({
         theme: 'forest',
       },
     }),
+    pluginLlms(),
   ]
 });

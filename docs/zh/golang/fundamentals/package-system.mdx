@@ -70,11 +70,16 @@ flowchart LR
     D --> I[encoding/json]
     E --> I
 
-    style A fill:#c8e6c9
-    style B fill:#e1f5ff
-    style C fill:#fff3e0
-    style D fill:#f3e5f5
-    style E fill:#fff9c4
+    linkStyle default stroke:#3b82f6,stroke-width:2px
+    classDef mainPkg fill:#c8e6c9,stroke:#2e7d32,color:#064e3b
+    classDef stdLib fill:#e1f5ff,stroke:#1976d2,color:#0d47a1
+    classDef thirdParty fill:#fff7ed,stroke:#f59e0b,color:#78350f
+    classDef localPkg fill:#f3e5f5,stroke:#7c3aed,color:#4c1d95
+
+    class A mainPkg
+    class B,E stdLib
+    class C thirdParty
+    class D localPkg
 ```
 
 

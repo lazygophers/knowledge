@@ -17,22 +17,16 @@ flowchart TD
     B --> C[块作用域<br/>Block Level]
     C --> D[内部块作用域<br/>Nested Blocks]
 
-    A --> A1[包级变量]
-    A --> A2[包级常量]
-    A --> A3[包级函数]
+    linkStyle default stroke:#3b82f6,stroke-width:2px
+    classDef globalScope fill:#e3f2fd,stroke:#1976d2,color:#0d47a1
+    classDef functionScope fill:#bbdefb,stroke:#1976d2,color:#0d47a1
+    classDef blockScope fill:#90caf9,stroke:#1976d2,color:#0d47a1
+    classDef nestedScope fill:#64b5f6,stroke:#1565c0,color:#ffffff
 
-    B --> B1[函数参数]
-    B --> B2[返回值]
-    B --> B3[局部变量]
-
-    C --> C1[if/else 块]
-    C --> C2[for 循环块]
-    C --> C3[switch 块]
-
-    style A fill:#e3f2fd
-    style B fill:#bbdefb
-    style C fill:#90caf9
-    style D fill:#64b5f6
+    class A globalScope
+    class B functionScope
+    class C blockScope
+    class D nestedScope
 ```
 
 ### 作用域示例
@@ -248,10 +242,16 @@ flowchart TD
     H[大对象/逃逸] --> D
     I[返回地址/闭包引用] --> D
 
-    style C fill:#c8e6c9
-    style D fill:#ffcdd2
-    style E fill:#a5d6a7
-    style F fill:#ef9a9a
+    linkStyle default stroke:#3b82f6,stroke-width:2px
+    classDef stackAlloc fill:#c8e6c9,stroke:#2e7d32,color:#064e3b
+    classDef heapAlloc fill:#ffcdd2,stroke:#d32f2f,color:#7f0000
+    classDef cleanup fill:#a5d6a7,stroke:#065f46,color:#ffffff
+    classDef gcCollect fill:#ef9a9a,stroke:#dc2626,color:#ffffff
+
+    class C stackAlloc
+    class D heapAlloc
+    class E cleanup
+    class F gcCollect
 ```
 
 <Badge text="逃逸场景" type="info" />
