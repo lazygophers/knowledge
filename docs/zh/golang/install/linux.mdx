@@ -1,17 +1,17 @@
-import { Badge, Tabs, TabItem } from '@rspress/core/theme';
+import { Badge, Tabs, Tab } from '@rspress/core/theme';
 
 # Linux 平台 - Go 语言安装指南
 
 本指南提供在 Linux 系统上安装 Go 语言的多种方法。请根据你的发行版和需求选择合适的安装方式。
 
-[← 返回安装指南](.)
+[← 返回安装指南](install/)
 
 ---
 
 ## 选择你的安装方式
 
 <Tabs groupId="install-method">
-  <TabItem value="binary" label={<><Badge text="官方二进制" type="info" /> <span style={{ fontSize: '14px' }}>推荐</span></>}>
+  <Tab value="binary" label={<><Badge text="官方二进制" type="info" /> <span style={{ fontSize: '14px' }}>推荐</span></>}>
     <div style={{ marginTop: '16px' }}>
 
       **适合人群**：大多数 Linux 用户
@@ -76,9 +76,9 @@ import { Badge, Tabs, TabItem } from '@rspress/core/theme';
       ```
 
     </div>
-  </TabItem>
+  </Tab>
 
-  <TabItem value="apt" label={<><Badge text="apt/deb" type="info" /> <span style={{ fontSize: '14px' }}>Ubuntu/Debian</span></>}>
+  <Tab value="apt" label={<><Badge text="apt/deb" type="info" /> <span style={{ fontSize: '14px' }}>Ubuntu/Debian</span></>}>
     <div style={{ marginTop: '16px' }}>
 
       **适合人群**：Ubuntu、Debian 及其衍生发行版用户
@@ -115,9 +115,9 @@ import { Badge, Tabs, TabItem } from '@rspress/core/theme';
       ```
 
     </div>
-  </TabItem>
+  </Tab>
 
-  <TabItem value="yum" label={<><Badge text="yum/dnf" type="info" /> <span style={{ fontSize: '14px' }}>RHEL/Fedora</span></>}>
+  <Tab value="yum" label={<><Badge text="yum/dnf" type="info" /> <span style={{ fontSize: '14px' }}>RHEL/Fedora</span></>}>
     <div style={{ marginTop: '16px' }}>
 
       **适合人群**：RedHat 系发行版用户
@@ -158,9 +158,9 @@ import { Badge, Tabs, TabItem } from '@rspress/core/theme';
       ```
 
     </div>
-  </TabItem>
+  </Tab>
 
-  <TabItem value="snap" label={<><Badge text="Snap" type="info" /> <span style={{ fontSize: '14px' }}>通用</span></>}>
+  <Tab value="snap" label={<><Badge text="Snap" type="info" /> <span style={{ fontSize: '14px' }}>通用</span></>}>
     <div style={{ marginTop: '16px' }}>
 
       **适合人群**：支持 Snap 的所有发行版
@@ -186,9 +186,9 @@ import { Badge, Tabs, TabItem } from '@rspress/core/theme';
       ```
 
     </div>
-  </TabItem>
+  </Tab>
 
-  <TabItem value="goup" label={<><Badge text="goup 多版本" type="warning" /> <span style={{ fontSize: '14px' }}>推荐开发者</span></>}>
+  <Tab value="goup" label={<><Badge text="goup 多版本" type="warning" /> <span style={{ fontSize: '14px' }}>推荐开发者</span></>}>
     <div style={{ marginTop: '16px' }}>
 
       **适合人群**：需要在不同项目间切换 Go 版本
@@ -282,7 +282,7 @@ import { Badge, Tabs, TabItem } from '@rspress/core/theme';
       ```
 
     </div>
-  </TabItem>
+  </Tab>
 </Tabs>
 
 ---
@@ -351,4 +351,4 @@ go env -w GOPROXY=https://goproxy.io,direct
 
 ---
 
-[← 返回安装指南](.) | [继续：Hello World →](../hello)
+[← 返回安装指南](install/) | [继续：Hello World →](/golang/hello)

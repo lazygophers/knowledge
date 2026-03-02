@@ -1,4 +1,4 @@
-import { Badge, Tabs, TabItem } from '@rspress/core/theme';
+import { Badge, Tabs, Tab } from '@rspress/core/theme';
 
 # Hello World - 第一个 Go 程序
 
@@ -7,7 +7,7 @@ import { Badge, Tabs, TabItem } from '@rspress/core/theme';
 ## 📋 前置要求
 
 在开始之前，请确保你已经：
-- ✅ 安装了 Go 语言（[安装指南](install)）
+- ✅ 安装了 Go 语言（[安装指南](/golang/install/install)）
 - ✅ 验证安装成功（`go version` 命令可用）
 
 ---
@@ -29,7 +29,7 @@ go mod init example.com/hello-go
 
 创建 `main.go` 文件：
 
-```go
+```go title="main.go"
 package main
 
 import "fmt"
@@ -39,7 +39,14 @@ func main() {
 }
 ```
 
-### 第三步：运行程序
+### 第三步：整理依赖
+
+```bash
+# 整理 go.mod 依赖（自动添加缺失的依赖）
+go mod tidy
+```
+
+### 第四步：运行程序
 
 ```bash
 # 方法1：直接运行
@@ -82,7 +89,7 @@ func main() {
 ### 关键概念
 
 <Tabs groupId="concept-level">
-  <TabItem value="basic" label={<><Badge text="基础概念" type="tip" /> <span style={{ fontSize: '14px' }}>必读</span></>}>
+  <Tab value="basic" label={<><Badge text="基础概念" type="tip" /> <span style={{ fontSize: '14px' }}>必读</span></>}>
     <div style={{ marginTop: '16px' }}>
 
       #### 1. package（包）
@@ -101,9 +108,9 @@ func main() {
       - `fmt.Println()`：打印一行文本，自动换行
 
     </div>
-  </TabItem>
+  </Tab>
 
-  <TabItem value="advanced" label={<><Badge text="进阶知识" type="info" /> <span style={{ fontSize: '14px' }}>扩展</span></>}>
+  <Tab value="advanced" label={<><Badge text="进阶知识" type="info" /> <span style={{ fontSize: '14px' }}>扩展</span></>}>
     <div style={{ marginTop: '16px' }}>
 
       #### main 包的特殊性
@@ -127,9 +134,9 @@ func main() {
       ```
 
     </div>
-  </TabItem>
+  </Tab>
 
-  <TabItem value="expert" label={<><Badge text="深入理解" type="warning" outline /> <span style={{ fontSize: '14px' }}>高级</span></>}>
+  <Tab value="expert" label={<><Badge text="深入理解" type="warning" outline /> <span style={{ fontSize: '14px' }}>高级</span></>}>
     <div style={{ marginTop: '16px' }}>
 
       #### Go 编译过程
@@ -159,7 +166,7 @@ func main() {
       ```
 
     </div>
-  </TabItem>
+  </Tab>
 </Tabs>
 
 ---
@@ -167,7 +174,7 @@ func main() {
 ## 🎯 按读者水平深入学习
 
 <Tabs groupId="user-level">
-  <TabItem value="beginner" label={<><Badge text="无技术背景" type="tip" /> <span style={{ fontSize: '14px' }}>详细讲解</span></>}>
+  <Tab value="beginner" label={<><Badge text="无技术背景" type="tip" /> <span style={{ fontSize: '14px' }}>详细讲解</span></>}>
     <div style={{ marginTop: '16px' }}>
 
       ### 什么是编程？
@@ -189,9 +196,9 @@ func main() {
       - ✅ 获得第一个成就感！
 
     </div>
-  </TabItem>
+  </Tab>
 
-  <TabItem value="developer" label={<><Badge text="初级开发者" type="info" /> <span style={{ fontSize: '14px' }}>常见错误</span></>}>
+  <Tab value="developer" label={<><Badge text="初级开发者" type="info" /> <span style={{ fontSize: '14px' }}>常见错误</span></>}>
     <div style={{ marginTop: '16px' }}>
 
       ### Go 程序的基本结构
@@ -238,9 +245,9 @@ func main() {
       ```
 
     </div>
-  </TabItem>
+  </Tab>
 
-  <TabItem value="intermediate" label={<><Badge text="中级开发者" type="warning" /> <span style={{ fontSize: '14px' }}>Go Modules</span></>}>
+  <Tab value="intermediate" label={<><Badge text="中级开发者" type="warning" /> <span style={{ fontSize: '14px' }}>Go Modules</span></>}>
     <div style={{ marginTop: '16px' }}>
 
       ### Go Modules 基础
@@ -254,7 +261,7 @@ func main() {
 
       初始化时生成的 `go.mod` 文件：
 
-      ```go
+      ```go title="go.mod"
       module example.com/hello-go
 
       go 1.26
@@ -312,9 +319,9 @@ func main() {
       ```
 
     </div>
-  </TabItem>
+  </Tab>
 
-  <TabItem value="advanced" label={<><Badge text="高级开发者" type="warning" outline /> <span style={{ fontSize: '14px' }}>性能优化</span></>}>
+  <Tab value="advanced" label={<><Badge text="高级开发者" type="warning" outline /> <span style={{ fontSize: '14px' }}>性能优化</span></>}>
     <div style={{ marginTop: '16px' }}>
 
       ### 内存布局
@@ -363,26 +370,36 @@ func main() {
       ```
 
     </div>
-  </TabItem>
+  </Tab>
 
-  <TabItem value="enterprise" label={<><Badge text="专业开发者" type="danger" /> <span style={{ fontSize: '14px' }}>最佳实践</span></>}>
+  <Tab value="enterprise" label={<><Badge text="专业开发者" type="danger" /> <span style={{ fontSize: '14px' }}>最佳实践</span></>}>
     <div style={{ marginTop: '16px' }}>
 
       ### 项目结构
 
       ```
-      hello-go/
-      ├── main.go           # 入口文件
-      ├── go.mod            # 模块定义
-      ├── go.sum            # 依赖校验
-      ├── internal/         # 内部包
-      │   └── utils/
-      ├── pkg/              # 公共包
-      │   └── api/
-      ├── cmd/              # 命令行工具
-      │   └── server/
-      └── scripts/          # 构建脚本
+      hello-go/                    # 项目根目录
+      ├── go.mod                   # 模块定义
+      ├── go.sum                   # 依赖校验和锁定
+      ├── main.go                  # 程序入口（小型项目可放根目录）
+      ├── internal/                # 内部包（不可被外部导入）
+      │   └── core/                # 核心业务逻辑
+      ├── pkg/                     # 公共包（可被外部导入）
+      │   ├── utils/               # 工具函数
+      │   └── api/                 # API 定义和类型
+      ├── cmd/                     # 多个可执行程序时使用
+      │   ├── hello/               # hello 命令
+      │   └── server/              # server 命令
+      ├── scripts/                 # 构建和部署脚本
+      ├── configs/                 # 配置文件
+      └── deployments/             # 部署配置（Docker、K8s）
       ```
+
+      **关键规则**：
+      - 小型项目：`main.go` 可放在根目录
+      - 多个可执行程序：使用 `cmd/` 目录，每个子目录包含一个 `main.go`
+      - `pkg/utils/`：通用工具函数，可被外部导入
+      - `internal/core/`：核心业务逻辑，仅限内部使用
 
       ### 错误处理
 
@@ -413,8 +430,7 @@ func main() {
 
       ### 测试
 
-      ```go
-      // main_test.go
+      ```go title="main_test.go"
       package main
 
       import "testing"
@@ -422,7 +438,7 @@ func main() {
       func TestGreet(t *testing.T) {
           msg, err := greet("World")
           if err != nil {
-              t.Errorf("unexpected error: %v", err)
+              t.Fatalf("unexpected error: %v", err)
           }
           if msg != "Hello, World" {
               t.Errorf("expected 'Hello, World', got '%s'", msg)
@@ -443,7 +459,7 @@ func main() {
       ```
 
     </div>
-  </TabItem>
+  </Tab>
 </Tabs>
 
 ---
@@ -506,14 +522,6 @@ func main() {
     fmt.Printf("你好，%s！\n", name)
 }
 ```
-
----
-
-## 📚 推荐阅读
-
-- [Go by Example](https://gobyexample.com/) - 通过示例学习 Go
-- [Effective Go](https://go.dev/doc/effective_go) - 编写有效 Go 代码
-- [Go 语言规范](https://go.dev/ref/spec) - 官方语言规范
 
 ---
 

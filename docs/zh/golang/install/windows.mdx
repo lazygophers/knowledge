@@ -1,17 +1,17 @@
-import { Badge, Tabs, TabItem } from '@rspress/core/theme';
+import { Badge, Tabs, Tab } from '@rspress/core/theme';
 
 # Windows 平台 - Go 语言安装指南
 
 本指南提供在 Windows 系统上安装 Go 语言的多种方法。请根据你的情况选择合适的安装方式。
 
-[← 返回安装指南](.)
+[← 返回安装指南](install/)
 
 ---
 
 ## 选择你的安装方式
 
 <Tabs groupId="install-method">
-  <TabItem value="msi" label={<><Badge text="MSI 图形化" type="tip" /> <span style={{ fontSize: '14px' }}>推荐新手</span></>}>
+  <Tab value="msi" label={<><Badge text="MSI 图形化" type="tip" /> <span style={{ fontSize: '14px' }}>推荐新手</span></>}>
     <div style={{ marginTop: '16px' }}>
 
       **适合人群**：第一次安装软件，希望使用图形界面
@@ -79,9 +79,9 @@ import { Badge, Tabs, TabItem } from '@rspress/core/theme';
       - 关闭杀毒软件后重试
 
     </div>
-  </TabItem>
+  </Tab>
 
-  <TabItem value="choco" label={<><Badge text="Chocolatey" type="info" /> <span style={{ fontSize: '14px' }}>命令行</span></>}>
+  <Tab value="choco" label={<><Badge text="Chocolatey" type="info" /> <span style={{ fontSize: '14px' }}>命令行</span></>}>
     <div style={{ marginTop: '16px' }}>
 
       **适合人群**：熟悉命令行，希望自动化安装
@@ -111,9 +111,9 @@ import { Badge, Tabs, TabItem } from '@rspress/core/theme';
       ```
 
     </div>
-  </TabItem>
+  </Tab>
 
-  <TabItem value="scoop" label={<><Badge text="Scoop" type="info" /> <span style={{ fontSize: '14px' }}>无需管理员</span></>}>
+  <Tab value="scoop" label={<><Badge text="Scoop" type="info" /> <span style={{ fontSize: '14px' }}>无需管理员</span></>}>
     <div style={{ marginTop: '16px' }}>
 
       **适合人群**：希望安装到用户目录，不需要管理员权限
@@ -152,9 +152,9 @@ import { Badge, Tabs, TabItem } from '@rspress/core/theme';
       ```
 
     </div>
-  </TabItem>
+  </Tab>
 
-  <TabItem value="zip" label={<><Badge text="ZIP 便携版" type="warning" outline /> <span style={{ fontSize: '14px' }}>高级</span></>}>
+  <Tab value="zip" label={<><Badge text="ZIP 便携版" type="warning" outline /> <span style={{ fontSize: '14px' }}>高级</span></>}>
     <div style={{ marginTop: '16px' }}>
 
       **适合人群**：需要自定义安装路径或多版本共存
@@ -186,9 +186,9 @@ import { Badge, Tabs, TabItem } from '@rspress/core/theme';
       ```
 
     </div>
-  </TabItem>
+  </Tab>
 
-  <TabItem value="goup" label={<><Badge text="goup 多版本" type="warning" /> <span style={{ fontSize: '14px' }}>推荐开发者</span></>}>
+  <Tab value="goup" label={<><Badge text="goup 多版本" type="warning" /> <span style={{ fontSize: '14px' }}>推荐开发者</span></>}>
     <div style={{ marginTop: '16px' }}>
 
       **适合人群**：需要在不同项目间切换 Go 版本
@@ -265,7 +265,7 @@ import { Badge, Tabs, TabItem } from '@rspress/core/theme';
       ```
 
     </div>
-  </TabItem>
+  </Tab>
 </Tabs>
 
 ---
@@ -318,4 +318,4 @@ go env -w GOPROXY=https://goproxy.io,direct
 
 ---
 
-[← 返回安装指南](.) | [继续：Hello World →](../hello)
+[← 返回安装指南](install/) | [继续：Hello World →](/golang/hello)

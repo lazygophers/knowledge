@@ -33,7 +33,7 @@ export default defineConfig({
   globalStyles: path.join(__dirname, 'docs/styles/theme.css'),
   markdown: {
     showLineNumbers: true,
-    defaultWrapCode: true,
+    defaultWrapCode: false,
   },
   themeConfig: {
     localeRedirect: 'only-default-lang',
