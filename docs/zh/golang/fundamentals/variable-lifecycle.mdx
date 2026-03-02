@@ -13,7 +13,7 @@ import { Badge } from "@rspress/core/theme";
 ### 作用域层级
 
 ```mermaid
-graph TD
+flowchart TD
     A[全局作用域<br/>Package Level] --> B[函数作用域<br/>Function Level]
     B --> C[块作用域<br/>Block Level]
     C --> D[内部块作用域<br/>Nested Blocks]
@@ -240,7 +240,7 @@ func main() {
 ### 逃逸分析
 
 ```mermaid
-graph TD
+flowchart TD
     A[变量声明] --> B{逃逸分析}
     B --> C[栈上分配<br/>Stack Allocation]
     B --> D[堆上分配<br/>Heap Allocation]
