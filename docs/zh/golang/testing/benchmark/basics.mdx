@@ -1,0 +1,355 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# 基准测试基础
+
+<Badge text="高级" type="danger" /> <Badge text="Go 1.0+" type="info" />
+
+基准测试（Benchmark）用于测量代码的性能，找出性能瓶颈。
+
+## 基本结构
+
+```go
+func BenchmarkFunction(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        Function()
+    }
+}
+```
+
+<Callout type="info" title="b.N 的机制">
+  <ul>
+    <li>b.N 会自动调整，使测试运行约 1 秒</li>
+    <li>初始值较小，逐步增加直到达到足够时间</li>
+    <li>不需要手动设置迭代次数</li>
+  </ul>
+</Callout>
+
+## 基础示例
+
+```go
+// calc.go
+package calc
+
+func Add(a, b int) int {
+    return a + b
+}
+
+func AddSlow(a, b int) int {
+    time.Sleep(time.Nanosecond)
+    return a + b
+}
+
+// calc_test.go
+package calc
+
+import "testing"
+
+func BenchmarkAdd(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        Add(2, 3)
+    }
+}
+
+func BenchmarkAddSlow(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        AddSlow(2, 3)
+    }
+}
+```
+
+```bash
+$ go test -bench=.
+BenchmarkAdd-8         1000000000          0.255 ns/op
+BenchmarkAddSlow-8      100000000          10.25 ns/op
+```
+
+## 读取结果
+
+```
+BenchmarkAdd-8         1000000000          0.255 ns/op
+│            │         │          │
+│            │         │          └─ 每次操作耗时（纳秒）
+│            │         └─────────────── 执行次数
+│            └────────────────────────── CPU 数量
+```
+
+## 计时器控制
+
+### ResetTimer
+
+```go
+func BenchmarkWithSetup(b *testing.B) {
+    // Setup 在计时外执行
+    data := generateLargeDataSet()
+
+    b.ResetTimer() // 重置计时器，排除 setup 时间
+
+    for i := 0; i < b.N; i++ {
+        Process(data)
+    }
+}
+```
+
+### StopTimer/StartTimer
+
+```go
+func BenchmarkWithSkip(b *testing.B) {
+    data := generateLargeDataSet()
+
+    b.ResetTimer()
+
+    for i := 0; i < b.N; i++ {
+        b.StopTimer() // 暂停计时
+        prepareData := prepareIteration(i)
+        b.StartTimer() // 恢复计时
+
+        Process(prepareData)
+    }
+}
+```
+
+## 内存分配
+
+### ReportAllocs
+
+```go
+func BenchmarkSprintf(b *testing.B) {
+    b.ReportAllocs() // 报告内存分配
+
+    for i := 0; i < b.N; i++ {
+        fmt.Sprintf("hello %d", i)
+    }
+}
+
+func BenchmarkStringBuilder(b *testing.B) {
+    b.ReportAllocs()
+
+    for i := 0; i < b.N; i++ {
+        var sb strings.Builder
+        sb.WriteString("hello ")
+        sb.WriteString(strconv.Itoa(i))
+        sb.String()
+    }
+}
+```
+
+```bash
+$ go test -bench=. -benchmem
+BenchmarkSprintf-8      5000000    280 ns/op    32 B/op    2 allocs/op
+BenchmarkStringBuilder-8 10000000   150 ns/op    16 B/op    1 allocs/op
+```
+
+### 内存报告解读
+
+```
+BenchmarkSprintf-8      5000000    280 ns/op    32 B/op    2 allocs/op
+│                                  │           │          │
+│                                  │           │          └─ 分配次数
+│                                  │           └──────────── 分配字节数
+│                                  └─────────────────────── 每次操作耗时
+```
+
+## 并行基准测试
+
+### b.RunParallel
+
+```go
+func BenchmarkParallel(b *testing.B) {
+    b.RunParallel(func(pb *testing.PB) {
+        for pb.Next() {
+            // 并行执行的代码
+            Process()
+        }
+    })
+}
+```
+
+```go
+func BenchmarkConcurrency(b *testing.B) {
+    // 顺序执行
+    b.Run("sequential", func(b *testing.B) {
+        for i := 0; i < b.N; i++ {
+            Process()
+        }
+    })
+
+    // 并行执行
+    b.Run("parallel", func(b *testing.B) {
+        b.RunParallel(func(pb *testing.PB) {
+            for pb.Next() {
+                Process()
+            }
+        })
+    })
+}
+```
+
+## 子基准测试
+
+```go
+func BenchmarkStrings(b *testing.B) {
+    cases := []struct {
+        name  string
+        input string
+    }{
+        {"short", "hello"},
+        {"medium", strings.Repeat("a", 100)},
+        {"long", strings.Repeat("a", 1000)},
+    }
+
+    for _, bb := range cases {
+        bb := bb
+        b.Run(bb.name, func(b *testing.B) {
+            for i := 0; i < b.N; i++ {
+                strings.ToUpper(bb.input)
+            }
+        })
+    }
+}
+```
+
+```bash
+$ go test -bench=BenchmarkStrings
+BenchmarkStrings/short-8     50000000    25.5 ns/op
+BenchmarkStrings/medium-8    10000000    156 ns/op
+BenchmarkStrings/long-8      2000000     785 ns/op
+```
+
+## 性能对比
+
+```go
+func BenchmarkJSONEncoding(b *testing.B) {
+    data := User{Name: "Alice", Age: 30}
+
+    b.Run("json", func(b *testing.B) {
+        for i := 0; i < b.N; i++ {
+            json.Marshal(data)
+        }
+    })
+
+    b.Run("jsoniter", func(b *testing.B) {
+        for i := 0; i < b.N; i++ {
+            jsoniter.Marshal(data)
+        }
+    })
+}
+```
+
+## 最佳实践
+
+### 避免优化
+
+```go
+// ❌ 错误：编译器可能优化掉循环
+func BenchmarkBad(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        _ = Add(2, 3)
+    }
+}
+
+// ✅ 正确：使用结果
+func BenchmarkGood(b *testing.B) {
+    var result int
+    for i := 0; i < b.N; i++ {
+        result = Add(2, 3)
+    }
+    _ = result // 防止编译器优化
+}
+```
+
+### 使用全局变量
+
+```go
+var globalData []byte
+
+func BenchmarkJSON(b *testing.B) {
+    b.ReportAllocs()
+    for i := 0; i < b.N; i++ {
+        _ = json.Marshal(globalData)
+    }
+}
+```
+
+<Callout type="warning" title="注意事项">
+  <ul>
+    <li>基准测试结果会因硬件和系统状态而变化</li>
+    <li>多次运行取平均值</li>
+    <li>在稳定的环境中进行测试</li>
+    <li>关闭其他应用程序</li>
+  </ul>
+</Callout>
+
+## 练习
+
+1. **比较字符串拼接**：比较不同字符串拼接方式的性能
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package string_test
+
+import (
+    "fmt"
+    "strings"
+    "testing"
+)
+
+func BenchmarkStringPlus(b *testing.B) {
+    b.ReportAllocs()
+    for i := 0; i < b.N; i++ {
+        s := ""
+        for j := 0; j < 10; j++ {
+            s += "hello"
+        }
+        _ = s
+    }
+}
+
+func BenchmarkStringFmt(b *testing.B) {
+    b.ReportAllocs()
+    for i := 0; i < b.N; i++ {
+        s := ""
+        for j := 0; j < 10; j++ {
+            s = fmt.Sprintf("%s%s", s, "hello")
+        }
+        _ = s
+    }
+}
+
+func BenchmarkStringBuilder(b *testing.B) {
+    b.ReportAllocs()
+    for i := 0; i < b.N; i++ {
+        var sb strings.Builder
+        for j := 0; j < 10; j++ {
+            sb.WriteString("hello")
+        }
+        _ = sb.String()
+    }
+}
+
+func BenchmarkStringsJoin(b *testing.B) {
+    b.ReportAllocs()
+    for i := 0; i < b.N; i++ {
+        parts := make([]string, 10)
+        for j := range parts {
+            parts[j] = "hello"
+        }
+        _ = strings.Join(parts, "")
+    }
+}
+```
+
+运行结果：
+```bash
+$ go test -bench=. -benchmem
+BenchmarkStringPlus-8       5000000    345 ns/op    512 B/op    9 allocs/op
+BenchmarkStringFmt-8        2000000    768 ns/op    640 B/op   10 allocs/op
+BenchmarkStringBuilder-8    10000000    125 ns/op     64 B/op    1 allocs/op
+BenchmarkStringsJoin-8      5000000    268 ns/op    160 B/op    2 allocs/op
+```
+
+**解释**：StringBuilder 是最高效的字符串拼接方式，+ 操作符效率最低。
+
+</details>

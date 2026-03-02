@@ -1,0 +1,22 @@
+[
+  {
+    "type": "file",
+    "name": "test-files",
+    "label": "测试文件"
+  },
+  {
+    "type": "file",
+    "name": "assertions",
+    "label": "断言与验证"
+  },
+  {
+    "type": "file",
+    "name": "table-driven",
+    "label": "表驱动测试"
+  },
+  {
+    "type": "file",
+    "name": "coverage",
+    "label": "测试覆盖率"
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "type": "dir",
+    "name": "basics",
+    "label": "基础测试"
+  },
+  {
+    "type": "dir",
+    "name": "advanced",
+    "label": "进阶测试"
+  },
+  {
+    "type": "dir",
+    "name": "benchmark",
+    "label": "基准测试"
+  },
+  {
+    "type": "dir",
+    "name": "fuzzing",
+    "label": "模糊测试"
+  },
+  {
+    "type": "dir",
+    "name": "tools",
+    "label": "测试工具"
+  },
+  {
+    "type": "dir",
+    "name": "best-practices",
+    "label": "最佳实践"
+  }
+]

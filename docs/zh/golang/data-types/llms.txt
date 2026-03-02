@@ -13,5 +13,5 @@
 - [Map Types](./map.mdx): Hash tables, CRUD operations, traversal, concurrency safety, and usage patterns.
 - [Struct Types](./struct.mdx): Aggregate data types, struct tags, anonymous fields, comparison, memory layout, and common patterns including method chaining.
 - [Pointer Types](./pointer.mdx): Memory addresses, pointer semantics, function parameters, best practices, and common pitfalls.
-- [Interface Types](./interface.mdx): Behavior contracts, implementation checks, empty interface, type assertions, and interface composition.
+- [Generics](./generics.mdx): Go 1.18+ generics including type parameters, constraints, type inference, built-in constraints, and practical patterns.
 - [Module Metadata](./_meta.json): Navigation metadata for data-types subdirectory.

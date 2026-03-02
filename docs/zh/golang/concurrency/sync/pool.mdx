@@ -1,0 +1,286 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# sync.Pool - 对象池
+
+<Badge text="高级" type="danger" /> <Badge text="Go 1.3+" type="info" />
+
+Pool 是临时对象池，用于重用对象以减少 GC 压力。
+
+## 定义
+
+```go
+type Pool struct {
+    // 包含非导出字段
+    noCopy any
+}
+
+type Pool struct {
+    New func() any  // 创建对象的函数
+}
+```
+
+## 主要方法
+
+```go
+func (p *Pool) Get() any    // 从池中获取对象
+func (p *Pool) Put(x any)   // 将对象放回池中
+```
+
+## 使用场景
+
+- 频繁创建/销毁的对象
+- 临时缓冲区
+- 连接对象
+- 减少内存分配
+
+## 基础示例
+
+```go
+package main
+
+import (
+    "bytes"
+    "fmt"
+    "sync"
+)
+
+func main() {
+    // 创建字节缓冲区池
+    bufferPool := sync.Pool{
+        New: func() any {
+            fmt.Println("创建新的缓冲区")
+            return new(bytes.Buffer)
+        },
+    }
+
+    // 获取缓冲区
+    buf1 := bufferPool.Get().(*bytes.Buffer)
+    buf1.WriteString("Hello")
+    fmt.Println("buf1:", buf1.String())
+
+    // 放回池中
+    bufferPool.Put(buf1)
+
+    // 再次获取（可能复用）
+    buf2 := bufferPool.Get().(*bytes.Buffer)
+    buf2.Reset()  // 重置缓冲区
+    buf2.WriteString("World")
+    fmt.Println("buf2:", buf2.String())
+}
+```
+
+## 性能对比
+
+```go
+package main
+
+import (
+    "bytes"
+    "fmt"
+    "sync"
+    "time"
+)
+
+func withoutPool() {
+    start := time.Now()
+    for i := 0; i < 10000; i++ {
+        buf := new(bytes.Buffer)
+        buf.WriteString("test")
+        _ = buf.String()
+    }
+    fmt.Printf("不使用池: %v\n", time.Since(start))
+}
+
+func withPool() {
+    pool := sync.Pool{
+        New: func() any {
+            return new(bytes.Buffer)
+        },
+    }
+
+    start := time.Now()
+    for i := 0; i < 10000; i++ {
+        buf := pool.Get().(*bytes.Buffer)
+        buf.WriteString("test")
+        _ = buf.String()
+        pool.Put(buf)
+    }
+    fmt.Printf("使用池: %v\n", time.Since(start))
+}
+
+func main() {
+    withoutPool()
+    withPool()
+}
+```
+
+## JSON 编码池
+
+```go
+package main
+
+import (
+    "bytes"
+    "encoding/json"
+    "fmt"
+    "sync"
+)
+
+var jsonPool = sync.Pool{
+    New: func() any {
+        return new(bytes.Buffer)
+    },
+}
+
+func toJSON(v any) (string, error) {
+    buf := jsonPool.Get().(*bytes.Buffer)
+    defer func() {
+        buf.Reset()
+        jsonPool.Put(buf)
+    }()
+
+    if err := json.NewEncoder(buf).Encode(v); err != nil {
+        return "", err
+    }
+
+    return buf.String(), nil
+}
+
+func main() {
+    data := map[string]any{
+        "name": "Alice",
+        "age":  30,
+    }
+
+    jsonStr, err := toJSON(data)
+    if err != nil {
+        fmt.Println("Error:", err)
+        return
+    }
+
+    fmt.Println(jsonStr)
+}
+```
+
+<Callout type="warning" title="注意事项">
+  <strong>Pool 使用规则</strong>：
+  - Pool 中的对象可能随时被 GC 回收
+  - Get() 返回的对象可能是 nil
+  - Put() 前必须重置对象状态
+  - 不要在 Pool 中存储连接等需要显式关闭的资源
+  - Pool 适合存储无状态或可重置的对象
+</Callout>
+
+## 练习
+
+1. **实现数据库连接池**：使用 Pool 实现可复用的数据库连接池
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import (
+    "fmt"
+    "sync"
+    "time"
+)
+
+// 模拟数据库连接
+type DBConnection struct {
+    id       int
+    inUse    bool
+    lastUsed time.Time
+}
+
+func (db *DBConnection) Query(query string) string {
+    return fmt.Sprintf("结果来自连接 %d: %s", db.id, query)
+}
+
+func (db *DBConnection) Close() error {
+    fmt.Printf("连接 %d 已关闭\n", db.id)
+    return nil
+}
+
+type ConnectionPool struct {
+    pool    sync.Pool
+    maxConn int
+    connID  int
+    mu      sync.Mutex
+}
+
+func NewConnectionPool(maxConn int) *ConnectionPool {
+    p := &ConnectionPool{
+        maxConn: maxConn,
+    }
+
+    p.pool = sync.Pool{
+        New: func() any {
+            p.mu.Lock()
+            p.connID++
+            id := p.connID
+            p.mu.Unlock()
+
+            fmt.Printf("创建新连接 %d\n", id)
+            return &DBConnection{
+                id:       id,
+                lastUsed: time.Now(),
+            }
+        },
+    }
+
+    return p
+}
+
+func (p *ConnectionPool) Get() *DBConnection {
+    conn := p.pool.Get().(*DBConnection)
+    conn.inUse = true
+    conn.lastUsed = time.Now()
+    return conn
+}
+
+func (p *ConnectionPool) Put(conn *DBConnection) {
+    conn.inUse = false
+    conn.lastUsed = time.Now()
+    p.pool.Put(conn)
+}
+
+func (p *ConnectionPool) Execute(query string) string {
+    conn := p.Get()
+    defer p.Put(conn)
+
+    // 模拟查询延迟
+    time.Sleep(50 * time.Millisecond)
+    return conn.Query(query)
+}
+
+func main() {
+    pool := NewConnectionPool(5)
+
+    var wg sync.WaitGroup
+
+    // 模拟并发查询
+    for i := 0; i < 10; i++ {
+        wg.Add(1)
+        go func(id int) {
+            defer wg.Done()
+
+            result := pool.Execute(fmt.Sprintf("SELECT * FROM users WHERE id = %d", id))
+            fmt.Printf("Goroutine %d: %s\n", id, result)
+        }(i)
+    }
+
+    wg.Wait()
+    fmt.Println("\n所有查询完成")
+}
+```
+
+**解释**：使用 sync.Pool 实现数据库连接池，连接可以被复用，减少创建连接的开销。
+
+</details>
+
+---
+
+[← Map](./map.mdx)

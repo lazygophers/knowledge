@@ -33,6 +33,7 @@ $ARGUMENTS
 6. 更新 @docs/zh 中的文档内容
    1. 如果是新增了目录相关的部分，要及时更新相关索引
    2. 及时通过 Commands(llms-skills) 添加、更新 `llms.txt`/`llms-full.txt` 文件，且确保 `llms.txt`/`llms-full.txt` 是英文文件
+   3. 除了语言的根目录以及 nav.json 标记的根目录外，不允许添加 index 文件
 
 注意：
 

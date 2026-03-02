@@ -1,0 +1,1005 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+[← 返回并发](../)
+
+# Atomic
+
+<Badge text="Go 1.19+" type="warning" />
+
+`sync/atomic` 包提供了底层的原子内存原语，用于实现无锁算法和并发数据结构。这些操作保证原子性，无需加锁即可安全地并发访问。
+
+## Atomic 基础
+
+### 什么是原子操作
+
+原子操作是不可分割的操作，在执行过程中不会被其他操作打断。在并发编程中，原子操作可以保证：
+
+- **原子性**：操作要么完全执行，要么完全不执行
+- **有序性**：操作按指定的顺序执行
+- **可见性**：操作结果对其他 goroutine 立即可见
+
+<Callout type="info">
+  原子操作比互斥锁（mutex）更轻量，但使用场景更有限。适用于简单的计数器、标志位等场景。
+</Callout>
+
+### 为什么需要原子操作
+
+**不使用原子操作的问题：**
+
+```go
+package main
+
+import (
+    "fmt"
+    "sync"
+)
+
+func main() {
+    var counter int
+    var wg sync.WaitGroup
+
+    // 启动 1000 个 goroutine
+    for i := 0; i < 1000; i++ {
+        wg.Add(1)
+        go func() {
+            defer wg.Done()
+            counter++ // 非原子操作，存在竞态条件
+        }()
+    }
+
+    wg.Wait()
+    fmt.Println("Counter:", counter) // 结果可能不是 1000
+}
+```
+
+**使用原子操作解决：**
+
+```go
+package main
+
+import (
+    "fmt"
+    "sync"
+    "sync/atomic"
+)
+
+func main() {
+    var counter int64
+    var wg sync.WaitGroup
+
+    for i := 0; i < 1000; i++ {
+        wg.Add(1)
+        go func() {
+            defer wg.Done()
+            atomic.AddInt64(&counter, 1) // 原子操作
+        }()
+    }
+
+    wg.Wait()
+    fmt.Println("Counter:", atomic.LoadInt64(&counter)) // 结果一定是 1000
+}
+```
+
+## 原子类型
+
+Go 1.19+ 引入了类型安全的原子类型，推荐使用这些类型而非原始的原子函数。
+
+### atomic.Int64
+
+```go
+package main
+
+import (
+    "sync"
+    "sync/atomic"
+)
+
+func main() {
+    var counter atomic.Int64
+
+    // 原子加法
+    counter.Add(1)
+
+    // 原子加载
+    value := counter.Load()
+    println("Value:", value)
+
+    // 原子存储
+    counter.Store(100)
+
+    // 原子交换
+    old := counter.Swap(200)
+    println("Old value:", old)
+
+    // 原子比较并交换
+    swapped := counter.CompareAndSwap(200, 300)
+    println("Swapped:", swapped) // true
+
+    // 原子加法并返回旧值
+    oldValue = counter.Add(50)
+    println("Old value after add:", oldValue)
+}
+```
+
+### atomic.Int32
+
+```go
+package main
+
+import (
+    "sync/atomic"
+)
+
+func main() {
+    var counter atomic.Int32
+
+    // 基本操作与 Int64 类似
+    counter.Add(1)
+    value := counter.Load()
+    println("Value:", value)
+
+    // 比较并交换
+    counter.Store(10)
+    swapped := counter.CompareAndSwap(10, 20)
+    println("Swapped:", swapped)
+}
+```
+
+### atomic.Uint32
+
+```go
+package main
+
+import (
+    "sync/atomic"
+)
+
+func main() {
+    var flags atomic.Uint32
+
+    // 设置位标志
+    flags.Store(0b0011)
+
+    // 原子加法
+    flags.Add(1)
+
+    // 原子按位或
+    flags.Or(0b1000)
+
+    // 原子按位与
+    flags.And(0b0101)
+
+    value := flags.Load()
+    println("Flags:", value)
+}
+```
+
+### atomic.Uint64
+
+```go
+package main
+
+import (
+    "sync/atomic"
+)
+
+func main() {
+    var id atomic.Uint64
+
+    // 生成唯一 ID
+    nextID := id.Add(1)
+    println("Next ID:", nextID)
+
+    // 原子加载
+    current := id.Load()
+    println("Current:", current)
+}
+```
+
+### atomic.Pointer
+
+```go
+package main
+
+import (
+    "sync/atomic"
+)
+
+type Config struct {
+    Host string
+    Port int
+}
+
+func main() {
+    var config atomic.Pointer[Config]
+
+    // 存储配置
+    oldConfig := &Config{Host: "localhost", Port: 8080}
+    config.Store(oldConfig)
+
+    // 原子加载
+    current := config.Load()
+    println("Host:", current.Host, "Port:", current.Port)
+
+    // 原子交换
+    newConfig := &Config{Host: "example.com", Port: 9090}
+    old := config.Swap(newConfig)
+    println("Old config:", old.Host)
+
+    // 比较并交换
+    swapped := config.CompareAndSwap(
+        newConfig,
+        &Config{Host: "production.com", Port: 443},
+    )
+    println("Swapped:", swapped)
+}
+```
+
+### atomic.Value
+
+`atomic.Value` 可以存储任意类型的值，但使用时需要类型断言。
+
+```go
+package main
+
+import (
+    "sync/atomic"
+)
+
+type Config struct {
+    Host string
+    Port int
+}
+
+func main() {
+    var config atomic.Value
+
+    // 存储配置
+    config.Store(&Config{Host: "localhost", Port: 8080})
+
+    // 加载配置
+    if cfg, ok := config.Load().(*Config); ok {
+        println("Host:", cfg.Host, "Port:", cfg.Port)
+    }
+
+    // 更新配置
+    newConfig := &Config{Host: "example.com", Port: 9090}
+    config.Store(newConfig)
+}
+```
+
+<Callout type="warning">
+  <strong>atomic.Value 注意事项</strong>：
+  - 不能存储 nil 值
+  - 第一次 Store 后，不能再存储其他类型
+  - Load 返回的值不应该被修改
+</Callout>
+
+## 原子操作函数
+
+对于 Go 1.19 之前的版本，或者需要更细粒度控制的场景，可以使用原始的原子操作函数。
+
+### 加载操作 (Load)
+
+```go
+package main
+
+import (
+    "sync/atomic"
+)
+
+func main() {
+    var counter int64 = 42
+
+    // 原子加载
+    value := atomic.LoadInt64(&counter)
+    println("Value:", value)
+
+    // 其他类型
+    var ptr *int
+    atomic.LoadPointer(&ptr) // unsafe.Pointer
+
+    var value32 uint32
+    atomic.LoadUint32(&value32)
+
+    var value64 uint64
+    atomic.LoadUint64(&value64)
+}
+```
+
+### 存储操作 (Store)
+
+```go
+package main
+
+import (
+    "sync/atomic"
+)
+
+func main() {
+    var counter int64
+
+    // 原子存储
+    atomic.StoreInt64(&counter, 42)
+
+    // 其他类型
+    var ptr *int
+    atomic.StorePointer(&ptr, nil)
+
+    var value32 uint32
+    atomic.StoreUint32(&value32, 100)
+
+    var value64 uint64
+    atomic.StoreUint64(&value64, 200)
+}
+```
+
+### 加法操作 (Add)
+
+```go
+package main
+
+import (
+    "fmt"
+    "sync/atomic"
+)
+
+func main() {
+    var counter int64
+
+    // 原子加法，返回新值
+    new := atomic.AddInt64(&counter, 10)
+    fmt.Println("New value:", new) // 10
+
+    // 原子减法
+    new = atomic.AddInt64(&counter, -5)
+    fmt.Println("New value:", new) // 5
+
+    // 无符号类型
+    var counter32 uint32
+    atomic.AddUint32(&counter32, 1)
+}
+```
+
+### 交换操作 (Swap)
+
+```go
+package main
+
+import (
+    "sync/atomic"
+)
+
+func main() {
+    var value int64 = 100
+
+    // 原子交换，返回旧值
+    old := atomic.SwapInt64(&value, 200)
+    println("Old value:", old)   // 100
+    println("New value:", value) // 200
+
+    // 指针交换
+    var ptr *int
+    oldPtr := atomic.SwapPointer(&ptr, nil)
+    println("Old pointer:", oldPtr)
+}
+```
+
+### 比较并交换 (CompareAndSwap)
+
+<Callout type="tip">
+  <strong>CAS (Compare-And-Swap)</strong> 是实现无锁算法的核心原语。它会比较当前值是否等于期望值，如果相等则更新为新值。
+</Callout>
+
+```go
+package main
+
+import (
+    "sync/atomic"
+)
+
+func main() {
+    var value int64 = 100
+
+    // 如果当前值是 100，则设置为 200
+    swapped := atomic.CompareAndSwapInt64(&value, 100, 200)
+    println("Swapped:", swapped) // true
+    println("Value:", value)     // 200
+
+    // 再次尝试（当前值是 200，不是 100）
+    swapped = atomic.CompareAndSwapInt64(&value, 100, 300)
+    println("Swapped:", swapped) // false
+    println("Value:", value)     // 200
+}
+```
+
+### 原子操作类型对照表
+
+| 类型 | Load | Store | Add | Swap | CompareAndSwap |
+|-----|------|-------|-----|------|----------------|
+| int32 | LoadInt32 | StoreInt32 | AddInt32 | SwapInt32 | CompareAndSwapInt32 |
+| int64 | LoadInt64 | StoreInt64 | AddInt64 | SwapInt64 | CompareAndSwapInt64 |
+| uint32 | LoadUint32 | StoreUint32 | AddUint32 | SwapUint32 | CompareAndSwapUint32 |
+| uint64 | LoadUint64 | StoreUint64 | AddUint64 | SwapUint64 | CompareAndSwapUint64 |
+| uintptr | LoadUintptr | StoreUintptr | - | SwapUintptr | CompareAndSwapUintptr |
+| unsafe.Pointer | LoadPointer | StorePointer | - | SwapPointer | CompareAndSwapPointer |
+
+## 常见应用场景
+
+### 1. 并发计数器
+
+```go
+package main
+
+import (
+    "fmt"
+    "sync"
+    "sync/atomic"
+)
+
+func main() {
+    var success, failure atomic.Int64
+    var wg sync.WaitGroup
+
+    // 模拟 100 个请求
+    for i := 0; i < 100; i++ {
+        wg.Add(1)
+        go func(id int) {
+            defer wg.Done()
+
+            // 模拟处理
+            if id%3 == 0 {
+                failure.Add(1)
+            } else {
+                success.Add(1)
+            }
+        }(i)
+    }
+
+    wg.Wait()
+
+    fmt.Printf("Success: %d\n", success.Load())
+    fmt.Printf("Failure: %d\n", failure.Load())
+    fmt.Printf("Total: %d\n", success.Load()+failure.Load())
+}
+```
+
+### 2. 配置热更新
+
+```go
+package main
+
+import (
+    "sync/atomic"
+    "time"
+)
+
+type Config struct {
+    MaxConnections int
+    Timeout        time.Duration
+}
+
+func main() {
+    var config atomic.Value
+
+    // 初始配置
+    config.Store(&Config{
+        MaxConnections: 100,
+        Timeout:        30 * time.Second,
+    })
+
+    // 后台 goroutine 定期更新配置
+    go func() {
+        for {
+            time.Sleep(time.Minute)
+
+            // 原子更新配置
+            newConfig := &Config{
+                MaxConnections: 200,
+                Timeout:        60 * time.Second,
+            }
+            config.Store(newConfig)
+        }
+    }()
+
+    // 工作 goroutine 读取配置
+    for i := 0; i < 5; i++ {
+        go func() {
+            cfg := config.Load().(*Config)
+            println("MaxConnections:", cfg.MaxConnections)
+            time.Sleep(time.Second)
+        }()
+    }
+
+    time.Sleep(5 * time.Second)
+}
+```
+
+### 3. 无锁栈
+
+```go
+package main
+
+import (
+    "sync/atomic"
+)
+
+type Node struct {
+    value int
+    next  *Node
+}
+
+type LockFreeStack struct {
+    head atomic.Pointer[Node]
+}
+
+func (s *LockFreeStack) Push(value int) {
+    newNode := &Node{value: value}
+
+    for {
+        oldHead := s.head.Load()
+        newNode.next = oldHead
+
+        // 尝试将 newNode 设置为新的 head
+        if s.head.CompareAndSwap(oldHead, newNode) {
+            return
+        }
+        // CAS 失败，重试
+    }
+}
+
+func (s *LockFreeStack) Pop() (int, bool) {
+    for {
+        oldHead := s.head.Load()
+        if oldHead == nil {
+            return 0, false // 栈为空
+        }
+
+        newHead := oldHead.next
+
+        // 尝试将 head 设置为下一个节点
+        if s.head.CompareAndSwap(oldHead, newHead) {
+            return oldHead.value, true
+        }
+        // CAS 失败，重试
+    }
+}
+
+func main() {
+    var stack LockFreeStack
+
+    // 并发 push
+    for i := 0; i < 100; i++ {
+        go func(v int) {
+            stack.Push(v)
+        }(i)
+    }
+
+    // 并发 pop
+    var popped int
+    for i := 0; i < 100; i++ {
+        go func() {
+            if _, ok := stack.Pop(); ok {
+                popped++
+            }
+        }()
+    }
+}
+```
+
+### 4. 单例模式（双重检查锁定）
+
+```go
+package main
+
+import (
+    "sync"
+    "sync/atomic"
+)
+
+type Singleton struct {
+    value int
+}
+
+var (
+    instance    *Singleton
+    initialized atomic.Bool
+    mu          sync.Mutex
+)
+
+func GetInstance() *Singleton {
+    if !initialized.Load() {
+        mu.Lock()
+        defer mu.Unlock()
+
+        // 再次检查
+        if !initialized.Load() {
+            instance = &Singleton{value: 42}
+            initialized.Store(true)
+        }
+    }
+
+    return instance
+}
+
+func main() {
+    s1 := GetInstance()
+    s2 := GetInstance()
+
+    println("Same instance:", s1 == s2) // true
+}
+```
+
+### 5. 标志位控制
+
+```go
+package main
+
+import (
+    "sync/atomic"
+)
+
+type Server struct {
+    running atomic.Bool
+    stopped atomic.Bool
+}
+
+func (s *Server) Start() {
+    // 原子设置运行标志
+    if !s.running.Swap(true) {
+        println("Server starting...")
+        // 启动服务逻辑
+    } else {
+        println("Server already running")
+    }
+}
+
+func (s *Server) Stop() {
+    // 原子设置停止标志
+    if !s.stopped.Swap(true) {
+        s.running.Store(false)
+        println("Server stopping...")
+        // 停止服务逻辑
+    } else {
+        println("Server already stopped")
+    }
+}
+
+func (s *Server) IsRunning() bool {
+    return s.running.Load()
+}
+
+func main() {
+    server := &Server{}
+
+    server.Start()
+    println("Running:", server.IsRunning()) // true
+
+    server.Stop()
+    println("Running:", server.IsRunning()) // false
+}
+```
+
+## 内存顺序
+
+Go 的原子操作默认使用**顺序一致性**（sequentially consistent）内存模型，这意味着：
+
+1. 所有原子操作按照代码顺序执行
+2. 所有 goroutine 看到相同的操作顺序
+3. 不需要额外的内存屏障
+
+<Callout type="info">
+  Go 的原子操作提供了最强的内存顺序保证，简单易用，但可能不是最高效的选择。对于性能敏感的场景，可以考虑使用更宽松的内存顺序（但 Go 标准库不直接支持）。
+</Callout>
+
+### 内存顺序示例
+
+```go
+package main
+
+import (
+    "fmt"
+    "sync/atomic"
+)
+
+func main() {
+    var data int
+    var ready atomic.Bool
+
+    // 写入者
+    go func() {
+        data = 42          // 写入数据
+        ready.Store(true)  // 设置就绪标志
+    }()
+
+    // 读取者
+    for !ready.Load() { // 等待就绪
+    }
+
+    // 保证能读取到 42
+    fmt.Println("Data:", data) // 42
+}
+```
+
+## 常见问题
+
+### 问题 1：误用原子操作
+
+<Callout type="danger">
+  <strong>错误示例</strong>：将原子操作与非原子操作混用
+</Callout>
+
+```go
+// 错误：混合使用原子和非原子操作
+var counter atomic.Int64
+
+// 正确的原子操作
+counter.Add(1)
+
+// 错误：直接访问底层值
+// value := counter.value + 1 // 编译错误，value 是私有的
+
+// 错误：假设原子操作可以解决所有并发问题
+type SafeMap struct {
+    m atomic.Value
+}
+
+func (sm *SafeMap) Store(key, value string) {
+    // 这不是原子的！
+    m := sm.m.Load().(map[string]string)
+    m[key] = value // 并发不安全
+}
+```
+
+### 问题 2：忽视 ABA 问题
+
+<Callout type="warning">
+  <strong>ABA 问题</strong>：一个值从 A 变成 B，又变回 A，CAS 会误认为没有变化。
+</Callout>
+
+```go
+package main
+
+import (
+    "sync/atomic"
+)
+
+func main() {
+    var value atomic.Int64
+    value.Store(100)
+
+    // Goroutine 1: 读取到 100
+    go func() {
+        old := value.Load() // 100
+
+        // 模拟其他操作
+        // 100 -> 200 -> 100
+        value.Store(200)
+        value.Store(100)
+
+        // CAS 仍然成功，但中间已经发生了变化
+        swapped := value.CompareAndSwap(old, 300)
+        println("Swapped:", swapped) // true
+    }()
+}
+```
+
+**解决方案**：使用版本号或指针类型
+
+```go
+type VersionedValue struct {
+    value int64
+    version uint64
+}
+```
+
+### 问题 3：性能误判
+
+<Callout type="tip">
+  <strong>性能对比</strong>：原子操作不总是比锁更快
+</Callout>
+
+```go
+// 场景 1：简单计数器，原子操作更快
+var counter atomic.Int64
+counter.Add(1) // 非常快
+
+// 场景 2：复杂操作，互斥锁更合适
+type SafeData struct {
+    mu    sync.Mutex
+    value int
+    flags map[string]bool
+}
+
+func (sd *SafeData) Update(key string) {
+    sd.mu.Lock()
+    defer sd.mu.Unlock()
+    // 复杂的多个字段操作
+    sd.value++
+    sd.flags[key] = true
+}
+```
+
+## 原子操作 vs 互斥锁
+
+### 对比表
+
+| 特性 | 原子操作 | 互斥锁 |
+|-----|---------|--------|
+| **性能** | 高（无锁） | 较低（加锁开销） |
+| **复杂度** | 简单操作 | 复杂操作 |
+| **适用场景** | 计数器、标志位 | 复杂数据结构 |
+| **可扩展性** | 受限于 CAS 重试 | 可能有锁竞争 |
+| **内存开销** | 低 | 较高 |
+| **使用难度** | 需要理解 CAS | 相对简单 |
+
+### 选择建议
+
+```go
+// 使用原子操作：简单的计数器、标志位
+var counter atomic.Int64
+counter.Add(1)
+
+var flag atomic.Bool
+flag.Store(true)
+
+// 使用互斥锁：复杂的临界区
+type SafeMap struct {
+    mu sync.Mutex
+    m  map[string]int
+}
+
+func (sm *SafeMap) Get(key string) (int, bool) {
+    sm.mu.Lock()
+    defer sm.mu.Unlock()
+    val, ok := sm.m[key]
+    return val, ok
+}
+```
+
+## 最佳实践
+
+1. **优先使用类型安全的原子类型**（Go 1.19+）
+   - 使用 `atomic.Int64` 而非 `int64` + `atomic.AddInt64`
+
+2. **保持操作简单**
+   - 原子操作只用于简单的读写、加减
+   - 复杂逻辑使用互斥锁
+
+3. **注意 ABA 问题**
+   - 使用版本号或指针类型避免
+
+4. **避免过度优化**
+   - 只有在性能瓶颈时才考虑无锁算法
+   - 优先选择清晰的互斥锁方案
+
+5. **正确处理错误**
+   - CAS 操作可能失败，需要重试逻辑
+
+## 练习
+
+<details>
+<summary>练习 1: 并发安全计数器</summary>
+
+实现一个并发安全的计数器，支持增、减、重置操作。
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import (
+    "sync/atomic"
+)
+
+type Counter struct {
+    value atomic.Int64
+}
+
+func (c *Counter) Add(delta int64) {
+    c.value.Add(delta)
+}
+
+func (c *Counter) Get() int64 {
+    return c.value.Load()
+}
+
+func (c *Counter) Reset() {
+    c.value.Store(0)
+}
+
+func main() {
+    counter := &Counter{}
+
+    // 增加计数
+    counter.Add(10)
+    println("Count:", counter.Get()) // 10
+
+    // 减少计数
+    counter.Add(-5)
+    println("Count:", counter.Get()) // 5
+
+    // 重置
+    counter.Reset()
+    println("Count:", counter.Get()) // 0
+}
+```
+
+</details>
+</details>
+
+<details>
+<summary>练习 2: 原子配置切换</summary>
+
+实现支持原子切换的配置管理器。
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import (
+    "sync/atomic"
+)
+
+type Config struct {
+    MaxSize int
+    Timeout int
+}
+
+type ConfigManager struct {
+    config atomic.Value
+}
+
+func NewConfigManager(initial *Config) *ConfigManager {
+    cm := &ConfigManager{}
+    cm.config.Store(initial)
+    return cm
+}
+
+func (cm *ConfigManager) Update(newConfig *Config) {
+    cm.config.Store(newConfig)
+}
+
+func (cm *ConfigManager) Get() *Config {
+    return cm.config.Load().(*Config)
+}
+
+func main() {
+    cm := NewConfigManager(&Config{
+        MaxSize: 100,
+        Timeout: 30,
+    })
+
+    cfg := cm.Get()
+    println("MaxSize:", cfg.MaxSize, "Timeout:", cfg.Timeout)
+
+    // 更新配置
+    cm.Update(&Config{
+        MaxSize: 200,
+        Timeout: 60,
+    })
+
+    cfg = cm.Get()
+    println("MaxSize:", cfg.MaxSize, "Timeout:", cfg.Timeout)
+}
+```
+
+</details>
+</details>
+
+## 总结
+
+Atomic 包提供了高效的并发访问原语：
+
+- **原子类型**（Go 1.19+）：`atomic.Int64`、`atomic.Pointer` 等，类型安全
+- **原子操作**：Load、Store、Add、Swap、CompareAndSwap
+- **应用场景**：计数器、标志位、配置热更新、无锁数据结构
+- **最佳实践**：简单操作用原子，复杂操作用锁
+
+---
+
+[← Sync 包](./sync/mutex.mdx) | [继续：最佳实践 →](./best-practices.mdx)

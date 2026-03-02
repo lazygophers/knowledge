@@ -1,0 +1,135 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# sync.WaitGroup - 等待组
+
+<Badge text="基础" type="tip" /> <Badge text="Go 1.0+" type="info" />
+
+WaitGroup 用于等待一组 goroutine 完成。
+
+## 定义
+
+```go
+type WaitGroup struct {
+    // 包含非导出字段
+}
+```
+
+## 主要方法
+
+```go
+func (wg *WaitGroup) Add(delta int)   // 增加计数器
+func (wg *WaitGroup) Done()           // 计数器减 1
+func (wg *WaitGroup) Wait()           // 阻塞直到计数器为 0
+```
+
+## 使用场景
+
+- 等待多个 goroutine 完成
+- 批量任务处理
+- 并发任务协调
+
+## 基础示例
+
+```go
+package main
+
+import (
+    "fmt"
+    "sync"
+    "time"
+)
+
+func worker(id int, wg *sync.WaitGroup) {
+    defer wg.Done()  // 等同于 wg.Add(-1)
+
+    fmt.Printf("Worker %d: 开始工作\n", id)
+    time.Sleep(100 * time.Millisecond)
+    fmt.Printf("Worker %d: 完成工作\n", id)
+}
+
+func main() {
+    var wg sync.WaitGroup
+
+    // 启动 3 个 worker
+    for i := 1; i <= 3; i++ {
+        wg.Add(1)  // 增加计数器
+        go worker(i, &wg)
+    }
+
+    // 等待所有 worker 完成
+    wg.Wait()
+    fmt.Println("所有 worker 已完成")
+}
+```
+
+## 常见模式
+
+```go
+package main
+
+import (
+    "fmt"
+    "sync"
+)
+
+// 模式 1：在启动 goroutine 前调用 Add
+func pattern1() {
+    var wg sync.WaitGroup
+    for i := 0; i < 3; i++ {
+        wg.Add(1)
+        go func(n int) {
+            defer wg.Done()
+            fmt.Println(n)
+        }(i)
+    }
+    wg.Wait()
+}
+
+// 模式 2：批量 Add
+func pattern2() {
+    var wg sync.WaitGroup
+    wg.Add(3)
+    for i := 0; i < 3; i++ {
+        go func(n int) {
+            defer wg.Done()
+            fmt.Println(n)
+        }(i)
+    }
+    wg.Wait()
+}
+
+// 模式 3：在函数内部 Add
+func process(tasks []int, wg *sync.WaitGroup) {
+    for _, task := range tasks {
+        wg.Add(1)
+        go func(t int) {
+            defer wg.Done()
+            fmt.Printf("处理任务 %d\n", t)
+        }(task)
+    }
+}
+
+func main() {
+    pattern1()
+    fmt.Println("---")
+    pattern2()
+    fmt.Println("---")
+
+    var wg sync.WaitGroup
+    process([]int{1, 2, 3}, &wg)
+    wg.Wait()
+}
+```
+
+<Callout type="danger" title="注意事项">
+  <strong>WaitGroup 使用规则</strong>：
+  - Add 必须在 goroutine 启动前调用
+  - Done 必须在 goroutine 内部调用
+  - Add 和 Done 的调用次数必须匹配
+  - 不要复制使用过的 WaitGroup
+</Callout>
+
+---
+
+[← RWMutex](./rwmutex.mdx) | [Once →](./once.mdx)

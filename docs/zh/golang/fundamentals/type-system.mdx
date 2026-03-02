@@ -473,8 +473,190 @@ func main() {
 ## 练习
 
 1. **创建一个表示"书"的结构体**，包含书名、作者、ISBN、价格
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// Book 图书结构体
+type Book struct {
+    Title     string  // 书名
+    Author    string  // 作者
+    ISBN      string  // ISBN编号
+    Price     float64 // 价格
+    Published int     // 出版年份（可选）
+}
+
+// String 实现Stringer接口
+func (b Book) String() string {
+    return fmt.Sprintf("《%s》 - %s (ISBN: %s, 价格: ¥%.2f)",
+        b.Title, b.Author, b.ISBN, b.Price)
+}
+
+func main() {
+    // 创建图书
+    book1 := Book{
+        Title:  "Go语言实战",
+        Author: "John Doe",
+        ISBN:   "978-7-111-12345-6",
+        Price:  89.00,
+    }
+
+    book2 := Book{
+        Title:     "深入理解计算机系统",
+        Author:    "Randal E. Bryant",
+        ISBN:      "978-7-111-54493-7",
+        Price:     139.00,
+        Published: 2016,
+    }
+
+    // 打印图书信息
+    fmt.Println(book1)
+    fmt.Println(book2)
+}
+```
+
+**解释**：展示了结构体定义、初始化和Stringer接口实现。
+</details>
+
 2. **使用切片存储多本书**，并遍历打印
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+type Book struct {
+    Title  string
+    Author string
+    ISBN   string
+    Price  float64
+}
+
+func main() {
+    // 创建图书切片
+    books := []Book{
+        {Title: "Go语言实战", Author: "John Doe", ISBN: "123456", Price: 89.00},
+        {Title: "Python编程", Author: "Jane Smith", ISBN: "234567", Price: 75.50},
+        {Title: "算法导论", Author: "Thomas H. Cormen", ISBN: "345678", Price: 128.00},
+    }
+
+    // 方法1：使用 range 遍历
+    fmt.Println("=== 图书列表（range）===")
+    for i, book := range books {
+        fmt.Printf("%d. %s - ¥%.2f\n", i+1, book.Title, book.Price)
+    }
+
+    // 方法2：只遍历值（忽略索引）
+    fmt.Println("\n=== 图书详情 ===")
+    for _, book := range books {
+        fmt.Printf("《%s》by %s, ISBN: %s, 价格: ¥%.2f\n",
+            book.Title, book.Author, book.ISBN, book.Price)
+    }
+
+    // 方法3：传统for循环
+    fmt.Println("\n=== 传统循环 ===")
+    for i := 0; i < len(books); i++ {
+        fmt.Printf("%d. %s\n", i+1, books[i].Title)
+    }
+
+    // 添加新书
+    books = append(books, Book{
+        Title:  "设计模式",
+        Author: "GoF",
+        ISBN:   "456789",
+        Price:  59.90,
+    })
+
+    fmt.Printf("\n总计 %d 本书\n", len(books))
+}
+```
+
+**解释**：展示了切片的创建、遍历和追加操作。
+</details>
+
 3. **编写函数接收接口参数**，实现不同的打印方式
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// Printer 打印器接口
+type Printer interface {
+    Print() string
+}
+
+// Book 图书类型
+type Book struct {
+    Title  string
+    Author string
+    Price  float64
+}
+
+// Print 实现Printer接口
+func (b Book) Print() string {
+    return fmt.Sprintf("《%s》- %s, ¥%.2f", b.Title, b.Author, b.Price)
+}
+
+// Magazine 杂志类型
+type Magazine struct {
+    Name  string
+    Issue int
+    Price float64
+}
+
+// Print 实现Printer接口
+func (m Magazine) Print() string {
+    return fmt.Sprintf("%s (第%d期), ¥%.2f", m.Name, m.Issue, m.Price)
+}
+
+// PrintItems 打印所有实现了Printer接口的项目
+func PrintItems(items []Printer) {
+    for _, item := range items {
+        fmt.Println(item.Print())
+    }
+}
+
+// SimplePrinter 简单打印接口
+type SimplePrinter interface {
+    GetName() string
+}
+
+// PrintSimple 简单打印
+func PrintSimple(item SimplePrinter) {
+    fmt.Println("名称:", item.GetName())
+}
+
+func main() {
+    // 创建不同类型的项目
+    book := Book{Title: "Go语言实战", Author: "John", Price: 89.00}
+    magazine := Magazine{Name: "科技周刊", Issue: 42, Price: 15.00}
+
+    // 使用Printer接口
+    items := []Printer{book, magazine}
+    fmt.Println("=== 详细打印 ===")
+    PrintItems(items)
+
+    // 使用SimplePrinter接口
+    fmt.Println("\n=== 简单打印 ===")
+    PrintSimple(book)
+    PrintSimple(magazine)
+}
+```
+
+**解释**：展示了接口的定义、实现和多态特性。
+</details>
 
 
 [← 返回基础概念](overview/) | [声明与初始化](variables/) | [继续：函数与方法 →](functions-methods/)

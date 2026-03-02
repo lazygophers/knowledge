@@ -49,7 +49,7 @@ fmt.Println(u.Name)  // Bob
 
 ```go
 type User struct {
-    ID       int    `json:"id" db:"user_id"`
+    Id       int    `json:"id" db:"user_id"`
     Name     string `json:"name" db:"name"`
     Password string `json:"-" db:"password"`  // json:"-" 表示不序列化
 }
@@ -57,7 +57,7 @@ type User struct {
 // 通过反射获取标签
 import "reflect"
 t := reflect.TypeOf(User{})
-field, _ := t.FieldByName("ID")
+field, _ := t.FieldByName("Id")
 fmt.Println(field.Tag.Get("json"))  // id
 fmt.Println(field.Tag.Get("db"))    // user_id
 ```
@@ -369,8 +369,205 @@ req := NewRequestBuilder("https://api.example.com").
 ## 练习
 
 1. 定义 Rectangle 结构体，计算面积和周长
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// Rectangle 矩形结构体
+type Rectangle struct {
+    Width  float64
+    Height float64
+}
+
+// Area 计算面积
+func (r Rectangle) Area() float64 {
+    return r.Width * r.Height
+}
+
+// Perimeter 计算周长
+func (r Rectangle) Perimeter() float64 {
+    return 2 * (r.Width + r.Height)
+}
+
+// NewRectangle 创建矩形（验证输入）
+func NewRectangle(width, height float64) (Rectangle, error) {
+    if width <= 0 || height <= 0 {
+        return Rectangle{}, fmt.Errorf("宽度和高度必须大于0")
+    }
+    return Rectangle{Width: width, Height: height}, nil
+}
+
+func main() {
+    rect := Rectangle{Width: 5, Height: 3}
+
+    fmt.Printf("矩形: 宽%.1f x 高%.1f\n", rect.Width, rect.Height)
+    fmt.Printf("面积: %.2f\n", rect.Area())
+    fmt.Printf("周长: %.2f\n", rect.Perimeter())
+
+    // 使用构造函数
+    rect2, err := NewRectangle(10, 20)
+    if err != nil {
+        fmt.Println("错误:", err)
+        return
+    }
+    fmt.Printf("\n第二个矩形面积: %.2f\n", rect2.Area())
+}
+```
+
+**解释**：展示了结构体定义、方法实现和构造函数模式。
+</details>
+
 2. 实现 Point 结构体的 String() 方法
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// Point 二维点结构体
+type Point struct {
+    X float64
+    Y float64
+}
+
+// String 实现 Stringer 接口
+func (p Point) String() string {
+    return fmt.Sprintf("(%.1f, %.1f)", p.X, p.Y)
+}
+
+// DistanceTo 计算到另一个点的距离
+func (p Point) DistanceTo(other Point) float64 {
+    dx := p.X - other.X
+    dy := p.Y - other.Y
+    return dx*dx + dy*dy
+}
+
+// Point3D 三维点结构体
+type Point3D struct {
+    X float64
+    Y float64
+    Z float64
+}
+
+// String 实现 Stringer 接口
+func (p Point3D) String() string {
+    return fmt.Sprintf("(%.1f, %.1f, %.1f)", p.X, p.Y, p.Z)
+}
+
+func main() {
+    p1 := Point{X: 3, Y: 4}
+    p2 := Point{X: 0, Y: 0}
+
+    fmt.Println("点:", p1)
+    fmt.Println("原点:", p2)
+    fmt.Printf("距离的平方: %.2f\n", p1.DistanceTo(p2))
+
+    p3d := Point3D{X: 1, Y: 2, Z: 3}
+    fmt.Println("三维点:", p3d)
+}
+```
+
+**解释**：展示了 Stringer 接口的实现，这是 Go 中自定义类型输出的标准方式。
+</details>
+
 3. 创建配置结构体，支持链式设置
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// Config 配置结构体
+type Config struct {
+    host     string
+    port     int
+    timeout  int
+    debug    bool
+    maxConns int
+}
+
+// NewConfig 创建默认配置
+func NewConfig() *Config {
+    return &Config{
+        host:     "localhost",
+        port:     8080,
+        timeout:  30,
+        debug:    false,
+        maxConns: 100,
+    }
+}
+
+// WithHost 设置主机（返回 *Config 支持链式调用）
+func (c *Config) WithHost(host string) *Config {
+    c.host = host
+    return c
+}
+
+// WithPort 设置端口
+func (c *Config) WithPort(port int) *Config {
+    c.port = port
+    return c
+}
+
+// WithTimeout 设置超时
+func (c *Config) WithTimeout(timeout int) *Config {
+    c.timeout = timeout
+    return c
+}
+
+// WithDebug 设置调试模式
+func (c *Config) WithDebug(debug bool) *Config {
+    c.debug = debug
+    return c
+}
+
+// WithMaxConns 设置最大连接数
+func (c *Config) WithMaxConns(max int) *Config {
+    c.maxConns = max
+    return c
+}
+
+// Display 打印配置
+func (c *Config) Display() {
+    fmt.Printf("Host: %s\n", c.host)
+    fmt.Printf("Port: %d\n", c.port)
+    fmt.Printf("Timeout: %d\n", c.timeout)
+    fmt.Printf("Debug: %v\n", c.debug)
+    fmt.Printf("MaxConns: %d\n", c.maxConns)
+}
+
+func main() {
+    // 链式设置配置
+    config := NewConfig().
+        WithHost("example.com").
+        WithPort(443).
+        WithTimeout(60).
+        WithDebug(true).
+        WithMaxConns(200)
+
+    fmt.Println("=== 配置信息 ===")
+    config.Display()
+
+    // 也可以使用默认配置
+    defaultConfig := NewConfig()
+    fmt.Println("\n=== 默认配置 ===")
+    defaultConfig.Display()
+}
+```
+
+**解释**：展示了链式调用模式，每个设置方法返回 *Config 以支持连续调用。
+</details>
 
 
 [← 映射](./map.mdx) | [指针 →](./pointer.mdx)

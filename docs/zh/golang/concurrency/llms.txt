@@ -1,0 +1,21 @@
+# Concurrency Module
+
+This module covers Go's concurrency primitives and patterns.
+
+## Topics
+
+- goroutine: Lightweight threads and the Go scheduler
+- channel: Buffered and unbuffered channels, channel operations
+- channel-patterns: Common channel patterns and idioms
+- sync (sync/): Mutex, RWMutex, WaitGroup, Once, Cond, Map, and Pool synchronization primitives
+- atomic: Atomic operations and memory ordering
+- best-practices: Concurrency best practices and anti-patterns
+
+## Key Concepts
+
+Go's concurrency model is based on CSP (Communicating Sequential Processes), emphasizing communication over shared memory.
+
+## Related Topics
+
+- Functions (functions-methods/): Goroutine functions and closures
+- Context (interface/library/context.mdx): Cancellation and deadlines

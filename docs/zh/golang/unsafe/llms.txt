@@ -1,0 +1,48 @@
+# Go Unsafe Module
+
+## Overview
+Go unsafe package provides operations that bypass Go's type system and memory safety, primarily used for low-level system programming and performance optimization.
+
+## Files
+
+### basics.mdx
+- **Unsafe Basics**: Introduction to unsafe package, unsafe.Pointer and uintptr types, Sizeof/Alignof/Offsetof functions, safety warnings, and use cases (high-performance scenarios, system programming, low-level optimization, standard library implementation)
+- Pointer conversion rules: *T1 ↔ unsafe.Pointer ↔ *T2 (same size), unsafe.Pointer ↔ uintptr
+- uintptr dangers: GC may move objects, don't store uintptr for long
+- Real-world applications: zero-copy string/bytes conversion, slice to array pointer, atomic operations
+
+### pointer-operations.mdx
+- **Pointer Operations**: Advanced pointer operations with unsafe
+- Type conversion: same-size type conversion, pointer type conversion
+- Array/slice operations: array to slice conversion, slice to array conversion, zero-length slice tricks
+- String operations: zero-copy string to bytes conversion (read-only), zero-copy bytes to string conversion
+- Struct operations: direct struct field access, struct slice tricks
+- Union simulation: using unsafe to simulate C unions
+
+### memory-layout.mdx
+- **Memory Layout**: Understanding Go type memory layout
+- Basic types layout: bool (1 byte), integers (1/2/4/8 bytes), floats (4/8 bytes), string (16 bytes: ptr+len), slice (24 bytes: ptr+len+cap), interface (16 bytes: type+data)
+- Struct layout: alignment rules, padding, field reordering optimization
+- Array layout: fixed-size arrays, multi-dimensional arrays, memory contiguity
+- Slice layout: slice header, relationship with underlying array, multiple slices sharing array
+- Map layout: hmap structure, bucket structure, memory usage
+- Channel layout: hchan structure, unbuffered vs buffered channels
+- Interface layout: empty interface (eface), non-empty interface (iface)
+- Memory layout optimization: reducing memory footprint, using smaller integer types
+
+### best-practices.mdx
+- **Best Practices**: When and how to use unsafe properly
+- When to use: performance-critical paths, C library interaction (CGO), standard-library level features, system programming
+- When NOT to use: application code, normal optimization (use pprof), cases where interfaces work, code generation alternatives
+- Common pitfalls: storing uintptr too long, object moving after conversion, modifying read-only memory, different type sizes, unaligned access
+- Safe patterns: restricted unsafe usage, boundary checking, documenting constraints
+- Performance optimization: caching offsets, batch operations
+- CGO integration: passing pointers to C, receiving pointers from C
+- Testing unsafe code: unit tests, race detection, fuzzing
+- Debugging: memory dump, alignment verification
+- Alternatives: using interfaces, code generation, standard library
+
+## Related Topics
+- Go reflection (../reflection/): Runtime type inspection
+- Go concurrency (../concurrency/): Atomic operations
+- Go data types (../data-types/): Type system overview

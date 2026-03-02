@@ -18,11 +18,11 @@
 
 ## 文档模块
 
-| 模块 | 描述 |
-|------|------|
+| 模块                                                           | 描述                                |
+| -------------------------------------------------------------- | ----------------------------------- |
 | [Golang](https://lazygophers.github.io/knowledge/golang/index) | Go 语言快速入门、基础概念、工程实践 |
-| [MySQL](https://lazygophers.github.io/knowledge/mysql/index) | 库表设计、事务与锁、性能优化 |
-| [Redis](https://lazygophers.github.io/knowledge/redis/index) | 数据结构、缓存模式、持久化、高可用 |
+| [MySQL](https://lazygophers.github.io/knowledge/mysql/index)   | 库表设计、事务与锁、性能优化        |
+| [Redis](https://lazygophers.github.io/knowledge/redis/index)   | 数据结构、缓存模式、持久化、高可用  |
 
 ## 技术栈
 
@@ -122,7 +122,7 @@ pnpm preview
 
 ## 许可证
 
-[MIT](LICENSE)
+[AGPL-3.0 license](LICENSE)
 
 ---
 

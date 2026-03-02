@@ -1,0 +1,18 @@
+# Sync Package (Chinese Source)
+
+> English llms.txt for files under `docs/zh/golang/concurrency/sync`.
+
+## Docs
+
+- [Mutex](./mutex.mdx): Basic mutex lock for protecting critical sections, Lock/Unlock/TryLock methods, use cases, common pitfalls.
+- [Mutex](./mutex.mdx): Basic mutex lock for protecting critical sections, Lock/Unlock/TryLock methods, use cases, common pitfalls.
+- [RWMutex](./rwmutex.mdx): Read-write mutex with shared read locks and exclusive write locks, suitable for read-heavy scenarios.
+- [WaitGroup](./waitgroup.mdx): WaitGroup for waiting for multiple goroutines to complete, Add/Done/Wait methods, common patterns.
+- [Once](./once.mdx): Once ensures an operation is executed only once, perfect for singleton pattern and lazy initialization.
+- [Cond](./cond.mdx): Condition variable for producer-consumer patterns, Wait/Signal/Broadcast methods.
+- [Map](./map.mdx): Concurrent-safe Map from sync package, Load/Store/LoadOrStore methods, suitable for read-heavy caches.
+- [Pool](./pool.mdx): Object pool for reusing temporary objects to reduce GC pressure, Get/Put methods.
+
+## Module Metadata
+
+- [_meta.json](./_meta.json): Navigation metadata for sync subdirectory.

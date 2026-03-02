@@ -35,5 +35,48 @@
         "type": "dir",
         "name": "data-types",
         "label": "数据类型"
+    },
+    {
+        "type": "dir",
+        "name": "functions-methods",
+        "label": "函数与方法"
+    },
+    {
+        "type": "dir",
+        "name": "interface",
+        "label": "接口"
+    },
+    {
+        "type": "dir",
+        "name": "reflection",
+        "label": "反射"
+    },
+    {
+        "type": "dir",
+        "name": "concurrency",
+        "label": "并发"
+    },
+    {
+        "type": "section-header",
+        "label": "测试"
+    },
+    {
+        "type": "dir",
+        "name": "testing",
+        "label": "测试"
+    },
+    {
+        "type": "section-header",
+        "label": "高级主题"
+    },
+    {
+        "type": "dir",
+        "name": "unsafe",
+        "label": "Unsafe"
+    },
+    {
+        "type": "dir",
+        "name": "cgo",
+        "label": "CGO"
     }
 ]

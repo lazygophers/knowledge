@@ -439,8 +439,272 @@ func process(data string) error {
 ## 练习
 
 1. **编写函数展示变量遮蔽**，并说明输出原因
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+var global = "全局变量"
+
+func demonstrateShadowing() {
+    fmt.Println("=== 变量遮蔽演示 ===")
+
+    // 1. 局部变量遮蔽全局变量
+    fmt.Println("\n1. 局部遮蔽全局:")
+    fmt.Println(global)  // 全局变量
+
+    global := "局部变量"
+    fmt.Println(global)  // 局部变量（已遮蔽全局）
+
+    // 2. 块级遮蔽
+    fmt.Println("\n2. 块级遮蔽:")
+    x := 10
+    fmt.Println("外层 x:", x)
+
+    {
+        x := 20
+        fmt.Println("内层 x:", x)  // 遮蔽外层 x
+    }
+
+    fmt.Println("回到外层 x:", x)  // 仍然是 10
+
+    // 3. 循环变量遮蔽
+    fmt.Println("\n3. 循环中的变量:")
+    for i := 0; i < 3; i++ {
+        i := i * 10  // Go 1.22+ 中每次迭代创建新变量
+        fmt.Printf("迭代 i: %d\n", i)
+    }
+}
+
+func main() {
+    demonstrateShadowing()
+
+    // 说明输出原因
+    fmt.Println("\n=== 输出原因说明 ===")
+    fmt.Println("1. 内层作用域的变量会遮蔽外层同名变量")
+    fmt.Println("2. 遮蔽只影响当前作用域，外层变量不受影响")
+    fmt.Println("3. Go 1.22+ 修复了循环变量共享的 bug")
+}
+```
+
+**解释**：演示了三种遮蔽场景，说明遮蔽只在当前作用域有效。
+</details>
+
 2. **创建闭包函数**，演示外部变量的捕获和修改
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// 闭包捕获外部变量
+func makeClosure() func() {
+    count := 0
+
+    // 返回的匿名函数捕获了 count 变量
+    return func() {
+        count++
+        fmt.Printf("count = %d\n", count)
+    }
+}
+
+// 闭包捕获循环变量（正确方式）
+func createCounters() []func() {
+    counters := make([]func(), 3)
+
+    for i := 0; i < 3; i++ {
+        // 方式1：Go 1.22+ 自动处理
+        counters[i] = func() {
+            fmt.Printf("Counter %d\n", i)
+        }
+    }
+
+    return counters
+}
+
+func demonstrateCapture() {
+    fmt.Println("=== 闭包捕获演示 ===")
+
+    // 演示1：基本闭包
+    fmt.Println("\n1. 基本闭包:")
+    closure := makeClosure()
+    closure()  // count = 1
+    closure()  // count = 2
+    closure()  // count = 3
+
+    // 演示2：闭包修改外部变量
+    fmt.Println("\n2. 闭包修改外部变量:")
+    sum := 0
+    adder := func(x int) {
+        sum += x
+        fmt.Printf("加上 %d, 当前 sum = %d\n", x, sum)
+    }
+
+    adder(10)  // sum = 10
+    adder(20)  // sum = 30
+    adder(30)  // sum = 60
+
+    // 演示3：多个闭包共享变量
+    fmt.Println("\n3. 多个闭包共享变量:")
+    counter := 0
+    increment := func() {
+        counter++
+        fmt.Printf("increment: counter = %d\n", counter)
+    }
+    decrement := func() {
+        counter--
+        fmt.Printf("decrement: counter = %d\n", counter)
+    }
+
+    increment()  // counter = 1
+    increment()  // counter = 2
+    decrement()  // counter = 1
+
+    fmt.Println("\n4. 循环闭包（Go 1.22+）:")
+    counters := createCounters()
+    for _, c := range counters {
+        c()
+    }
+}
+
+func main() {
+    demonstrateCapture()
+}
+```
+
+**解释**：闭包捕获的是变量的引用，而不是值，所以多个闭包可以共享和修改同一个变量。
+</details>
+
 3. **实现计数器**，使用闭包维护状态
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// 创建计数器工厂函数
+func NewCounter(initial int) func() int {
+    count := initial
+
+    // 返回的闭包函数维护自己的 count 状态
+    return func() int {
+        count++
+        return count
+    }
+}
+
+// 创建带前缀的计数器
+func NewNamedCounter(name string, initial int) func() int {
+    count := initial
+
+    return func() int {
+        count++
+        fmt.Printf("%s: count = %d\n", name, count)
+        return count
+    }
+}
+
+// 创建可重置的计数器
+func NewResettableCounter() (func() int, func()) {
+    count := 0
+
+    // 计数函数
+    increment := func() int {
+        count++
+        return count
+    }
+
+    // 重置函数
+    reset := func() {
+        count = 0
+        fmt.Println("计数器已重置")
+    }
+
+    return increment, reset
+}
+
+// 创建多种操作的计数器
+func NewAdvancedCounter() (func() int, func(int), func() int, func()) {
+    count := 0
+
+    increment := func() int {
+        count++
+        return count
+    }
+
+    add := func(n int) int {
+        count += n
+        return count
+    }
+
+    get := func() int {
+        return count
+    }
+
+    reset := func() {
+        count = 0
+    }
+
+    return increment, add, get, reset
+}
+
+func main() {
+    fmt.Println("=== 基本计数器 ===")
+    counter1 := NewCounter(0)
+    fmt.Println(counter1())  // 1
+    fmt.Println(counter1())  // 2
+    fmt.Println(counter1())  // 3
+
+    fmt.Println("\n=== 独立计数器 ===")
+    counter2 := NewCounter(100)
+    counter3 := NewCounter(0)
+
+    fmt.Println("counter2:", counter2())  // 101
+    fmt.Println("counter3:", counter3())  // 1
+    fmt.Println("counter2:", counter2())  // 102
+    fmt.Println("counter3:", counter3())  // 2
+
+    fmt.Println("\n=== 带名称的计数器 ===")
+    c1 := NewNamedCounter("A计数器", 0)
+    c2 := NewNamedCounter("B计数器", 10)
+
+    c1()  // A计数器: count = 1
+    c2()  // B计数器: count = 11
+    c1()  // A计数器: count = 2
+
+    fmt.Println("\n=== 可重置计数器 ===")
+    inc, reset := NewResettableCounter()
+
+    fmt.Println(inc())  // 1
+    fmt.Println(inc())  // 2
+    fmt.Println(inc())  // 3
+    reset()             // 计数器已重置
+    fmt.Println(inc())  // 1
+
+    fmt.Println("\n=== 高级计数器 ===")
+    increment, add, get, resetAdv := NewAdvancedCounter()
+
+    fmt.Println(increment())  // 1
+    fmt.Println(increment())  // 2
+    fmt.Println(add(10))      // 12
+    fmt.Println(get())        // 12
+    resetAdv()
+    fmt.Println(get())        // 0
+}
+```
+
+**解释**：每个闭包维护独立的状态，展示了闭包如何用于实现状态管理和封装。
+</details>
 
 
 [← 返回基础概念](overview/) | [包系统](package-system/) | [返回模块概览](overview/)

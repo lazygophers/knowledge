@@ -46,7 +46,7 @@
   },
   {
     "type": "file",
-    "name": "interface",
-    "label": "Interface"
+    "name": "generics",
+    "label": "Generics"
   }
 ]

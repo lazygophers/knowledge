@@ -216,8 +216,205 @@ fmt.Println(matrix[0][1])  // 2
 ## 练习
 
 1. 实现切片去重函数
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// RemoveDuplicates 去除切片中的重复元素（保留顺序）
+func RemoveDuplicates(slice []int) []int {
+    seen := make(map[int]bool)
+    result := []int{}
+
+    for _, v := range slice {
+        if !seen[v] {
+            seen[v] = true
+            result = append(result, v)
+        }
+    }
+
+    return result
+}
+
+// RemoveDuplicatesInPlace 原地去重（修改原切片）
+func RemoveDuplicatesInPlace(slice []int) []int {
+    if len(slice) == 0 {
+        return slice
+    }
+
+    // 先排序
+    for i := 0; i < len(slice)-1; i++ {
+        for j := i + 1; j < len(slice); j++ {
+            if slice[i] > slice[j] {
+                slice[i], slice[j] = slice[j], slice[i]
+            }
+        }
+    }
+
+    // 去重
+    unique := 0
+    for i := 1; i < len(slice); i++ {
+        if slice[i] != slice[unique] {
+            unique++
+            slice[unique] = slice[i]
+        }
+    }
+
+    return slice[:unique+1]
+}
+
+func main() {
+    // 方法1：保留顺序的去重
+    slice1 := []int{1, 2, 3, 2, 4, 1, 5, 3}
+    fmt.Println("原切片:", slice1)
+    fmt.Println("去重后:", RemoveDuplicates(slice1))
+
+    // 方法2：排序后去重
+    slice2 := []int{3, 1, 4, 1, 5, 9, 2, 6}
+    fmt.Println("\n原切片:", slice2)
+    result := RemoveDuplicatesInPlace(append([]int{}, slice2...))
+    fmt.Println("去重后:", result)
+}
+```
+
+**解释**：展示了两种去重方法，一种保留顺序，一种排序后去重。
+</details>
+
 2. 编写函数过滤切片中的偶数
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// FilterEven 过滤出偶数
+func FilterEven(numbers []int) []int {
+    result := []int{}
+    for _, num := range numbers {
+        if num%2 == 0 {
+            result = append(result, num)
+        }
+    }
+    return result
+}
+
+// FilterOdd 过滤出奇数
+func FilterOdd(numbers []int) []int {
+    result := []int{}
+    for _, num := range numbers {
+        if num%2 != 0 {
+            result = append(result, num)
+        }
+    }
+    return result
+}
+
+// Filter 通用过滤函数
+func Filter(numbers []int, predicate func(int) bool) []int {
+    result := []int{}
+    for _, num := range numbers {
+        if predicate(num) {
+            result = append(result, num)
+        }
+    }
+    return result
+}
+
+func main() {
+    numbers := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+
+    fmt.Println("原切片:", numbers)
+    fmt.Println("偶数:", FilterEven(numbers))
+    fmt.Println("奇数:", FilterOdd(numbers))
+
+    // 使用通用过滤函数
+    evens := Filter(numbers, func(n int) bool {
+        return n%2 == 0
+    })
+    fmt.Println("偶数（通用）:", evens)
+
+    // 过滤大于5的数
+    greaterThanFive := Filter(numbers, func(n int) bool {
+        return n > 5
+    })
+    fmt.Println("大于5的数:", greaterThanFive)
+}
+```
+
+**解释**：展示了如何使用函数作为参数实现通用过滤。
+</details>
+
 3. 实现切片旋转（将前k个元素移到末尾）
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// Rotate 将切片的前 k 个元素移到末尾
+func Rotate(slice []int, k int) []int {
+    n := len(slice)
+    if n == 0 || k == 0 {
+        return slice
+    }
+
+    k = k % n // 处理 k > n 的情况
+
+    // 方法：三次反转
+    // 1. 反转前 k 个元素
+    reverse(slice, 0, k-1)
+    // 2. 反转剩余元素
+    reverse(slice, k, n-1)
+    // 3. 反转整个切片
+    reverse(slice, 0, n-1)
+
+    return slice
+}
+
+// reverse 反转切片的一部分（从 left 到 right）
+func reverse(slice []int, left, right int) {
+    for left < right {
+        slice[left], slice[right] = slice[right], slice[left]
+        left++
+        right--
+    }
+}
+
+// RotateSimple 简单的旋转实现
+func RotateSimple(slice []int, k int) []int {
+    n := len(slice)
+    if n == 0 || k == 0 {
+        return slice
+    }
+
+    k = k % n
+    return append(slice[k:], slice[:k]...)
+}
+
+func main() {
+    slice := []int{1, 2, 3, 4, 5, 6, 7}
+
+    fmt.Println("原切片:", slice)
+    fmt.Println("旋转3位（三次反转）:", Rotate(append([]int{}, slice...), 3))
+    fmt.Println("旋转3位（简单方法）:", RotateSimple(append([]int{}, slice...), 3))
+
+    // 旋转位数大于长度
+    fmt.Println("旋转10位:", Rotate(append([]int{}, slice...), 10))
+}
+```
+
+**解释**：展示了三次反转法和简单拼接法两种实现旋转的方式。
+</details>
 
 
 [← 数组](./array.mdx) | [映射 →](./map.mdx)

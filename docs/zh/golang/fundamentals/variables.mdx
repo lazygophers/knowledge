@@ -230,7 +230,129 @@ func main() {
 ## 练习
 
 1. **声明一个表示用户的变量**，包含姓名、年龄和邮箱
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// 方法一：分别声明
+func method1() {
+    var name string = "张三"
+    var age int = 25
+    var email string = "zhangsan@example.com"
+
+    fmt.Printf("姓名: %s, 年龄: %d, 邮箱: %s\n", name, age, email)
+}
+
+// 方法二：批量声明（推荐）
+func method2() {
+    var (
+        name  string = "李四"
+        age   int    = 30
+        email string = "lisi@example.com"
+    )
+
+    fmt.Printf("姓名: %s, 年龄: %d, 邮箱: %s\n", name, age, email)
+}
+
+// 方法三：使用简短声明
+func method3() {
+    name := "王五"
+    age := 28
+    email := "wangwu@example.com"
+
+    fmt.Printf("姓名: %s, 年龄: %d, 邮箱: %s\n", name, age, email)
+}
+
+func main() {
+    method1()
+    method2()
+    method3()
+}
+```
+
+**解释**：展示了三种变量声明方式，推荐使用方法二的批量声明提高代码可读性。
+</details>
+
 2. **编写函数返回两数之和与积**
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// 返回两数之和与积
+func sumAndProduct(a, b int) (int, int) {
+    sum := a + b
+    product := a * b
+    return sum, product
+}
+
+// 使用命名返回值
+func sumAndProductNamed(a, b int) (sum int, product int) {
+    sum = a + b
+    product = a * b
+    return  // 隐式返回
+}
+
+func main() {
+    s, p := sumAndProduct(5, 3)
+    fmt.Printf("5 + 3 = %d, 5 * 3 = %d\n", s, p)
+
+    s2, p2 := sumAndProductNamed(10, 2)
+    fmt.Printf("10 + 2 = %d, 10 * 2 = %d\n", s2, p2)
+}
+```
+
+**解释**：演示了多返回值和命名返回值的使用。
+</details>
+
 3. **演示变量遮蔽的效果**
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// 全局变量
+var x = "全局 x"
+
+func main() {
+    // 打印全局变量
+    fmt.Println(x)  // 全局 x
+
+    // 遮蔽全局变量
+    x := "局部 x"
+    fmt.Println(x)  // 局部 x
+
+    // 在块中再次遮蔽
+    {
+        x := "块级 x"
+        fmt.Println(x)  // 块级 x
+    }
+
+    // 回到函数级变量
+    fmt.Println(x)  // 局部 x
+
+    // 演示循环中的遮蔽（Go 1.22+ 不会共享变量）
+    for i := 0; i < 3; i++ {
+        i := i * 10  // 创建新变量遮蔽循环变量
+        fmt.Printf("块中的 i: %d\n", i)
+    }
+}
+```
+
+**解释**：变量遮蔽可能导致难以发现的 bug，建议使用不同的变量名避免遮蔽。
+</details>
 
 [← 返回基础概念](overview/) | [命名规则](naming-conventions/) | [常量 →](../data-types/constants.mdx)
