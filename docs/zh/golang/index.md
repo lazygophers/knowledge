@@ -1,28 +1,62 @@
-# Golang 模块概览
+# Go 语言快速入门
 
-Golang 模块用于统一团队在语言、并发和工程实践上的认知。
+欢迎使用 Go 语言快速入门指南！本模块帮助你从零开始掌握 Go 语言的开发基础。
+
+## 🎯 学习路径
 
 <div class="kb-card-grid">
-  <a class="kb-card" href="/golang/basics">
-    <span class="kb-card-title">01 语言基础</span>
-    <span class="kb-card-desc">变量类型、接口与错误处理规范。</span>
+  <a class="kb-card" href="/golang/install">
+    <span class="kb-card-title">01 环境搭建</span>
+    <span class="kb-card-desc">安装 Go 语言，配置开发环境，选择你的操作系统开始。</span>
   </a>
-  <a class="kb-card" href="/golang/concurrency">
-    <span class="kb-card-title">02 并发模型</span>
-    <span class="kb-card-desc">goroutine、channel、context 协作模式。</span>
-  </a>
-  <a class="kb-card" href="/golang/project-structure">
-    <span class="kb-card-title">03 项目结构</span>
-    <span class="kb-card-desc">目录分层、依赖边界与配置管理。</span>
-  </a>
-  <a class="kb-card" href="/golang/testing">
-    <span class="kb-card-title">04 测试策略</span>
-    <span class="kb-card-desc">单测、集成测试与性能基准测试。</span>
+  <a class="kb-card" href="/golang/hello">
+    <span class="kb-card-title">02 Hello World</span>
+    <span class="kb-card-desc">编写第一个 Go 程序，了解基本结构和运行方式。</span>
   </a>
 </div>
 
-## 本模块产出目标
+## 📖 面向对象
 
-- 统一服务端代码风格与包结构。
-- 降低并发问题定位成本。
-- 保证核心路径具备可回归测试。
+本教程为不同技术背景的读者提供了分层内容：
+
+| 读者类型 | 说明 | 推荐路径 |
+|---------|------|---------|
+| 🟢 **无技术背景** | 第一次接触编程 | 图形化安装 → Hello World |
+| 🔵 **初级开发者** | 有其他编程语言经验 | 命令行安装 → Hello World |
+| 🟡 **中级开发者** | 熟悉命令行和开发环境 | 多版本管理 → 进阶配置 |
+| 🟠 **高级开发者** | 需要深度定制 | 源码编译 → 性能调优 |
+| 🔴 **专业开发者** | 企业级部署需求 | 企业部署 → CI/CD集成 |
+
+## 🌟 Go 语言简介
+
+Go 是由 Google 开发的开源编程语言，专注于简洁、高效和可靠性。
+
+### 主要特点
+
+- **简洁语法**：快速上手，代码易读易维护
+- **原生并发**：goroutine 和 channel 让并发编程变得简单
+- **快速编译**：秒级编译，提升开发效率
+- **跨平台**：一次编写，到处运行
+- **强类型**：编译时发现错误，减少运行时问题
+
+### 应用场景
+
+- 云服务和微服务
+- DevOps 工具和运维脚本
+- 网络服务和 API
+- 命令行工具
+- 区块链和加密货币
+- 数据处理和分析
+
+## 📋 前置要求
+
+- **无技术背景读者**：会使用电脑鼠标和键盘
+- **初级开发者**：了解基本的编程概念（变量、函数）
+- **中级以上开发者**：熟悉命令行操作
+
+## 🚀 开始学习
+
+选择你的起点：
+
+- [我想安装 Go → 环境搭建](/golang/install)
+- [我已经安装好了 → Hello World](/golang/hello)
