@@ -4,8 +4,6 @@
 
 [← 返回模块概览](../)
 
----
-
 ## 🖥️ 快速选择你的平台
 
 选择你的操作系统，查看详细的安装指南：
@@ -27,11 +25,11 @@
 
 ### 各平台安装方式对比
 
-| 操作系统 | 图形化安装 | 命令行安装 | 包管理器 | 便携版 | 多版本管理 |
-|---------|-----------|-----------|---------|--------|-----------|
-| **Windows** | ✅ MSI 安装包 | ✅ | Chocolatey / Scoop | ✅ ZIP | ✅ goup |
-| **macOS** | ✅ PKG 安装包 | ✅ | Homebrew | - | ✅ goup |
-| **Linux** | - | ✅ tar.gz | apt / yum / dnf / Snap | ✅ | ✅ goup |
+| 操作系统    | 图形化安装    | 命令行安装 | 包管理器               | 便携版 | 多版本管理 |
+| ----------- | ------------- | ---------- | ---------------------- | ------ | ---------- |
+| **Windows** | ✅ MSI 安装包 | ✅         | Chocolatey / Scoop     | ✅ ZIP | ✅ goup    |
+| **macOS**   | ✅ PKG 安装包 | ✅         | Homebrew               | -      | ✅ goup    |
+| **Linux**   | -             | ✅ tar.gz  | apt / yum / dnf / Snap | ✅     | ✅ goup    |
 
 > 💡 **提示**：如果你是第一次安装，推荐使用图形化安装或包管理器方式。
 >
@@ -58,6 +56,7 @@ CMD ["app"]
 ### CI/CD 集成
 
 **GitHub Actions 示例**：
+
 ```yaml
 name: Go Build
 on: [push, pull_request]
@@ -66,7 +65,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go-version: ['1.25', '1.26']
+        go-version: ["1.25", "1.26"]
     steps:
       - name: Install goup
         run: curl -sSf https://raw.githubusercontent.com/owenthereal/goup/master/install.sh | sh
@@ -107,6 +106,7 @@ go env -w GOPROXY=https://goproxy.io,direct
 ```
 
 **国内 Go 代理服务**：
+
 - [https://goproxy.cn](https://goproxy.cn) - 七牛云提供的 Go 模块代理
 - [https://goproxy.io](https://goproxy.io) - 全球知名的 Go 模块代理
 
@@ -174,22 +174,27 @@ git clone https://github.com/LazyVim/starter ~/.config/nvim
 ## ❓ 常见问题（跨平台）
 
 ### Q: 安装后提示 "command not found: go"
+
 **A**: PATH 环境变量未正确配置，请检查上述配置步骤。
 
 ### Q: 多个 Go 版本冲突
+
 **A**: 使用 **goup** 版本管理工具统一管理多版本。goup 支持 Windows、macOS 和 Linux，提供一致的跨平台体验。
 
 ### Q: goup 和其他版本管理工具的区别
+
 **A**:
 
-| 特性 | goup | gvm | g |
-|------|------|-----|---|
+| 特性           | goup                   | gvm                | g                  |
+| -------------- | ---------------------- | ------------------ | ------------------ |
 | **跨平台支持** | ✅ Windows/macOS/Linux | ❌ Unix/macOS only | ❌ Unix/macOS only |
-| **安装难度** | ⭐ 一行命令 | ⭐⭐⭐⭐ 需要依赖 | ⭐ 一行命令 |
-| **预装 Go** | ❌ 不需要 | ✅ 需要 | ❌ 不需要 |
+| **安装难度**   | ⭐ 一行命令            | ⭐⭐⭐⭐ 需要依赖  | ⭐ 一行命令        |
+| **预装 Go**    | ❌ 不需要              | ✅ 需要            | ❌ 不需要          |
 
 ### Q: 中国用户下载慢
+
 **A**:
+
 - 使用国内镜像下载：https://golang.google.cn/dl/
 - 设置 Go 代理：
   ```bash

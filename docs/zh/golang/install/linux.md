@@ -4,8 +4,6 @@
 
 [← 返回安装指南](.)
 
----
-
 ## 🔵 初级开发者 - 官方二进制包（推荐）
 
 **适合人群**：大多数 Linux 用户
@@ -172,6 +170,7 @@ sudo snap remove go
 ### 方案：使用 goup（跨平台）
 
 **优势**：
+
 - ✅ 真正的跨平台支持（Windows/macOS/Linux）
 - ✅ 一行命令安装，无需预装 Go
 - ✅ 支持项目级版本锁定（`.go-version` 文件）
@@ -277,6 +276,7 @@ go env -w GOPROXY=https://goproxy.io,direct
 ```
 
 **国内 Go 代理服务**：
+
 - [https://goproxy.cn](https://goproxy.cn) - 七牛云提供的 Go 模块代理
 - [https://goproxy.io](https://goproxy.io) - 全球知名的 Go 模块代理
 
@@ -285,33 +285,38 @@ go env -w GOPROXY=https://goproxy.io,direct
 ## ❓ Linux 常见问题
 
 ### Q: 安装后提示 "command not found: go"
+
 **A**: PATH 环境变量未正确配置，请检查上述配置步骤。
 
 ### Q: 多个 Go 版本冲突
+
 **A**: 使用 **goup** 版本管理工具统一管理多版本。goup 支持 Windows、macOS 和 Linux，提供一致的跨平台体验。
 
 ### Q: 包管理器安装的版本较旧
+
 **A**: 使用官方二进制包安装，或使用 PPA（Ubuntu/Debian）。
 
 ### Q: 权限不足
+
 **A**: 使用 sudo 执行需要 root 权限的命令，或使用用户目录安装。
 
 ### Q: SELinux 阻止 Go 运行
+
 **A**: 配置 SELinux 策略或临时设置为 Permissive 模式。
 
 ---
 
 ## 📊 发行版支持矩阵
 
-| 发行版 | 官方二进制 | apt | yum/dnf | pacman | zypper | snap |
-|--------|-----------|-----|---------|--------|--------|------|
-| Ubuntu | ✅ | ✅ | - | - | - | ✅ |
-| Debian | ✅ | ✅ | - | - | - | ✅ |
-| CentOS | ✅ | - | ✅ | - | - | ✅ |
-| RHEL | ✅ | - | ✅ | - | - | ✅ |
-| Fedora | ✅ | - | ✅ | - | - | ✅ |
-| Arch | ✅ | - | - | ✅ | - | ✅ |
-| openSUSE | ✅ | - | - | - | ✅ | ✅ |
+| 发行版   | 官方二进制 | apt | yum/dnf | pacman | zypper | snap |
+| -------- | ---------- | --- | ------- | ------ | ------ | ---- |
+| Ubuntu   | ✅         | ✅  | -       | -      | -      | ✅   |
+| Debian   | ✅         | ✅  | -       | -      | -      | ✅   |
+| CentOS   | ✅         | -   | ✅      | -      | -      | ✅   |
+| RHEL     | ✅         | -   | ✅      | -      | -      | ✅   |
+| Fedora   | ✅         | -   | ✅      | -      | -      | ✅   |
+| Arch     | ✅         | -   | -       | ✅     | -      | ✅   |
+| openSUSE | ✅         | -   | -       | -      | ✅     | ✅   |
 
 ---
 

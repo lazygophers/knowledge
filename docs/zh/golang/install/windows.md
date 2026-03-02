@@ -4,8 +4,6 @@
 
 [← 返回安装指南](.)
 
----
-
 ## 🟢 无技术背景 - MSI 图形化安装（推荐）
 
 **适合人群**：第一次安装软件，希望使用图形界面
@@ -37,6 +35,7 @@
    ```cmd
    go version
    ```
+
    - 看到类似输出即成功：
    ```
    go version go1.26.0 windows/amd64
@@ -54,10 +53,12 @@
 ### 常见问题
 
 **Q: 安装后提示找不到 go 命令？**
+
 - 重启命令提示符或电脑
 - 检查 PATH 环境变量是否包含 Go 路径
 
 **Q: 安装失败？**
+
 - 确保以管理员身份运行安装程序
 - 关闭杀毒软件后重试
 
@@ -68,9 +69,11 @@
 **适合人群**：熟悉命令行，希望自动化安装
 
 ### 前置要求
+
 已安装 Chocolatey 包管理器
 
 ### 安装命令
+
 ```cmd
 # 以管理员身份打开 PowerShell，执行：
 choco install golang
@@ -93,6 +96,7 @@ choco uninstall golang
 **适合人群**：希望安装到用户目录，不需要管理员权限
 
 ### 安装步骤
+
 ```powershell
 # 1. 安装 Scoop（如果尚未安装）
 Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
@@ -106,6 +110,7 @@ go version
 ```
 
 ### 优势
+
 - 安装到用户目录，不需要管理员权限
 - 更新方便：`scoop update go`
 - 多版本管理：`scoop install go1.25`
@@ -127,6 +132,7 @@ scoop uninstall scoop
 **适合人群**：需要自定义安装路径或多版本共存
 
 ### 安装步骤
+
 ```cmd
 # 1. 下载 go1.26.0.windows-amd64.zip
 # 2. 解压到自定义目录，如 C:\MyTools\go
@@ -159,6 +165,7 @@ rmdir /s C:\MyTools\go
 ### 方案：使用 goup（跨平台）
 
 **优势**：
+
 - ✅ 真正的跨平台支持（Windows/macOS/Linux）
 - ✅ 一行命令安装，无需预装 Go
 - ✅ 支持项目级版本锁定（`.go-version` 文件）
@@ -249,6 +256,7 @@ go env -w GOPROXY=https://goproxy.io,direct
 ```
 
 **国内 Go 代理服务**：
+
 - [https://goproxy.cn](https://goproxy.cn) - 七牛云提供的 Go 模块代理
 - [https://goproxy.io](https://goproxy.io) - 全球知名的 Go 模块代理
 
@@ -257,15 +265,19 @@ go env -w GOPROXY=https://goproxy.io,direct
 ## ❓ Windows 常见问题
 
 ### Q: 安装后提示 "command not found: go"
+
 **A**: PATH 环境变量未正确配置，请检查上述配置步骤。
 
 ### Q: 多个 Go 版本冲突
+
 **A**: 使用 **goup** 版本管理工具统一管理多版本。goup 支持 Windows、macOS 和 Linux，提供一致的跨平台体验。
 
 ### Q: 权限不足
+
 **A**: 以管理员身份运行命令提示符或 PowerShell。
 
 ### Q: Windows Defender 阻止安装
+
 **A**: 临时关闭 Windows Defender，或将 Go 安装目录添加到排除列表。
 
 ---
