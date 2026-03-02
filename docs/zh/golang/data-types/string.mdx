@@ -251,8 +251,159 @@ for i, r := range s {
 ## 练习
 
 1. 编写函数判断字符串是否为回文
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import (
+    "fmt"
+    "unicode"
+)
+
+// IsPalindrome 判断字符串是否为回文（支持中文）
+func IsPalindrome(s string) bool {
+    // 转换为 rune 切片处理 Unicode
+    runes := []rune(s)
+    length := len(runes)
+
+    for i := 0; i < length/2; i++ {
+        if runes[i] != runes[length-1-i] {
+            return false
+        }
+    }
+    return true
+}
+
+// IsPalindromeIgnoreCase 忽略大小写判断回文
+func IsPalindromeIgnoreCase(s string) bool {
+    runes := []rune(s)
+
+    // 转小写
+    for i := range runes {
+        runes[i] = unicode.ToLower(runes[i])
+    }
+
+    length := len(runes)
+    for i := 0; i < length/2; i++ {
+        if runes[i] != runes[length-1-i] {
+            return false
+        }
+    }
+    return true
+}
+
+func main() {
+    words := []string{"level", "上海自来水来自海上", "hello", "Madam"}
+
+    for _, word := range words {
+        if IsPalindrome(word) {
+            fmt.Printf("'%s' 是回文\n", word)
+        } else {
+            fmt.Printf("'%s' 不是回文\n", word)
+        }
+    }
+
+    fmt.Println("\n忽略大小写:")
+    fmt.Printf("'Madam' 是回文: %v\n", IsPalindromeIgnoreCase("Madam"))
+}
+```
+
+**解释**：使用 rune 切片正确处理 Unicode 字符。
+</details>
+
 2. 实现字符串反转功能
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// ReverseString 反转字符串
+func ReverseString(s string) string {
+    runes := []rune(s)
+    length := len(runes)
+
+    for i := 0; i < length/2; i++ {
+        runes[i], runes[length-1-i] = runes[length-1-i], runes[i]
+    }
+
+    return string(runes)
+}
+
+func main() {
+    strings := []string{"Hello", "世界", "Go语言", "12321"}
+
+    for _, s := range strings {
+        reversed := ReverseString(s)
+        fmt.Printf("'%s' -> '%s'\n", s, reversed)
+    }
+}
+```
+
+**解释**：使用双指针技巧反转字符串，注意要转换为 rune 切片处理 Unicode。
+</details>
+
 3. 统计字符串中每个字符出现的次数
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import (
+    "fmt"
+)
+
+// CountChars 统计字符出现次数
+func CountChars(s string) map[rune]int {
+    count := make(map[rune]int)
+
+    for _, r := range s {
+        count[r]++
+    }
+
+    return count
+}
+
+// CountBytes 统计字节出现次数
+func CountBytes(s string) map[byte]int {
+    count := make(map[byte]int)
+
+    for i := 0; i < len(s); i++ {
+        count[s[i]]++
+    }
+
+    return count
+}
+
+func main() {
+    text := "Hello, 世界"
+
+    fmt.Println("按字符统计（正确处理中文）:")
+    charCount := CountChars(text)
+    for char, count := range charCount {
+        fmt.Printf("'%c': %d次\n", char, count)
+    }
+
+    fmt.Println("\n按字节统计:")
+    byteCount := CountBytes(text)
+    for b, count := range byteCount {
+        if b >= 32 && b <= 126 { // 只打印可打印字符
+            fmt.Printf("'%c': %d次\n", b, count)
+        }
+    }
+}
+```
+
+**解释**：展示了按字符和按字节统计的区别，处理中文应使用 rune。
+</details>
 
 
 [← 数值类型](./numeric.mdx) | [数组 →](./array.mdx)

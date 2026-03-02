@@ -358,8 +358,203 @@ for _, cond := range conditions {
 ## 练习
 
 1. 编写函数判断字符串是否为回文（返回 bool）
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import (
+    "fmt"
+    "strings"
+)
+
+// IsPalindrome 判断字符串是否为回文
+func IsPalindrome(s string) bool {
+    // 转小写并移除非字母字符
+    s = strings.ToLower(s)
+
+    // 使用双指针判断
+    left, right := 0, len(s)-1
+    for left < right {
+        if s[left] != s[right] {
+            return false
+        }
+        left++
+        right--
+    }
+    return true
+}
+
+func main() {
+    words := []string{"level", "hello", "radar", "world"}
+
+    for _, word := range words {
+        if IsPalindrome(word) {
+            fmt.Printf("%s 是回文\n", word)
+        } else {
+            fmt.Printf("%s 不是回文\n", word)
+        }
+    }
+}
+```
+
+**解释**：使用双指针法判断回文，时间复杂度 O(n/2)。
+</details>
+
 2. 实现配置结构体，使用 bool 字段控制功能开关
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// Config 应用配置
+type Config struct {
+    Debug       bool   // 调试模式
+    Logging     bool   // 日志记录
+    CacheEnabled bool  // 缓存开关
+    AuthEnabled bool  // 认证开关
+}
+
+// Apply 应用配置
+func (c Config) Apply() {
+    if c.Debug {
+        fmt.Println("调试模式已启用")
+    }
+    if c.Logging {
+        fmt.Println("日志记录已启用")
+    }
+    if c.CacheEnabled {
+        fmt.Println("缓存已启用")
+    }
+    if c.AuthEnabled {
+        fmt.Println("认证已启用")
+    }
+}
+
+func main() {
+    // 开发环境配置
+    devConfig := Config{
+        Debug:       true,
+        Logging:     true,
+        CacheEnabled: false,
+        AuthEnabled: true,
+    }
+
+    fmt.Println("=== 开发环境 ===")
+    devConfig.Apply()
+
+    // 生产环境配置
+    prodConfig := Config{
+        Debug:       false,
+        Logging:     true,
+        CacheEnabled: true,
+        AuthEnabled: true,
+    }
+
+    fmt.Println("\n=== 生产环境 ===")
+    prodConfig.Apply()
+}
+```
+
+**解释**：使用 bool 字段控制功能开关，实现灵活的配置管理。
+</details>
+
 3. 创建用户验证系统，使用多个 bool 字段表示不同状态
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// User 用户结构体
+type User struct {
+    Username      string
+    IsActive      bool   // 账户是否激活
+    IsVerified    bool   // 是否已验证
+    HasPermission bool   // 是否有权限
+    IsAdmin       bool   // 是否是管理员
+}
+
+// CanLogin 判断用户是否可以登录
+func (u User) CanLogin() bool {
+    return u.IsActive && u.IsVerified
+}
+
+// CanAccess 判断用户是否可以访问资源
+func (u User) CanAccess() bool {
+    return u.CanLogin() && u.HasPermission
+}
+
+// CanAdmin 判断用户是否有管理员权限
+func (u User) CanAdmin() bool {
+    return u.CanAccess() && u.IsAdmin
+}
+
+// GetStatus 获取用户状态描述
+func (u User) GetStatus() string {
+    var status []string
+
+    if u.IsActive {
+        status = append(status, "激活")
+    } else {
+        status = append(status, "未激活")
+    }
+
+    if u.IsVerified {
+        status = append(status, "已验证")
+    } else {
+        status = append(status, "未验证")
+    }
+
+    if u.HasPermission {
+        status = append(status, "有权限")
+    } else {
+        status = append(status, "无权限")
+    }
+
+    if u.IsAdmin {
+        status = append(status, "管理员")
+    }
+
+    result := ""
+    for i, s := range status {
+        if i > 0 {
+            result += ", "
+        }
+        result += s
+    }
+    return result
+}
+
+func main() {
+    users := []User{
+        {Username: "user1", IsActive: true, IsVerified: true, HasPermission: true, IsAdmin: false},
+        {Username: "user2", IsActive: true, IsVerified: false, HasPermission: true, IsAdmin: false},
+        {Username: "admin", IsActive: true, IsVerified: true, HasPermission: true, IsAdmin: true},
+        {Username: "guest", IsActive: false, IsVerified: false, HasPermission: false, IsAdmin: false},
+    }
+
+    for _, user := range users {
+        fmt.Printf("\n用户: %s\n", user.Username)
+        fmt.Printf("状态: %s\n", user.GetStatus())
+        fmt.Printf("可以登录: %v\n", user.CanLogin())
+        fmt.Printf("可以访问: %v\n", user.CanAccess())
+        fmt.Printf("管理员权限: %v\n", user.CanAdmin())
+    }
+}
+```
+
+**解释**：使用多个 bool 字段组合表示用户的多种状态，展示了 bool 类型的实际应用。
+</details>
 
 
 [← 数值类型](./numeric.mdx) | [String →](./string.mdx)

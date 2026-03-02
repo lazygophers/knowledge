@@ -551,6 +551,25 @@ func (this *User) Save() error {}  // 不符合 Go 风格
 func (self *User) Save() error {}  // 不符合 Go 风格
 ```
 
+<Callout type="tip" title="推荐实践：统一使用 p">
+  <strong>推荐所有接收者统一使用 `p`（pointer 的缩写）</strong>
+
+  ```go
+  // ✅ 推荐：统一使用 p
+  func (p *User) Save() error {}
+  func (p *Config) Load() error {}
+  func (p *Buffer) Write(data []byte) (int, error) {}
+  ```
+
+  **优势**：
+  • 减少命名思考 - 不需要考虑类型首字母
+  • 代码一致性 - 所有接收者名称相同
+  • 避免遮蔽风险 - 不会与字段名冲突
+  • 快速输入 - 只需输入 `p.` 三个字符
+
+  本知识库推荐在项目中统一使用 `p` 作为接收者名称。
+</Callout>
+
 ### 错误处理
 
 ```go

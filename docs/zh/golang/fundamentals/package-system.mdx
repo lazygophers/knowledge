@@ -560,8 +560,153 @@ func main() {
 ## 练习
 
 1. **创建一个 math 包**，实现加减乘除函数
+
+<details>
+<summary>查看答案</summary>
+
+**math/math.go**:
+```go
+package math
+
+// Add 加法
+func Add(a, b float64) float64 {
+    return a + b
+}
+
+// Subtract 减法
+func Subtract(a, b float64) float64 {
+    return a - b
+}
+
+// Multiply 乘法
+func Multiply(a, b float64) float64 {
+    return a * b
+}
+
+// Divide 除法（返回商和余数）
+func Divide(a, b float64) (float64, error) {
+    if b == 0 {
+        return 0, fmt.Errorf("除零错误")
+    }
+    return a / b, nil
+}
+```
+
+**main.go**:
+```go
+package main
+
+import (
+    "fmt"
+    "yourmodule/math"
+)
+
+func main() {
+    fmt.Println(math.Add(10, 5))        // 15
+    fmt.Println(math.Subtract(10, 5))  // 5
+    fmt.Println(math.Multiply(10, 5))  // 50
+
+    result, err := math.Divide(10, 5)
+    if err != nil {
+        fmt.Println("错误:", err)
+    } else {
+        fmt.Println(result)  // 2
+    }
+}
+```
+
+**解释**：展示了包的创建、导入和使用。
+</details>
+
 2. **使用 init 函数**实现配置自动加载
+
+<details>
+<summary>查看答案</summary>
+
+**config/config.go**:
+```go
+package config
+
+import (
+    "os"
+    "strconv"
+)
+
+var (
+    Port     int
+    Debug    bool
+    Host     string
+)
+
+func init() {
+    // 从环境变量加载配置
+    Port = getEnvInt("PORT", 8080)
+    Debug = getEnvBool("DEBUG", false)
+    Host = getEnvString("HOST", "localhost")
+
+    println("[config] 配置已加载")
+}
+
+func getEnvInt(key string, defaultVal int) int {
+    if val := os.Getenv(key); val != "" {
+        if i, err := strconv.Atoi(val); err == nil {
+            return i
+        }
+    }
+    return defaultVal
+}
+
+func getEnvBool(key string, defaultVal bool) bool {
+    if val := os.Getenv(key); val == "true" {
+        return true
+    }
+    return defaultVal
+}
+
+func getEnvString(key, defaultVal string) string {
+    if val := os.Getenv(key); val != "" {
+        return val
+    }
+    return defaultVal
+}
+```
+
+**解释**：init函数在包导入时自动执行，适合初始化配置。
+</details>
+
 3. **编写示例代码**展示你的包的用法
+
+<details>
+<summary>查看答案</summary>
+
+**math/example_test.go**:
+```go
+package math_test
+
+import (
+    "fmt"
+    "yourmodule/math"
+)
+
+func ExampleAdd() {
+    result := math.Add(2, 3)
+    fmt.Println(result)
+    // Output: 5
+}
+
+func ExampleDivide() {
+    result, err := math.Divide(10, 2)
+    if err != nil {
+        fmt.Println("错误:", err)
+    } else {
+        fmt.Println(result)
+    }
+    // Output: 5
+}
+```
+
+**解释**：使用 `_test.go` 文件和 `Example` 前缀创建可执行的示例代码。
+</details>
 
 
 [← 返回基础概念](overview/) | [函数与方法](functions-methods/) | [继续：作用域 →](variable-lifecycle/)

@@ -935,11 +935,242 @@ a, b := Pair(1, 2)
 <Badge text="初级" type="tip" />
 1. **实现泛型函数 `Last`**：返回切片的最后一个元素
 
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// Last 返回切片的最后一个元素
+func Last[T any](slice []T) (T, error) {
+    var zero T
+    if len(slice) == 0 {
+        return zero, fmt.Errorf("切片为空")
+    }
+    return slice[len(slice)-1], nil
+}
+
+func main() {
+    // 整数切片
+    ints := []int{1, 2, 3, 4, 5}
+    lastInt, err := Last(ints)
+    if err != nil {
+        fmt.Println("错误:", err)
+    } else {
+        fmt.Println("最后一个整数:", lastInt)
+    }
+
+    // 字符串切片
+    strs := []string{"a", "b", "c"}
+    lastStr, err := Last(strs)
+    if err != nil {
+        fmt.Println("错误:", err)
+    } else {
+        fmt.Println("最后一个字符串:", lastStr)
+    }
+
+    // 空切片
+    empty := []int{}
+    _, err = Last(empty)
+    if err != nil {
+        fmt.Println("空切片错误:", err)
+    }
+}
+```
+
+**解释**：展示了泛型函数的基本用法，使用 `[T any]` 定义泛型类型参数。
+</details>
+
 <Badge text="中级" type="info" />
 2. **实现泛型队列 `Queue[T]`**：支持 Enqueue 和 Dequeue 操作
 
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// Queue 泛型队列
+type Queue[T any] struct {
+    items []T
+}
+
+// NewQueue 创建新队列
+func NewQueue[T any]() *Queue[T] {
+    return &Queue[T]{
+        items: make([]T, 0),
+    }
+}
+
+// Enqueue 入队
+func (q *Queue[T]) Enqueue(item T) {
+    q.items = append(q.items, item)
+}
+
+// Dequeue 出队
+func (q *Queue[T]) Dequeue() (T, error) {
+    var zero T
+    if len(q.items) == 0 {
+        return zero, fmt.Errorf("队列为空")
+    }
+
+    item := q.items[0]
+    q.items = q.items[1:]
+    return item, nil
+}
+
+// Peek 查看队首元素
+func (q *Queue[T]) Peek() (T, error) {
+    var zero T
+    if len(q.items) == 0 {
+        return zero, fmt.Errorf("队列为空")
+    }
+    return q.items[0], nil
+}
+
+// IsEmpty 判断队列是否为空
+func (q *Queue[T]) IsEmpty() bool {
+    return len(q.items) == 0
+}
+
+// Size 返回队列大小
+func (q *Queue[T]) Size() int {
+    return len(q.items)
+}
+
+func main() {
+    // 整数队列
+    intQueue := NewQueue[int]()
+
+    intQueue.Enqueue(1)
+    intQueue.Enqueue(2)
+    intQueue.Enqueue(3)
+
+    fmt.Printf("队列大小: %d\n", intQueue.Size())
+
+    for !intQueue.IsEmpty() {
+        item, _ := intQueue.Dequeue()
+        fmt.Println("出队:", item)
+    }
+
+    // 字符串队列
+    strQueue := NewQueue[string]()
+    strQueue.Enqueue("first")
+    strQueue.Enqueue("second")
+
+    item, _ := strQueue.Dequeue()
+    fmt.Println("字符串出队:", item)
+}
+```
+
+**解释**：展示了如何定义泛型类型，并在方法中使用类型参数。
+</details>
+
 <Badge text="高级" type="warning" />
 3. **实现泛型哈希表 `HashMap[K, V]`**：支持基本的 CRUD 操作
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import (
+    "fmt"
+)
+
+// HashMap 泛型哈希表（K 必须是可比较的类型）
+type HashMap[K comparable, V any] struct {
+    data map[K]V
+}
+
+// NewHashMap 创建新哈希表
+func NewHashMap[K comparable, V any]() *HashMap[K, V] {
+    return &HashMap[K, V]{
+        data: make(map[K]V),
+    }
+}
+
+// Put 添加或更新键值对
+func (hm *HashMap[K, V]) Put(key K, value V) {
+    hm.data[key] = value
+}
+
+// Get 获取值
+func (hm *HashMap[K, V]) Get(key K) (V, bool) {
+    value, ok := hm.data[key]
+    return value, ok
+}
+
+// Delete 删除键
+func (hm *HashMap[K, V]) Delete(key K) {
+    delete(hm.data, key)
+}
+
+// ContainsKey 检查键是否存在
+func (hm *HashMap[K, V]) ContainsKey(key K) bool {
+    _, ok := hm.data[key]
+    return ok
+}
+
+// Size 返回哈希表大小
+func (hm *HashMap[K, V]) Size() int {
+    return len(hm.data)
+}
+
+// Keys 返回所有键
+func (hm *HashMap[K, V]) Keys() []K {
+    keys := make([]K, 0, len(hm.data))
+    for k := range hm.data {
+        keys = append(keys, k)
+    }
+    return keys
+}
+
+// Values 返回所有值
+func (hm *HashMap[K, V]) Values() []V {
+    values := make([]V, 0, len(hm.data))
+    for _, v := range hm.data {
+        values = append(values, v)
+    }
+    return values
+}
+
+func main() {
+    // 字符串到整数的映射
+    ages := NewHashMap[string, int]()
+    ages.Put("Alice", 30)
+    ages.Put("Bob", 25)
+    ages.Put("Charlie", 35)
+
+    fmt.Println("=== 年龄映射 ===")
+    if age, ok := ages.Get("Bob"); ok {
+        fmt.Printf("Bob 的年龄: %d\n", age)
+    }
+
+    fmt.Printf("所有键: %v\n", ages.Keys())
+    fmt.Printf("所有值: %v\n", ages.Values())
+
+    ages.Delete("Charlie")
+    fmt.Printf("删除后大小: %d\n", ages.Size())
+
+    // 整数到字符串的映射
+    names := NewHashMap[int, string]()
+    names.Put(1, "one")
+    names.Put(2, "two")
+    names.Put(3, "three")
+
+    fmt.Println("\n=== 数字映射 ===")
+    fmt.Printf("2 的英文: %v\n", names.Get(2))
+}
+```
+
+**解释**：展示了如何定义泛型类型，其中键类型使用 `comparable` 约束。
+</details>
 
 ## 下一步
 

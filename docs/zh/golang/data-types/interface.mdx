@@ -319,8 +319,129 @@ flowchart LR
 ## 练习
 
 1. 定义 Shape 接口，包含 Area() 方法
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// Shape 形状接口
+type Shape interface {
+    Area() float64
+}
+
+// 编译时检查接口实现
+var _ Shape = (*Circle)(nil)
+var _ Shape = (*Rectangle)(nil)
+```
+
+**解释**：定义了接口并使用 `var _` 进行编译时检查。
+</details>
+
 2. 实现 Circle 和 Rectangle 结构体
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// Shape 形状接口
+type Shape interface {
+    Area() float64
+}
+
+// Circle 圆形结构体
+type Circle struct {
+    Radius float64
+}
+
+// Area 计算圆的面积
+func (c Circle) Area() float64 {
+    return 3.14159 * c.Radius * c.Radius
+}
+
+// Rectangle 矩形结构体
+type Rectangle struct {
+    Width  float64
+    Height float64
+}
+
+// Area 计算矩形的面积
+func (r Rectangle) Area() float64 {
+    return r.Width * r.Height
+}
+
+func main() {
+    circle := Circle{Radius: 5}
+    rectangle := Rectangle{Width: 4, Height: 6}
+
+    fmt.Printf("圆面积: %.2f\n", circle.Area())
+    fmt.Printf("矩形面积: %.2f\n", rectangle.Area())
+}
+```
+
+**解释**：展示了如何定义结构体并实现接口方法。
+</details>
+
 3. 编写函数计算多个形状的总面积
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+type Shape interface {
+    Area() float64
+}
+
+type Circle struct {
+    Radius float64
+}
+
+func (c Circle) Area() float64 {
+    return 3.14159 * c.Radius * c.Radius
+}
+
+type Rectangle struct {
+    Width  float64
+    Height float64
+}
+
+func (r Rectangle) Area() float64 {
+    return r.Width * r.Height
+}
+
+// TotalArea 计算多个形状的总面积
+func TotalArea(shapes []Shape) float64 {
+    var total float64
+    for _, shape := range shapes {
+        total += shape.Area()
+    }
+    return total
+}
+
+func main() {
+    shapes := []Shape{
+        Circle{Radius: 5},
+        Rectangle{Width: 4, Height: 6},
+        Circle{Radius: 10},
+    }
+
+    fmt.Printf("总面积: %.2f\n", TotalArea(shapes))
+}
+```
+
+**解释**：展示了接口的多态特性，不同类型可以统一处理。
+</details>
 
 
 [← 指针](./pointer.mdx)

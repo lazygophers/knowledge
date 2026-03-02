@@ -313,8 +313,211 @@ func other() {
 ## 练习
 
 1. 使用 iota 定义 HTTP 状态码
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// HTTP状态码
+const (
+    StatusOK                  = 200  // 成功
+    StatusMovedPermanently    = 301  // 永久重定向
+    StatusFound               = 302  // 临时重定向
+    StatusBadRequest          = 400  // 错误请求
+    StatusUnauthorized        = 401  // 未授权
+    StatusForbidden           = 403  // 禁止访问
+    StatusNotFound            = 404  // 未找到
+    StatusInternalServerError  = 500  // 服务器内部错误
+    StatusServiceUnavailable  = 503  // 服务不可用
+)
+
+// 使用 iota 定义状态码分类
+const (
+    // 1xx 信息响应
+    StatusContinue           = 100 + iota
+    StatusSwitchingProtocols
+    StatusProcessing
+
+    // 2xx 成功
+    StatusOK                 = 200 + iota
+    StatusCreated
+    StatusAccepted
+    StatusNonAuthoritativeInfo
+)
+
+func main() {
+    fmt.Println("=== HTTP 状态码 ===")
+    fmt.Printf("200 OK: %d\n", StatusOK)
+    fmt.Printf("301 Moved: %d\n", StatusMovedPermanently)
+    fmt.Printf("404 Not Found: %d\n", StatusNotFound)
+    fmt.Printf("500 Server Error: %d\n", StatusInternalServerError)
+}
+```
+
+**解释**：展示了如何使用常量定义 HTTP 状态码，便于代码维护。
+</details>
+
 2. 创建配置常量组，包含服务器和数据库配置
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// 服务器配置
+const (
+    DefaultHost     = "localhost"
+    DefaultPort     = 8080
+    DefaultTimeout  = 30
+    MaxConnections  = 100
+    ReadBufferSize  = 4096
+    WriteBufferSize = 4096
+)
+
+// 数据库配置
+const (
+    DBHost     = "localhost"
+    DBPort     = 5432
+    DBName     = "myapp"
+    DBUser     = "admin"
+    DBMaxConns = 25
+    DBMinConns = 5
+    DBTimeout  = 10
+)
+
+// 应用配置
+const (
+    AppName        = "MyApp"
+    AppVersion     = "1.0.0"
+    AppEnvironment = "production"
+    DebugMode      = false
+)
+
+// ConfigInfo 打印配置信息
+func ConfigInfo() {
+    fmt.Println("=== 服务器配置 ===")
+    fmt.Printf("Host: %s\n", DefaultHost)
+    fmt.Printf("Port: %d\n", DefaultPort)
+    fmt.Printf("Timeout: %d\n", DefaultTimeout)
+
+    fmt.Println("\n=== 数据库配置 ===")
+    fmt.Printf("%s@%s:%d/%s\n", DBUser, DBHost, DBPort, DBName)
+    fmt.Printf("最大连接数: %d\n", DBMaxConns)
+
+    fmt.Println("\n=== 应用配置 ===")
+    fmt.Printf("%s v%s (%s)\n", AppName, AppVersion, AppEnvironment)
+}
+
+func main() {
+    ConfigInfo()
+}
+```
+
+**解释**：展示了如何组织配置常量，便于集中管理应用配置。
+</details>
+
 3. 实现位标志常量，用于权限控制
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// 权限位标志
+const (
+    // 基础权限
+    PermissionRead   = 1 << iota  // 1 (二进制: 0001)
+    PermissionWrite              // 2 (二进制: 0010)
+    PermissionExecute            // 4 (二进制: 0100)
+    PermissionDelete             // 8 (二进制: 1000)
+
+    // 组合权限
+    PermissionReadWrite = PermissionRead | PermissionWrite     // 3
+    PermissionAll       = PermissionRead | PermissionWrite | PermissionExecute | PermissionDelete  // 15
+)
+
+// UserPermission 用户权限结构
+type UserPermission struct {
+    Name       string
+    Permission int
+}
+
+// HasPermission 检查是否有某个权限
+func (up *UserPermission) HasPermission(perm int) bool {
+    return up.Permission&perm != 0
+}
+
+// AddPermission 添加权限
+func (up *UserPermission) AddPermission(perm int) {
+    up.Permission |= perm
+}
+
+// RemovePermission 移除权限
+func (up *UserPermission) RemovePermission(perm int) {
+    up.Permission &^= perm
+}
+
+// GetPermissionNames 获取权限名称列表
+func (up *UserPermission) GetPermissionNames() []string {
+    names := []string{}
+
+    if up.HasPermission(PermissionRead) {
+        names = append(names, "读取")
+    }
+    if up.HasPermission(PermissionWrite) {
+        names = append(names, "写入")
+    }
+    if up.HasPermission(PermissionExecute) {
+        names = append(names, "执行")
+    }
+    if up.HasPermission(PermissionDelete) {
+        names = append(names, "删除")
+    }
+
+    return names
+}
+
+func main() {
+    // 创建不同权限的用户
+    admin := UserPermission{Name: "管理员", Permission: PermissionAll}
+    guest := UserPermission{Name: "访客", Permission: PermissionRead}
+    editor := UserPermission{Name: "编辑", Permission: PermissionReadWrite}
+
+    users := []UserPermission{admin, guest, editor}
+
+    for _, user := range users {
+        fmt.Printf("\n%s 的权限:\n", user.Name)
+        fmt.Printf("权限值: %d\n", user.Permission)
+        fmt.Printf("权限列表: %v\n", user.GetPermissionNames())
+
+        fmt.Printf("可以读取: %v\n", user.HasPermission(PermissionRead))
+        fmt.Printf("可以写入: %v\n", user.HasPermission(PermissionWrite))
+        fmt.Printf("可以删除: %v\n", user.HasPermission(PermissionDelete))
+    }
+
+    // 动态添加权限
+    fmt.Println("\n=== 动态添加权限 ===")
+    guest.AddPermission(PermissionWrite)
+    fmt.Printf("%s 添加写入权限后: %v\n", guest.Name, guest.GetPermissionNames())
+
+    // 移除权限
+    admin.RemovePermission(PermissionDelete)
+    fmt.Printf("%s 移除删除权限后: %v\n", admin.Name, admin.GetPermissionNames())
+}
+```
+
+**解释**：展示了位标志常量的使用，通过位运算实现权限的灵活组合和检查。
+</details>
 
 
 [← Interface](./interface.mdx)

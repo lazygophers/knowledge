@@ -259,8 +259,141 @@ fmt.Println(groups)
 ## 练习
 
 1. 使用 map 统计文本中每个单词出现的次数
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import (
+    "fmt"
+    "strings"
+)
+
+func main() {
+    text := "Go is great Go is fun Go is powerful"
+
+    // 转换为小写并分割
+    words := strings.Fields(strings.ToLower(text))
+
+    // 统计单词频率
+    wordCount := make(map[string]int)
+    for _, word := range words {
+        wordCount[word]++
+    }
+
+    // 打印结果
+    fmt.Println("单词出现次数:")
+    for word, count := range wordCount {
+        fmt.Printf("%s: %d\n", word, count)
+    }
+}
+```
+
+**解释**：使用 map 统计单词频率，展示了 map 的典型应用场景。
+</details>
+
 2. 实现两个 map 的合并功能
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// MergeMaps 合并两个 map，第二个 map 的值会覆盖第一个
+func MergeMaps(m1, m2 map[string]int) map[string]int {
+    result := make(map[string]int)
+
+    // 复制第一个 map
+    for k, v := range m1 {
+        result[k] = v
+    }
+
+    // 复制第二个 map（会覆盖相同的键）
+    for k, v := range m2 {
+        result[k] = v
+    }
+
+    return result
+}
+
+func main() {
+    map1 := map[string]int{"a": 1, "b": 2, "c": 3}
+    map2 := map[string]int{"b": 20, "c": 30, "d": 40}
+
+    merged := MergeMaps(map1, map2)
+    fmt.Println("合并后的 map:", merged)
+    // 输出: map[a:1 b:20 c:30 d:40]
+}
+```
+
+**解释**：展示了如何合并两个 map，注意后合并的值会覆盖先前的值。
+</details>
+
 3. 创建 map 存储 slice，实现多值映射
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// MultiMap 一个键对应多个值的映射
+type MultiMap struct {
+    data map[string][]string
+}
+
+// NewMultiMap 创建新的多值映射
+func NewMultiMap() *MultiMap {
+    return &MultiMap{
+        data: make(map[string][]string),
+    }
+}
+
+// Add 添加值
+func (mm *MultiMap) Add(key, value string) {
+    mm.data[key] = append(mm.data[key], value)
+}
+
+// Get 获取键对应的所有值
+func (mm *MultiMap) Get(key string) []string {
+    return mm.data[key]
+}
+
+// Keys 获取所有键
+func (mm *MultiMap) Keys() []string {
+    keys := make([]string, 0, len(mm.data))
+    for k := range mm.data {
+        keys = append(keys, k)
+    }
+    return keys
+}
+
+func main() {
+    mm := NewMultiMap()
+
+    // 添加数据
+    mm.Add("水果", "苹果")
+    mm.Add("水果", "香蕉")
+    mm.Add("水果", "橙子")
+    mm.Add("蔬菜", "西红柿")
+    mm.Add("蔬菜", "黄瓜")
+
+    // 查询数据
+    fmt.Println("水果类:", mm.Get("水果"))
+    fmt.Println("蔬菜类:", mm.Get("蔬菜"))
+    fmt.Println("所有类别:", mm.Keys())
+}
+```
+
+**解释**：展示了如何使用 map 存储 slice 实现一对多的映射关系。
+</details>
 
 
 [← 切片](./slice.mdx) | [结构体 →](./struct.mdx)
