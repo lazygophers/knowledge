@@ -1,0 +1,8 @@
+# Data Types Module (Chinese Source)
+
+> English llms.txt for files under `docs/zh/golang/data-types`.
+
+## Docs
+
+- [Data Types Reference](./index.mdx): Comprehensive reference manual for Go data types including numeric, string, array, slice, map, struct, pointer, and interface types.
+- [Module Metadata](./_meta.json): Navigation metadata for data-types subdirectory.

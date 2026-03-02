@@ -30,5 +30,10 @@
         "type": "dir",
         "name": "fundamentals",
         "label": "核心基础"
+    },
+    {
+        "type": "dir",
+        "name": "data-types",
+        "label": "数据类型"
     }
 ]
