@@ -50,6 +50,17 @@
 - [Interface Sidebar](./interface/_meta.json): Navigation metadata for interface subdirectory.
 - [Interface LLMs Index](./interface/llms.txt): English index for interface subdirectory.
 
+## Reflection
+
+- [Reflection Basics](./reflection/basics.mdx): Introduction to Go reflection, three laws of reflection, Type vs Value, Kind types, generic functions, deep equality, and performance considerations.
+- [Type Reflection](./reflection/type-reflection.mdx): reflect.Type interface, type properties (Name, Kind, PkgPath), struct fields, struct tags, function types, interface methods, and type operations (Implements, AssignableTo, ConvertibleTo).
+- [Value Reflection](./reflection/value-reflection.mdx): reflect.Value for reading/modifying values, basic/composite type operations, CanSet/CanAddr, creating values (MakeSlice, MakeMap, MakeChan, New), and value operations (Compare, DeepEqual, IsZero).
+- [Struct Tags](./reflection/struct-tags.mdx): Struct tag syntax, Tag.Get/Tag.Lookup, parsing tags, JSON/XML serialization, database mapping (GORM), validation, custom tag processing, and best practices.
+- [Dynamic Calls](./reflection/dynamic-calls.mdx): Dynamic method/function invocation, MethodByName, Call/CallSlice, interface method calls, generic frameworks (RPC, event handlers, command dispatchers), and performance optimization.
+- [Best Practices](./reflection/best-practices.mdx): When to use reflection (serialization, DI, ORM), when NOT to use (known types, hot paths), performance optimization (caching, code generation), error handling, common pitfalls (unexported fields, addressability), design patterns (adapter, plugin system), and testing.
+- [Reflection Sidebar](./reflection/_meta.json): Navigation metadata for reflection subdirectory.
+- [Reflection LLMs Index](./reflection/llms.txt): English index for reflection subdirectory.
+
 ## Concurrency
 
 - [Goroutine](./concurrency/goroutine.mdx): Lightweight threads, Go scheduler (G-M-P model), goroutine lifecycle, and common pitfalls.
