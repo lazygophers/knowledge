@@ -79,6 +79,89 @@ for i, r := range s {
 }
 ```
 
+## <Badge text="string vs []rune vs []byte" type="warning" />
+
+### 三者区别对比
+
+| 特性 | `string` | `[]byte` | `[]rune` |
+|-----|----------|----------|----------|
+| **本质** | 只读的字节序列 | 可变的字节数组 | 可变的 Unicode 码点数组 |
+| **元素** | 字节（byte） | 字节（uint8） | Unicode 码点（int32） |
+| **长度** | 字节数（`len(s)`） | 字节数（`len(b)`） | 字符数（`len(r)`） |
+| **可变性** | 不可变 | 可变 | 可变 |
+| **索引访问** | 返回字节 | 返回字节 | 返回 rune |
+| **UTF-8 支持** | 原始 UTF-8 字节 | 原始 UTF-8 字节 | 解码后的字符 |
+
+### 使用场景对比
+
+```go
+s := "你好，世界"
+
+// string：用于只读文本
+fmt.Println(s)           // 你好，世界
+fmt.Println(len(s))      // 18（字节数，UTF-8编码中文3字节/字符）
+
+// []byte：用于二进制数据、网络传输、文件 I/O
+bytes := []byte(s)
+fmt.Println(len(bytes))  // 18
+fmt.Println(bytes[0])    // 228（'你'的第一个字节）
+
+// []rune：用于需要按字符处理的场景
+runes := []rune(s)
+fmt.Println(len(runes))  // 6（字符数）
+fmt.Println(runes[0])    // 20320（'你'的 Unicode 码点）
+```
+
+### 选择指南
+
+| 场景 | 推荐 | 原因 |
+|-----|------|------|
+| 存储和传递文本 | `string` | 不可变，安全，高效 |
+| 网络传输、文件操作 | `[]byte` | 与 I/O 接口兼容 |
+| 按字符处理 Unicode | `[]rune` | 正确处理多字节字符 |
+| 修改字符串内容 | `[]rune` | 可变，按字符操作 |
+| 二进制数据处理 | `[]byte` | 原始字节，无编码问题 |
+
+### 性能对比
+
+```go
+s := "hello world"
+
+// string → []byte（零拷贝，但共享底层数组）
+bytes := []byte(s)
+// 转换很快，但修改 bytes 会复制整个数组
+
+// string → []rune（需要解码）
+runes := []rune(s)
+// 转换较慢，需要遍历并解码每个字符
+```
+
+<Badge text="性能提示" type="info" /> 尽量使用 `string`，只在需要时转换。频繁的转换会影响性能。
+
+### 常见陷阱
+
+```go
+s := "你好"
+
+// 陷阱1：按字节索引会导致乱码
+for i := 0; i < len(s); i++ {
+    fmt.Printf("%d: %c\n", i, s[i])  // 输出乱码
+}
+
+// 陷阱2：字符串切片可能截断多字节字符
+sub := s[0:2]  // 截断了"你"字
+fmt.Println(sub)  // 乱码
+
+// ✅ 正确：使用 range 或 []rune
+for i, r := range s {
+    fmt.Printf("%d: %c\n", i, r)  // 正确输出
+}
+
+runes := []rune(s)
+subRunes := runes[0:1]  // 安全
+fmt.Println(string(subRunes))  // 你
+```
+
 ## <Badge text="字符串是不可变的" type="warning" />
 
 ```go
