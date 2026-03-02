@@ -1,11 +1,11 @@
-import Badge from '@theme/Badge';
-import Callout from '@theme/Callout';
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
 
 [← 返回并发](../)
 
 # Atomic
 
-<Badge variant="warning" text="Go 1.19+" />
+<Badge text="Go 1.19+" type="warning" />
 
 `sync/atomic` 包提供了底层的原子内存原语，用于实现无锁算法和并发数据结构。这些操作保证原子性，无需加锁即可安全地并发访问。
 
