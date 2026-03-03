@@ -1,0 +1,90 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# Trace 工具 - Trace Tool
+
+<Badge text="高级工具" type="danger" />
+
+go tool trace 提供了执行追踪功能，可以可视化程序的执行过程。
+
+## 启用 Trace
+
+<Badge text="高级开发者" type="danger" />
+
+### 采集 Trace 数据
+
+```go
+package main
+
+import (
+    "fmt"
+    "os"
+    "runtime/trace"
+)
+
+func main() {
+    // 创建 trace 文件
+    f, _ := os.Create("trace.out")
+    defer f.Close()
+
+    // 开始 trace
+    trace.Start(f)
+    defer trace.Stop()
+
+    // 你的代码
+    doWork()
+}
+
+func doWork() {
+    for i := 0; i < 5; i++ {
+        fmt.Printf("工作 %d\n", i)
+    }
+}
+```
+
+### 运行程序
+
+```bash
+# 运行程序生成 trace
+go run main.go
+
+# 查看 trace
+go tool trace trace.out
+```
+
+## Trace 分析
+
+<Badge text="高级开发者" type="danger" />
+
+### 查看 Goroutine
+
+```bash
+go tool trace trace.out
+# 输出包含：
+# Goroutine 分析
+# 网络事件
+# 系统调用
+# GC 事件
+```
+
+### 可视化
+
+```bash
+# 生成 HTML 报告
+go tool trace -http=:8080 trace.out
+# 浏览器访问 http://localhost:8080
+```
+
+---
+
+## 总结
+
+### 速查表
+
+```bash
+# 生成 trace
+go tool trace trace.out
+
+# 分析 trace
+go tool trace -http=:8080 trace.out
+```

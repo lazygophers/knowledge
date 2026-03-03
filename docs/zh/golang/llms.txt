@@ -213,3 +213,61 @@
 - [Best Practices](./cgo/best-practices.mdx): When to use CGO (existing C libraries, performance-critical code), when NOT to use (pure Go possible), performance optimization (reduce cross-boundary calls), error handling (C errors to Go), build tags (platform-specific), debugging, alternatives (pure Go, Go libraries), security (input validation), and testing CGO code.
 - [CGO Sidebar](./cgo/_meta.json): Navigation metadata for cgo subdirectory.
 - [CGO LLMs Index](./cgo/llms.txt): English index for cgo subdirectory.
+
+## Best Practices
+
+- [Best Practices Overview](./best-practices/index.mdx): Overview of Go best practices with learning paths and skill level navigation.
+
+### Code Style
+
+- [Code Style Conventions](./best-practices/code-style.mdx): Go code style conventions including gofmt, goimports, naming conventions, comment standards, code organization, common pitfalls, tools and setup (VS Code, Git hooks, Makefile), and code review checklist.
+
+### Error Patterns
+
+- [Error Handling Patterns](./best-practices/error-patterns.mdx): Go error handling best practices including error wrapping with %w, sentinel errors, error chain operations (errors.Is, errors.As, errors.Unwrap), custom error types, error handling patterns (early return, error groups, error context), layered error handling (Repository-Service-Controller), common pitfalls, and code review checklist.
+
+### Concurrency Patterns
+
+- [Concurrency Patterns](./best-practices/concurrency-patterns.mdx): Go concurrency patterns including worker pool patterns (basic, with Context, dynamic), fan-in/fan-out patterns, pipeline patterns, semaphore patterns, context cancellation patterns, common pitfalls (goroutine leaks, forgotten channel closes, defer in loops), performance optimization (sync.Pool, batching, atomic operations), and code review checklist.
+
+### Testing Strategies
+
+- [Testing Strategies](./best-practices/testing-strategies.mdx): Go testing strategies including basic testing concepts, table-driven tests, mock and test doubles (manual mocks, Testify, gomock), benchmark testing, fuzzing (Go 1.18+), test coverage, test architecture (unit/integration/E2E), tools recommendations, and code review checklist.
+
+### Anti-Patterns
+
+- [Common Anti-Patterns](./best-practices/anti-patterns.mdx): Common Go anti-patterns to avoid including performance anti-patterns (string concatenation in loops, slice pre-allocation, fmt.Sprintf misuse, reflect.DeepEqual overuse), concurrency anti-patterns (goroutine leaks, channel closing issues, time.After in loops, concurrent map access), memory anti-patterns (slice underlying array leaks, closure variable capture, string/byte conversion leaks, sync.Pool overuse), design anti-patterns (excessive interface{}, improper error handling, ignoring context cancellation), detection and prevention methods, and code review checklist.
+
+- [Best Practices Sidebar](./best-practices/_meta.json): Navigation metadata for best-practices subdirectory.
+
+## Ecosystem
+
+- [Ecosystem Overview](./ecosystem/index.mdx): Overview of Go ecosystem with navigation cards and technology stack recommendations.
+
+### Lazygophers Series
+
+- [lazy-log](./ecosystem/lazy-log.mdx): lazygophers/log high-performance logging library based on zap with structured logging, zero-allocation field API, context propagation, log levels, output configuration, rotation, performance benchmarks (3x faster than zap), and best practices.
+
+- [lazy-utils](./ecosystem/lazy-utils.mdx): lazygophers/utils modern utility library with 20+ modules including stringx (zero-allocation string operations), candy (generic collections and utilities), osx (file system operations), HTTP utilities, JSON utilities, time utilities, crypto utilities, and performance comparisons with standard library.
+
+- [lazy-lrpc](./ecosystem/lazy-lrpc.mdx): lazygophers/lrpc lightweight RPC framework based on fasthttp with features including service registration, load balancing, service discovery, middleware ecosystem (authentication, rate limiting, circuit breaking, tracing, logging), performance benchmarks (2x faster than gRPC), and microservices architecture patterns.
+
+### Web Frameworks
+
+- [Web Frameworks Comparison](./ecosystem/web-frameworks.mdx): Comprehensive comparison of Go web frameworks including Gin (high-performance minimalist framework), Echo (minimalist framework with built-in middleware), Fiber (fasthttp-based framework), performance benchmarks, feature comparison, code examples, decision tree, and best practices.
+
+### Data Access
+
+- [ORM Libraries Comparison](./ecosystem/orm.mdx): In-depth comparison of Go ORM libraries including GORM (feature-rich ORM with conventions), Ent (Facebook's type-safe code generator), performance benchmarks, type safety analysis, code examples, and when to use each.
+
+- [Database Drivers](./ecosystem/database.mdx): Go database programming including standard library database/sql usage, driver registration (MySQL, PostgreSQL, SQLite), connection pool management, transaction handling, prepared statements, NULL value handling, and security best practices.
+
+### Infrastructure
+
+- [CLI Tools](./ecosystem/cli.mdx): CLI development with Cobra framework including command system design, subcommands, flags/persistent flags, argument validation, shell completion (bash/zsh/fish), command aliases, configuration file integration, help generation, and advanced patterns (pre/post-run, InterceptExec).
+
+- [Logging Libraries Comparison](./ecosystem/logging.mdx): Comparison of Go logging libraries including zap (uber's high-performance structured logging), logrus (structured logging with hooks), slog (Go 1.21+ standard library structured logging), performance benchmarks (zero-allocation optimization), structured logging best practices, and testing methods.
+
+- [Configuration Management](./ecosystem/config.mdx): Configuration management with Viper including configuration file formats (JSON/YAML/TOML/ENV), environment variable binding, flag binding, remote configuration (etcd/Consul), hot reloading, multi-environment configuration, configuration validation, and best practices.
+
+- [Ecosystem Sidebar](./ecosystem/_meta.json): Navigation metadata for ecosystem subdirectory.

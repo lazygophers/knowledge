@@ -1,0 +1,205 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# 数学与随机 - Math and Rand
+
+<Badge text="标准库" type="info" />
+
+## math 包
+
+<Badge text="初级开发者" type="tip" />
+
+### 常用函数
+
+```go
+package main
+
+import (
+    "fmt"
+    "math"
+)
+
+func main() {
+    // 基本数学函数
+    fmt.Println("绝对值:", math.Abs(-5))     // 5
+    fmt.Println("向下取整:", math.Floor(5.7))  // 5
+    fmt.Println("向上取整:", math.Ceil(5.3))    // 6
+    fmt.Println("四舍五入:", math.Round(5.5))  // 6
+
+    // 三角函数
+    fmt.Println("正弦:", math.Sin(math.Pi/2))     // 1
+    fmt.Println("余弦:", math.Cos(math.Pi/3))     // 0.5
+    fmt.Println("正切:", math.Tan(math.Pi/4))     // 1
+
+    // 反三角函数
+    fmt.Println("反正弦:", math.Asin(1))        // π/2
+    fmt.Println("反余弦:", math.Acos(0.5))      // π/3
+
+    // 指数和对数
+    fmt.Println("e的平方:", math.Exp(2))      // 7.389...
+    fmt.Println("自然对数:", math.Log(10))      // 2.302...
+
+    // 幂运算
+    fmt.Println("2的10次方:", math.Pow(2, 10)) // 1024
+    fmt.Println("平方根:", math.Sqrt(16))      // 4
+
+    // 常数
+    fmt.Println("π:", math.Pi)                   // 3.14159...
+    fmt.Println("e:", math.E)                    // 2.71828...
+    fmt.Println("φ:", math.Phi)                 // 1.61803...
+}
+```
+
+### 最大最小值
+
+```go
+// min/max 函数
+min := math.Min(1, 2)       // 1
+max := math.Max(1, 2)       // 2
+
+// 多个值比较（Go 1.21+）
+min = math.Min(1, 2, 3)   // 1
+max = math.Max(1, 2, 3)   // 3
+```
+
+## rand 包
+
+<Badge text="初级开发者" type="tip" />
+
+### 基础随机数
+
+```go
+package main
+
+import (
+    "fmt"
+    "math/rand"
+)
+
+func main() {
+    // 生成随机整数 [0, 100)
+    n := rand.Intn(100)
+    fmt.Println("随机整数:", n)
+
+    // 生成浮点数 [0.0, 1.0)
+    f := rand.Float64()
+    fmt.Println("随机浮点数:", f)
+
+    // 生成指定范围的随机数
+    min := 10
+    max := 20
+    rangeNum := min + rand.Intn(max-min+1)
+    fmt.Println("范围随机数:", rangeNum)
+}
+```
+
+<Callout type="danger">
+**重要**：Go 1.20+ 使用 `math/rand`，旧版 `rand` 已弃用。
+</Callout>
+
+### 随机种子
+
+```go
+// 固定种子（用于测试）
+rand.Seed(42)
+
+// 使用当前时间作为种子（不推荐）
+rand.Seed(time.Now().UnixNano())
+
+// 使用纳秒时间（更好的随机性）
+rand.Seed(time.Now().UnixNano())
+```
+
+### 随机序列
+
+```go
+// 生成随机字节序列
+data := make([]byte, 16)
+rand.Read(data)
+fmt.Println("随机字节:", data)
+```
+
+## 实用示例
+
+<Badge text="中级开发者" type="warning" />
+
+### 随机字符串生成
+
+```go
+package main
+
+import (
+    "fmt"
+    "math/rand"
+    "time"
+)
+
+const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+func randomString(length int) string {
+    rand.Seed(time.Now().UnixNano())
+
+    b := make([]byte, length)
+    for i := range b {
+        b[i] = charset[rand.Intn(len(charset))]
+    }
+    return string(b)
+}
+
+func main() {
+    fmt.Println("随机字符串:", randomString(10))
+}
+```
+
+### 随机选择
+
+```go
+// 随机选择元素
+items := []string{"apple", "banana", "cherry"}
+choice := items[rand.Intn(len(items))]
+fmt.Println("选择:", choice)
+
+// 随机打乱切片
+rand.Shift(len(items)/2) // 打乱前半部分
+fmt.Println("打乱后:", items)
+```
+
+### UUID 生成
+
+```go
+import (
+    "github.com/google/uuid"
+)
+
+func generateUUID() string {
+    // 生成 UUID v4
+    id := uuid.New()
+    return id.String()
+}
+```
+
+---
+
+## 总结
+
+### 关键要点
+
+| 读者水平 | 核心要点 |
+|---------|---------|
+| <Badge text="初级开发者" type="tip" /> | math 常用函数。rand.Intn 生成随机数。 |
+| <Badge text="中级开发者" type="warning" /> | 使用 math/rand 包。正确设置种子。 |
+
+### 速查表
+
+```go
+// math
+math.Abs(x)
+math.Floor(x)
+math.Min(a, b)
+math.Pi
+
+// rand
+rand.Intn(n)
+rand.Float64()
+rand.Seed(seed)
+```

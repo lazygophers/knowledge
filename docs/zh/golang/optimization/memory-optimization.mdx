@@ -1,0 +1,411 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# 内存优化 - Memory Optimization
+
+<Badge text="性能优化" type="danger" />
+
+内存优化是 Go 性能优化的核心部分。正确的内存管理可以显著提升程序性能。
+
+## 内存分配基础
+
+<Badge text="中级开发者" type="warning" />
+
+### 值类型 vs 指针类型
+
+```go
+package main
+
+import (
+    "fmt"
+)
+
+// 值类型 - 栈分配
+type Value struct {
+    x, y int
+}
+
+func useValue() {
+    v := Value{x: 1, y: 2}  // 栈分配
+    fmt.Println(v)
+}
+
+// 指针类型 - 堆分配
+func usePointer() *Value {
+    v := &Value{x: 1, y: 2}  // 堆分配
+    return v
+}
+```
+
+<Callout type="info">
+**逃逸分析**：如果编译器不能确定变量的生命周期，它会分配在堆上而不是栈上。使用 `go build -gcflags=-m` 查看逃逸分析。
+</Callout>
+
+### 减少分配
+
+```go
+// ❌ 每次循环都分配
+func process(items []string) {
+    for _, item := range items {
+        result := strings.ToUpper(item)  // 新分配
+        _ = result
+    }
+}
+
+// ✅ 重用缓冲区
+func processOptimized(items []string) {
+    buf := make([]byte, 0, 64)
+    for _, item := range items {
+        buf = buf[:0]
+        buf = append(buf, strings.ToUpper(item)...)
+    }
+}
+```
+
+## 对象池
+
+<Badge text="高级开发者" type="danger" />
+
+### sync.Pool
+
+```go
+package main
+
+import (
+    "bytes"
+    "fmt"
+    "sync"
+)
+
+var bufferPool = sync.Pool{
+    New: func() interface{} {
+        return new(bytes.Buffer)
+    },
+}
+
+func processData(data string) string {
+    // 从池中获取 buffer
+    buf := bufferPool.Get().(*bytes.Buffer)
+    defer func() {
+        buf.Reset()  // 重置
+        bufferPool.Put(buf)  // 放回池
+    }()
+
+    buf.WriteString(data)
+    return buf.String()
+}
+
+func main() {
+    result := processData("Hello, World!")
+    fmt.Println(result)
+}
+```
+
+### 对象池最佳实践
+
+```go
+// ✅ 好：池化大对象
+var bigBufferPool = sync.Pool{
+    New: func() interface{} {
+        return make([]byte, 0, 1024)
+    },
+}
+
+// ✅ 好：池化昂贵对象
+var decoderPool = sync.Pool{
+    New: func() interface{} {
+        return json.NewDecoder(nil)
+    },
+}
+
+// ❌ 避免：池化小对象
+var intPool = sync.Pool{
+    New: func() interface{} {
+        return new(int)  // 不值得
+    },
+}
+```
+
+## 切片优化
+
+<Badge text="中级开发者" type="warning" />
+
+### 预分配切片容量
+
+```go
+// ❌ 多次重新分配
+func growSlice() []byte {
+    var data []byte
+    for i := 0; i < 1000; i++ {
+        data = append(data, byte(i))
+    }
+    return data
+}
+
+// ✅ 预分配容量
+func growSliceOptimized() []byte {
+    data := make([]byte, 0, 1000)
+    for i := 0; i < 1000; i++ {
+        data = append(data, byte(i))
+    }
+    return data
+}
+```
+
+### 切片截断
+
+```go
+// ❌ 可能内存泄漏
+func processData(data []byte) []byte {
+    result := make([]byte, len(data))
+    copy(result, data)
+    return result
+}
+
+// ✅ 重用底层数组
+func processDataOptimized(data []byte) []byte {
+    result := make([]byte, 0, len(data))
+    result = append(result, data...)
+    return result
+}
+```
+
+## 字符串优化
+
+<Badge text="高级开发者" type="danger" />
+
+### 字符串拼接
+
+```go
+// ❌ 低效：多次分配
+func buildString(items []string) string {
+    var result string
+    for _, item := range items {
+        result += item  // 每次都分配新字符串
+    }
+    return result
+}
+
+// ✅ 高效：使用 strings.Builder
+func buildStringOptimized(items []string) string {
+    var builder strings.Builder
+    builder.Grow(64)  // 预分配
+
+    for _, item := range items {
+        builder.WriteString(item)
+    }
+    return builder.String()
+}
+```
+
+### 子字符串
+
+```go
+// ❌ 分配新内存
+func getSubstring(s string) string {
+    return s[1:5]
+}
+
+// ✅ 使用 []byte 避免分配
+func processBytes(s string) []byte {
+    return []byte(s[1:5])
+}
+```
+
+## map 优化
+
+<Badge text="高级开发者" type="danger" />
+
+### 预分配 map
+
+```go
+// ❌ 动态增长
+m := make(map[string]int)
+for i := 0; i < 1000; i++ {
+    m[string(rune(i))] = i
+}
+
+// ✅ 预分配大小
+m := make(map[string]int, 1000)
+for i := 0; i < 1000; i++ {
+    m[string(rune(i))] = i
+}
+```
+
+### 零值 map
+
+```go
+// 空 map vs 零值 map
+var m1 map[string]int
+m2 := make(map[string]int)
+
+// m1 == nil, m2 != nil
+// m1 无法写入，m2 可以写入
+```
+
+## 逃逸分析
+
+<Badge text="高级开发者" type="danger" />
+
+### 查看逃逸
+
+```bash
+# 运行逃逸分析
+go build -gcflags=-m main.go
+
+# 输出示例：
+# ./main.go:10:6: can inline main.start as: "自动内联"
+# ./main.go:20:9: leaking param: result
+```
+
+### 避免逃逸
+
+```go
+// ❌ 返回接口导致逃逸
+func getData() []interface{} {
+    return []interface{}{1, 2, 3}
+}
+
+// ✅ 返回具体类型
+func getDataOptimized() []int {
+    return []int{1, 2, 3}
+}
+```
+
+## 性能分析
+
+<Badge text="高级开发者" type="danger" />
+
+### 内存 benchmark
+
+```go
+package main
+
+import (
+    "testing"
+)
+
+func BenchmarkAllocate(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        _ = make([]byte, 1024)
+    }
+}
+
+func BenchmarkPool(b *testing.B) {
+    var pool = sync.Pool{
+        New: func() interface{} {
+            return make([]byte, 1024)
+        },
+    }
+
+    b.ResetTimer()
+    for i := 0; i < b.N; i++ {
+        buf := pool.Get().([]byte)
+        pool.Put(buf)
+    }
+}
+```
+
+## 实战案例
+
+### 案例：高并发日志
+
+```go
+package main
+
+import (
+    "sync"
+)
+
+// LogEntry 日志条目
+type LogEntry struct {
+    Time   time.Time
+    Level  string
+    Message string
+}
+
+// AsyncLogger 异步日志
+type AsyncLogger struct {
+    entries chan LogEntry
+    buffer  *bytes.Buffer
+    done    chan struct{}
+}
+
+func NewAsyncLogger(bufferSize int) *AsyncLogger {
+    l := &AsyncLogger{
+        entries: make(chan LogEntry, 1000),
+        buffer:  bytes.NewBuffer(),
+        done:    make(chan struct{}),
+    }
+    go l.writer()
+    return l
+}
+
+func (l *AsyncLogger) Log(level, message string) {
+    l.entries <- LogEntry{
+        Time:    time.Now(),
+        Level:   level,
+        Message: message,
+    }
+}
+
+func (l *AsyncLogger) writer() {
+    for {
+        select {
+        case entry := <-l.entries:
+            l.buffer.WriteString(entry.Time.Format(time.RFC3339))
+            l.buffer.WriteByte(' ')
+            l.buffer.WriteString(entry.Level)
+            l.buffer.WriteByte(' ')
+            l.buffer.WriteString(entry.Message)
+            l.buffer.WriteByte('\n')
+        case <-l.done:
+            return
+        }
+    }
+}
+
+func (l *AsyncLogger) Close() {
+    close(l.entries)
+    <-l.done
+}
+```
+
+## 练习
+
+### 练习：优化内存分配
+
+优化以下代码的内存分配：
+
+```go
+// TODO: 优化
+func ProcessData(data []string) string {
+    var result string
+    for _, s := range data {
+        result += strings.ToUpper(s) + " "
+    }
+    return result
+}
+```
+
+---
+
+## 总结
+
+### 关键要点
+
+| 读者水平 | 核心要点 |
+|---------|---------|
+| <Badge text="中级开发者" type="warning" /> | 预分配切片/map。使用 strings.Builder。 |
+| <Badge text="高级开发者" type="danger" /> | 使用 sync.Pool。逃逸分析。内存 profile。 |
+
+### 速查表
+
+```bash
+# 逃逸分析
+go build -gcflags=-m
+
+# 内存 profile
+go test -memprofile=mem.prof
+go tool pprof mem.prof
+```

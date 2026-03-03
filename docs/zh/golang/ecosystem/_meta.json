@@ -1,0 +1,68 @@
+[
+    {
+        "type": "file",
+        "name": "index",
+        "label": "生态概览"
+    },
+    {
+        "type": "section-header",
+        "label": "Lazygophers 系列"
+    },
+    {
+        "type": "file",
+        "name": "lazy-log",
+        "label": "log 日志库"
+    },
+    {
+        "type": "file",
+        "name": "lazy-utils",
+        "label": "utils 工具库"
+    },
+    {
+        "type": "file",
+        "name": "lazy-lrpc",
+        "label": "lrpc RPC 框架"
+    },
+    {
+        "type": "section-header",
+        "label": "Web 框架"
+    },
+    {
+        "type": "file",
+        "name": "web-frameworks",
+        "label": "主流 Web 框架"
+    },
+    {
+        "type": "section-header",
+        "label": "数据访问"
+    },
+    {
+        "type": "file",
+        "name": "orm",
+        "label": "ORM 库"
+    },
+    {
+        "type": "file",
+        "name": "database",
+        "label": "数据库驱动"
+    },
+    {
+        "type": "section-header",
+        "label": "基础设施"
+    },
+    {
+        "type": "file",
+        "name": "cli",
+        "label": "CLI 工具"
+    },
+    {
+        "type": "file",
+        "name": "logging",
+        "label": "日志库"
+    },
+    {
+        "type": "file",
+        "name": "config",
+        "label": "配置管理"
+    }
+]

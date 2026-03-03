@@ -1,7 +1,7 @@
 [
     {
         "type": "section-header",
-        "label": "快速入门"
+        "label": "01-快速入门"
     },
     {
         "type": "file",
@@ -14,17 +14,13 @@
         "label": "环境搭建"
     },
     {
-        "type": "section-header",
-        "label": "编程入门"
-    },
-    {
         "type": "file",
         "name": "hello",
         "label": "Hello World"
     },
     {
         "type": "section-header",
-        "label": "基础概念"
+        "label": "02-语言核心"
     },
     {
         "type": "dir",
@@ -48,16 +44,6 @@
     },
     {
         "type": "dir",
-        "name": "reflection",
-        "label": "反射"
-    },
-    {
-        "type": "dir",
-        "name": "concurrency",
-        "label": "并发"
-    },
-    {
-        "type": "dir",
         "name": "error-handling",
         "label": "错误处理"
     },
@@ -68,7 +54,7 @@
     },
     {
         "type": "section-header",
-        "label": "标准库"
+        "label": "03-标准库"
     },
     {
         "type": "dir",
@@ -77,16 +63,36 @@
     },
     {
         "type": "section-header",
-        "label": "测试"
+        "label": "04-高级特性"
+    },
+    {
+        "type": "dir",
+        "name": "concurrency",
+        "label": "并发"
+    },
+    {
+        "type": "dir",
+        "name": "reflection",
+        "label": "反射"
+    },
+    {
+        "type": "dir",
+        "name": "unsafe",
+        "label": "Unsafe"
+    },
+    {
+        "type": "dir",
+        "name": "cgo",
+        "label": "CGO"
+    },
+    {
+        "type": "section-header",
+        "label": "05-工程实践"
     },
     {
         "type": "dir",
         "name": "testing",
         "label": "测试"
-    },
-    {
-        "type": "section-header",
-        "label": "工具与优化"
     },
     {
         "type": "dir",
@@ -99,17 +105,17 @@
         "label": "性能优化"
     },
     {
+        "type": "dir",
+        "name": "best-practices",
+        "label": "最佳实践"
+    },
+    {
         "type": "section-header",
-        "label": "高级主题"
+        "label": "06-生态"
     },
     {
         "type": "dir",
-        "name": "unsafe",
-        "label": "Unsafe"
-    },
-    {
-        "type": "dir",
-        "name": "cgo",
-        "label": "CGO"
+        "name": "ecosystem",
+        "label": "生态系统"
     }
 ]
