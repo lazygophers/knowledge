@@ -1,0 +1,27 @@
+[
+  {
+    "type": "file",
+    "name": "index",
+    "label": "构建工具概览"
+  },
+  {
+    "type": "file",
+    "name": "go-mod",
+    "label": "Go Modules"
+  },
+  {
+    "type": "file",
+    "name": "go-commands",
+    "label": "Go 命令"
+  },
+  {
+    "type": "file",
+    "name": "cross-compile",
+    "label": "交叉编译"
+  },
+  {
+    "type": "file",
+    "name": "go-asm",
+    "label": "Go 汇编"
+  }
+]

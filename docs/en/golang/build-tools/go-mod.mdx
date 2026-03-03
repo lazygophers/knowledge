@@ -1,0 +1,249 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# Go Modules - Go Modules
+
+<Badge text="核心依赖管理" type="danger" />
+
+Go Modules 是 Go 1.11+ 的官方依赖管理系统。
+
+## go.mod 文件
+
+<Badge text="初级开发者" type="tip" />
+
+### 基本结构
+
+```go
+module github.com/user/project
+
+go 1.21
+
+require (
+    github.com/gin-gonic/gin v1.9.1
+    gorm.io/gorm v1.25.5
+)
+
+indirect (
+    github.com/bytedance/sonic v1.9.1
+)
+```
+
+### 初始化模块
+
+```bash
+# 初始化新模块
+go mod init github.com/user/project
+
+# 查看模块信息
+go list -m
+```
+
+## 依赖管理
+
+<Badge text="初级开发者" type="tip" />
+
+### 添加依赖
+
+```bash
+# 添加单个包
+go get github.com/pkg/errors
+
+# 添加指定版本
+go get github.com/pkg/errors@v0.9.1
+
+# 添加最新版本
+go get github.com/pkg/errors@latest
+
+# 更新所有依赖
+go get -u ./...
+go get -u=patch ./...
+```
+
+### 整理依赖
+
+```bash
+# 整理 go.mod 和 go.sum
+go mod tidy
+
+# 下载依赖到本地缓存
+go mod download
+
+# 验证依赖
+go mod verify
+```
+
+### 查看依赖
+
+```bash
+# 查看依赖图
+go mod graph
+
+# 查看为什么需要某个包
+go mod why github.com/pkg/errors
+```
+
+## 版本管理
+
+<Badge text="中级开发者" type="warning" />
+
+### 语义化版本
+
+```
+v1.2.3
+│ │ └─ 补丁版本（bug 修复）
+│ └─── 次版本（新功能，向后兼容）
+└───── 主版本（可能不兼容的变更）
+```
+
+### 版本选择
+
+```go
+// 精确版本
+require github.com/pkg/errors v0.9.1
+
+// 版本范围
+require github.com/pkg/errors v0.9.0
+
+// 排除特定版本
+exclude github.com/pkg/errors v0.9.0
+
+// 替换版本
+replace github.com/pkg/errors => ../errors
+```
+
+### 最小版本选择（Go 1.21+）
+
+```go
+// go.mod
+toolchain go1.21.0
+
+// 最小版本选择
+require github.com/pkg/errors v0.9.1 // 间接依赖至少需要 v0.9.1
+```
+
+## 私有仓库
+
+<Badge text="高级开发者" type="danger" />
+
+### Go Private Module
+
+```bash
+# 配置 GOPRIVATE
+go env -w GOPRIVATE=github.com/mycompany
+
+# 使用私有模块
+go get github.com/mycompany/private-module
+```
+
+### GOPROXY 和 GOSUMDB
+
+```bash
+# 设置代理
+go env -w GOPROXY=https://goproxy.cn,direct
+
+# 设置校验和数据库
+go env -w GOSUMDB=off
+
+# 查看当前配置
+go env
+```
+
+### .netrc 认证
+
+```bash
+# ~/.netrc
+machine github.com
+login username
+password token
+```
+
+## 最佳实践
+
+<Badge text="高级开发者" type="danger" />
+
+### 依赖更新策略
+
+```bash
+# 生产环境：锁定版本
+go mod tidy
+go mod vendor
+
+# 开发环境：定期更新
+go get -u ./...
+go mod tidy
+```
+
+### 依赖审查
+
+```bash
+# 查看依赖许可证
+go list -m all | xargs go list -m -f '{{.Dir}}' | xargs ls -la
+
+# 使用 govok 检查已知漏洞
+go install github.com/owaisreal/govok@latest
+govok ./...
+```
+
+## 实战案例
+
+### 多模块工作区
+
+```bash
+# 创建工作区
+go work init
+
+# 添加模块到工作区
+go work use ./module1
+go work use ./module2
+```
+
+## 练习
+
+### 练习：管理项目依赖
+
+创建一个新项目并添加依赖：
+
+```bash
+# 1. 初始化项目
+mkdir myproject
+cd myproject
+go mod init github.com/user/myproject
+
+# 2. 添加依赖
+go get github.com/gin-gonic/gin
+go get gorm.io/gorm
+
+# 3. 整理依赖
+go mod tidy
+
+# 4. 构建验证
+go build ./...
+```
+
+---
+
+## 总结
+
+### 关键要点
+
+| 读者水平 | 核心要点 |
+|---------|---------|
+| <Badge text="初级开发者" type="tip" /> | `go mod init` 初始化。`go mod tidy` 整理。 |
+| <Badge text="中级开发者" type="warning" /> | 理解版本管理。私有仓库配置。 |
+| <Badge text="高级开发者" type="danger" /> | 多模块工作区。依赖安全审查。 |
+
+### 速查表
+
+```bash
+# 初始化
+go mod init
+
+# 依赖管理
+go mod tidy
+go get package@version
+go mod download
+
+# 查看
+go list -m
+go mod graph
+```

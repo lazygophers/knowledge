@@ -1,0 +1,560 @@
+import { Badge } from "@rspress/core/theme";
+
+# Bool 类型 - Boolean Types
+
+[← 返回数据类型](../)
+
+布尔类型表示<strong>真或假</strong>的二元值。
+
+## <Badge text="Bool 基础" type="tip" />
+
+### 声明布尔变量
+
+```go
+// 声明布尔变量
+var isActive bool = true
+var isVerified bool = false
+
+// 类型推断
+enabled := true
+disabled := false
+
+// 零值为 false
+var defaultValue bool  // false
+```
+
+### Bool 零值
+
+```go
+var b bool
+fmt.Println(b == false)  // true
+fmt.Println(b)           // false
+```
+
+<Badge text="重要" type="info" /> Bool 的零值是 `false`，不是 `nil`。
+
+## <Badge text="Bool 运算" type="info" />
+
+### 逻辑运算符
+
+```go
+a := true
+b := false
+
+// 逻辑非（NOT）
+fmt.Println(!a)  // false
+
+// 逻辑与（AND）
+fmt.Println(a && b)  // false
+
+// 逻辑或（OR）
+fmt.Println(a || b)  // true
+```
+
+### 运算符优先级
+
+```go
+// 优先级：! > && > ||
+result := true || false && false  // true（先算 &&）
+fmt.Println(result)
+
+// 建议使用括号明确优先级
+result = true || (false && false)  // 更清晰
+```
+
+### 比较运算返回 Bool
+
+```go
+// 比较运算返回 bool 值
+fmt.Println(10 > 5)    // true
+fmt.Println(5 == 5)    // true
+fmt.Println(3 != 3)    // false
+fmt.Println(7 >= 7)    // true
+```
+
+## <Badge text="Bool 使用场景" type="warning" />
+
+### 状态标志
+
+```go
+type User struct {
+    IsActive    bool
+    IsVerified  bool
+    HasPermission bool
+}
+
+user := User{
+    IsActive:    true,
+    IsVerified:  false,
+    HasPermission: true,
+}
+
+// 条件检查
+if user.IsActive && user.IsVerified {
+    fmt.Println("用户已激活且已验证")
+}
+```
+
+### 配置开关
+
+```go
+type Config struct {
+    Debug      bool
+    Logging    bool
+    CacheEnabled bool
+}
+
+config := Config{
+    Debug:      true,
+    Logging:    false,
+    CacheEnabled: true,
+}
+
+if config.Debug {
+    fmt.Println("Debug 模式已开启")
+}
+```
+
+### 函数返回 Bool
+
+```go
+// 判断是否为偶数
+func isEven(n int) bool {
+    return n%2 == 0
+}
+
+// 验证邮箱格式
+func isValidEmail(email string) bool {
+    return strings.Contains(email, "@")
+}
+
+// 检查权限
+func hasPermission(user User, resource string) bool {
+    return user.IsActive && user.HasPermission
+}
+
+if isEven(10) {
+    fmt.Println("10 是偶数")
+}
+```
+
+## <Badge text="Bool 与控制流" type="info" />
+
+### if 语句
+
+```go
+isActive := true
+
+// 简洁形式
+if isActive {
+    fmt.Println("激活状态")
+}
+
+// 带否定的形式
+if !isActive {
+    fmt.Println("未激活")
+}
+
+// 多条件
+if isActive && isVerified {
+    fmt.Println("激活且已验证")
+}
+```
+
+### 三元表达式的替代
+
+Go 没有三元运算符，使用 if-else：
+
+```go
+// ❌ Go 没有三元运算符
+// result := condition ? value1 : value2
+
+// ✅ 使用 if-else
+var result string
+if condition {
+    result = value1
+} else {
+    result = value2
+}
+```
+
+## <Badge text="Bool 最佳实践" type="warning" />
+
+### 命名建议
+
+```go
+// ✅ 好：使用 is/has/can 前缀
+var isActive bool
+var hasPermission bool
+var canWrite bool
+var shouldRetry bool
+
+// ❌ 差：命名不清晰
+var active bool
+var permission bool
+```
+
+### 避免 Bool 参数
+
+```go
+// ❌ 差：多个 bool 参数难以理解
+func process(enabled, verbose, debug bool) {
+    // enabled 是什么？verbose 影响什么？
+}
+
+// ✅ 好：使用选项模式
+type Options struct {
+    Enabled bool
+    Verbose bool
+    Debug   bool
+}
+
+func process(opts Options) {
+    if opts.Enabled && opts.Verbose {
+        // ...
+    }
+}
+
+// 调用更清晰
+process(Options{
+    Enabled: true,
+    Verbose: true,
+    Debug:   false,
+})
+```
+
+### 返回 Bool 时提供原因
+
+```go
+// ❌ 差：只知道失败，不知道原因
+func isValid(data string) bool {
+    return len(data) > 0
+}
+
+// ✅ 好：返回 bool 和错误信息
+func validate(data string) (bool, error) {
+    if len(data) == 0 {
+        return false, errors.New("data cannot be empty")
+    }
+    return true, nil
+}
+
+if valid, err := validate(data); !valid {
+    fmt.Println("验证失败:", err)
+}
+```
+
+## <Badge text="Bool 陷阱" type="danger" />
+
+### 陷阱1：将非布尔值当作 Bool
+
+```go
+// ❌ Go 不允许非布尔值在条件中
+// if 1 {  // 编译错误
+//     fmt.Println("true")
+// }
+
+// ✅ 必须使用布尔表达式
+if 1 > 0 {
+    fmt.Println("true")
+}
+
+// ❌ 不能将整数转换为 bool
+// n := 1
+// if n {  // 编译错误
+// }
+
+// ✅ 需要显式比较
+if n != 0 {
+    fmt.Println("非零")
+}
+```
+
+### 陷阱2：nil 与 false 的区别
+
+```go
+type Result struct {
+    Success bool
+}
+
+var r *Result  // nil 指针
+
+// 检查指针是否为 nil
+if r == nil {
+    fmt.Println("结果不存在")
+}
+
+// 检查 bool 字段（需要先检查指针）
+if r != nil && r.Success {
+    fmt.Println("操作成功")
+}
+```
+
+### 陷阱3：Bool 指针
+
+```go
+// 使用 bool 指针表示"三种状态"
+type User struct {
+    IsDeleted *bool  // nil=未设置, true=已删除, false=未删除
+}
+
+// 通常更好的做法是使用枚举
+type DeleteStatus int
+
+const (
+    DeleteStatusUnknown DeleteStatus = iota
+    DeleteStatusActive
+    DeleteStatusDeleted
+)
+
+type User struct {
+    DeleteStatus DeleteStatus
+}
+```
+
+## <Badge text="Bool 与接口" type="info" />
+
+### 实现条件接口
+
+```go
+// 定义条件接口
+type Condition interface {
+    Evaluate() bool
+}
+
+// 具体条件
+type AgeCondition struct {
+    MinAge int
+}
+
+func (c AgeCondition) Evaluate() bool {
+    return time.Now().Year() - c.BirthYear >= c.MinAge
+}
+
+// 使用
+conditions := []Condition{
+    AgeCondition{MinAge: 18},
+    // ...
+}
+
+for _, cond := range conditions {
+    if cond.Evaluate() {
+        fmt.Println("条件满足")
+    }
+}
+```
+
+## Bool 速查表
+
+| 操作 | 语法 | 结果 |
+|-----|------|------|
+| 声明 | `var b bool` | 零值 `false` |
+| 字面量 | `true`, `false` | 布尔值 |
+| 逻辑非 | `!b` | 取反 |
+| 逻辑与 | `a && b` | 两真为真 |
+| 逻辑或 | `a \|\| b` | 有真即真 |
+| 比较 | `a == b` | 相等判断 |
+
+## 练习
+
+1. 编写函数判断字符串是否为回文（返回 bool）
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import (
+    "fmt"
+    "strings"
+)
+
+// IsPalindrome 判断字符串是否为回文
+func IsPalindrome(s string) bool {
+    // 转小写并移除非字母字符
+    s = strings.ToLower(s)
+
+    // 使用双指针判断
+    left, right := 0, len(s)-1
+    for left < right {
+        if s[left] != s[right] {
+            return false
+        }
+        left++
+        right--
+    }
+    return true
+}
+
+func main() {
+    words := []string{"level", "hello", "radar", "world"}
+
+    for _, word := range words {
+        if IsPalindrome(word) {
+            fmt.Printf("%s 是回文\n", word)
+        } else {
+            fmt.Printf("%s 不是回文\n", word)
+        }
+    }
+}
+```
+
+**解释**：使用双指针法判断回文，时间复杂度 O(n/2)。
+</details>
+
+2. 实现配置结构体，使用 bool 字段控制功能开关
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// Config 应用配置
+type Config struct {
+    Debug       bool   // 调试模式
+    Logging     bool   // 日志记录
+    CacheEnabled bool  // 缓存开关
+    AuthEnabled bool  // 认证开关
+}
+
+// Apply 应用配置
+func (c Config) Apply() {
+    if c.Debug {
+        fmt.Println("调试模式已启用")
+    }
+    if c.Logging {
+        fmt.Println("日志记录已启用")
+    }
+    if c.CacheEnabled {
+        fmt.Println("缓存已启用")
+    }
+    if c.AuthEnabled {
+        fmt.Println("认证已启用")
+    }
+}
+
+func main() {
+    // 开发环境配置
+    devConfig := Config{
+        Debug:       true,
+        Logging:     true,
+        CacheEnabled: false,
+        AuthEnabled: true,
+    }
+
+    fmt.Println("=== 开发环境 ===")
+    devConfig.Apply()
+
+    // 生产环境配置
+    prodConfig := Config{
+        Debug:       false,
+        Logging:     true,
+        CacheEnabled: true,
+        AuthEnabled: true,
+    }
+
+    fmt.Println("\n=== 生产环境 ===")
+    prodConfig.Apply()
+}
+```
+
+**解释**：使用 bool 字段控制功能开关，实现灵活的配置管理。
+</details>
+
+3. 创建用户验证系统，使用多个 bool 字段表示不同状态
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// User 用户结构体
+type User struct {
+    Username      string
+    IsActive      bool   // 账户是否激活
+    IsVerified    bool   // 是否已验证
+    HasPermission bool   // 是否有权限
+    IsAdmin       bool   // 是否是管理员
+}
+
+// CanLogin 判断用户是否可以登录
+func (u User) CanLogin() bool {
+    return u.IsActive && u.IsVerified
+}
+
+// CanAccess 判断用户是否可以访问资源
+func (u User) CanAccess() bool {
+    return u.CanLogin() && u.HasPermission
+}
+
+// CanAdmin 判断用户是否有管理员权限
+func (u User) CanAdmin() bool {
+    return u.CanAccess() && u.IsAdmin
+}
+
+// GetStatus 获取用户状态描述
+func (u User) GetStatus() string {
+    var status []string
+
+    if u.IsActive {
+        status = append(status, "激活")
+    } else {
+        status = append(status, "未激活")
+    }
+
+    if u.IsVerified {
+        status = append(status, "已验证")
+    } else {
+        status = append(status, "未验证")
+    }
+
+    if u.HasPermission {
+        status = append(status, "有权限")
+    } else {
+        status = append(status, "无权限")
+    }
+
+    if u.IsAdmin {
+        status = append(status, "管理员")
+    }
+
+    result := ""
+    for i, s := range status {
+        if i > 0 {
+            result += ", "
+        }
+        result += s
+    }
+    return result
+}
+
+func main() {
+    users := []User{
+        {Username: "user1", IsActive: true, IsVerified: true, HasPermission: true, IsAdmin: false},
+        {Username: "user2", IsActive: true, IsVerified: false, HasPermission: true, IsAdmin: false},
+        {Username: "admin", IsActive: true, IsVerified: true, HasPermission: true, IsAdmin: true},
+        {Username: "guest", IsActive: false, IsVerified: false, HasPermission: false, IsAdmin: false},
+    }
+
+    for _, user := range users {
+        fmt.Printf("\n用户: %s\n", user.Username)
+        fmt.Printf("状态: %s\n", user.GetStatus())
+        fmt.Printf("可以登录: %v\n", user.CanLogin())
+        fmt.Printf("可以访问: %v\n", user.CanAccess())
+        fmt.Printf("管理员权限: %v\n", user.CanAdmin())
+    }
+}
+```
+
+**解释**：使用多个 bool 字段组合表示用户的多种状态，展示了 bool 类型的实际应用。
+</details>
+
+
+[← 数值类型](./numeric.mdx) | [String →](./string.mdx)

@@ -1,0 +1,23 @@
+# Standard Library Interfaces
+
+This module covers commonly used interfaces from Go's standard library, organized by package.
+
+## Topics
+
+- io: Reader, Writer, Closer, Seeker, and composed interfaces
+- http: Handler, ResponseWriter, RoundTripper, and related interfaces
+- error: error interface, wrapping, and error handling patterns
+- sort: sort.Interface for custom sorting
+- fmt: Stringer, GoStringer, and formatting interfaces
+- context: context.Context interface methods
+- gorm: GORM interfaces including DB, Session, hooks, and plugins
+
+## Key Concepts
+
+Standard library interfaces define contracts that enable interoperability between different packages and implementations. Understanding these interfaces is essential for effective Go development.
+
+## Related Topics
+
+- Interface Basics (../interface-basics.mdx): Core interface concepts
+- Interface Composition (../interface-composition.mdx): How interfaces compose
+- Best Practices (../best-practices.mdx): Interface design principles

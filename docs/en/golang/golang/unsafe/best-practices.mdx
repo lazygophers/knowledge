@@ -1,0 +1,598 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# 最佳实践
+
+<Badge text="专业" type="danger" /> <Badge text="Go 1.0+" type="info" />
+
+使用 `unsafe` 需要格外小心，以下是一些最佳实践和常见陷阱。
+
+## 何时使用 unsafe
+
+### 适当的场景
+
+```go
+// 1. 性能关键路径的优化
+// 例如：零拷贝转换
+
+// 2. 与 C 库交互
+// 例如：cgo 参数传递
+
+// 3. 实现标准库级别的功能
+// 例如：sync.Pool, encoding/binary
+
+// 4. 系统编程
+// 例如：操作系统调用
+```
+
+### 不适当的场景
+
+```go
+// ❌ 避免使用 unsafe 的场景
+
+// 1. 应用层代码
+// 使用正常的 Go 类型系统
+
+// 2. 普通性能优化
+// 先用 pprof 分析，找到真正的瓶颈
+
+// 3. 可以用接口替代的场景
+// 接口更安全、更清晰
+
+// 4. 可以用代码生成的场景
+// 代码生成更安全
+```
+
+<Callout type="warning" title="使用前检查清单">
+  <strong>使用 unsafe 前，确认：</strong>
+  <ul>
+    <li>是否真的需要？</li>
+    <li>是否有更安全的替代方案？</li>
+    <li>是否充分理解风险？</li>
+    <li>是否有完善的测试？</li>
+  </ul>
+</Callout>
+
+## 常见陷阱
+
+### 陷阱 1：uintptr 被长时间保存
+
+```go
+// ❌ 危险： uintptr 被保存
+func dangerous() {
+    var x int = 42
+    addr := uintptr(unsafe.Pointer(&x))
+
+    // ... 可能触发 GC ...
+    runtime.GC()
+
+    // addr 可能已失效
+    p := unsafe.Pointer(addr)
+    fmt.Println(*(*int)(p))  // 未定义行为
+}
+
+// ✅ 安全：立即转换
+func safe() {
+    var x int = 42
+    p := unsafe.Pointer(&x)
+    fmt.Println(*(*int)(p))
+}
+```
+
+### 陷阱 2：转换后对象被移动
+
+```go
+// ❌ 危险：对象可能被移动
+func dangerous() {
+    s := []int{1, 2, 3}
+    addr := uintptr(unsafe.Pointer(&s[0]))
+
+    // 切片扩容，可能移动
+    s = append(s, 4, 5, 6)
+
+    // addr 已失效
+    p := unsafe.Pointer(addr)
+    fmt.Println(*(*int)(p))  // 未定义行为
+}
+```
+
+### 陷阱 3：修改只读内存
+
+```go
+// ❌ 危险：修改字符串（只读内存）
+func dangerous() {
+    s := "hello"
+    b := StringToBytes(s)
+    b[0] = 'H'  // 可能导致 panic
+}
+
+// ✅ 安全：先复制
+func safe() {
+    s := "hello"
+    b := []byte(s)
+    b[0] = 'H'
+    fmt.Println(string(b))  // Hello
+}
+```
+
+### 陷阱 4：类型大小不同
+
+```go
+// ❌ 危险：大小不同
+func dangerous() {
+    var f32 float32 = 3.14
+    pi64 := (*int64)(unsafe.Pointer(&f32))
+    fmt.Println(*pi64)  // 未定义行为
+}
+
+// ✅ 安全：确保大小相同
+func safe() {
+    var f64 float64 = 3.14
+    pi64 := (*int64)(unsafe.Pointer(&f64))
+    fmt.Println(*pi64)  // IEEE 754 表示
+}
+```
+
+### 陷阱 5：未对齐访问
+
+```go
+// ❌ 危险：某些平台不支持未对齐访问
+func dangerous() {
+    s := []byte{0, 0, 0, 0, 1, 0, 0, 0}
+    // 从偏移 1 开始读取 int64
+    pi64 := (*int64)(unsafe.Pointer(&s[1]))
+    fmt.Println(*pi64)  // 某些平台会 panic
+}
+
+// ✅ 安全：确保对齐
+func safe() {
+    s := []byte{0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0}
+    // 从偏移 8 开始读取
+    pi64 := (*int64)(unsafe.Pointer(&s[8]))
+    fmt.Println(*pi64)
+}
+```
+
+## 安全模式
+
+### 模式 1：受限的 unsafe 使用
+
+```go
+package safe
+
+import (
+    "unsafe"
+)
+
+// 将 unsafe 操作封装在安全接口中
+type Buffer struct {
+    data []byte
+}
+
+// WriteInt64 安全地写入 int64
+func (b *Buffer) WriteInt64(v int64) {
+    // 确保 buffer 足够大
+    if len(b.data) < 8 {
+        b.data = make([]byte, 8)
+    }
+
+    // 使用 unsafe，但确保安全性
+    *(*int64)(unsafe.Pointer(&b.data[0])) = v
+}
+
+// ReadInt64 安全地读取 int64
+func (b *Buffer) ReadInt64() int64 {
+    if len(b.data) < 8 {
+        return 0
+    }
+    return *(*int64)(unsafe.Pointer(&b.data[0]))
+}
+```
+
+### 模式 2：边界检查
+
+```go
+package safe
+
+import (
+    "unsafe"
+)
+
+// 添加边界检查
+func SafeRead(p unsafe.Pointer, size int) []byte {
+    if p == nil || size <= 0 {
+        return nil
+    }
+
+    // 创建切片
+    return (*[1 << 30]byte)(p)[:size:size]
+}
+```
+
+### 模式 3：文档化约束
+
+```go
+package mylib
+
+import (
+    "unsafe"
+)
+
+// Atoi 将 ASCII 字符串转换为整数。
+//
+// 约束：
+//   - s 必须以 null 结尾
+//   - s 必须包含有效的 ASCII 数字
+//   - 调用期间必须保持 s 有效
+func Atoi(s *int8) int {
+    // 实现使用 unsafe
+    // 但文档清楚说明了约束
+    return 0
+}
+```
+
+## 性能优化
+
+### 缓存偏移量
+
+```go
+package main
+
+import (
+    "unsafe"
+)
+
+type FieldOffset struct {
+    offset uintptr
+}
+
+func NewFieldOffset(example any, field string) FieldOffset {
+    // 缓存字段偏移
+    return FieldOffset{
+        offset: unsafe.Offsetof(example.(struct{ X int }).X),
+    }
+}
+
+func (f FieldOffset) GetInt(base unsafe.Pointer) int {
+    ptr := (*int)(unsafe.Pointer(uintptr(base) + f.offset))
+    return *ptr
+}
+```
+
+### 批量操作
+
+```go
+package main
+
+import (
+    "unsafe"
+)
+
+// 批量复制，减少循环开销
+func FastCopy(dst, src []int) {
+    if len(dst) == 0 || len(src) == 0 {
+        return
+    }
+
+    n := len(dst)
+    if n > len(src) {
+        n = len(src)
+    }
+
+    // 使用 unsafe 批量复制
+    copy(dst[:n], src[:n])
+
+    // 或者使用 memcopy
+    // runtime.memmove(
+    //     unsafe.Pointer(&dst[0]),
+    //     unsafe.Pointer(&src[0]),
+    //     uintptr(n)*unsafe.Sizeof(int(0)),
+    // )
+}
+```
+
+## CGO 集成
+
+### 传递指针给 C
+
+```go
+package main
+
+/*
+#include <stdlib.h>
+#include <string.h>
+*/
+import "C"
+import (
+    "unsafe"
+)
+
+func PassToC() {
+    // 创建 Go 字符串
+    s := "Hello, C"
+
+    // 转换为 C 字符串
+    cs := C.CString(s)
+    defer C.free(unsafe.Pointer(cs))
+
+    // 使用 C 函数
+    C.puts(cs)
+}
+```
+
+### 从 C 接收指针
+
+```go
+package main
+
+/*
+#include <stdlib.h>
+*/
+import "C"
+import (
+    "unsafe"
+)
+
+func ReceiveFromC() {
+    // C 分配内存
+    size := C.size_t(100)
+    ptr := C.malloc(size)
+    defer C.free(ptr)
+
+    // 转换为 Go 切片
+    // 注意：需要确保生命周期
+    data := (*[1 << 30]byte)(ptr)[:size:size]
+
+    // 使用 data
+    _ = data
+}
+```
+
+## 测试 unsafe 代码
+
+### 单元测试
+
+```go
+package main
+
+import (
+    "testing"
+    "unsafe"
+)
+
+func TestUnsafeConversion(t *testing.T) {
+    tests := []struct {
+        name string
+        fn   func() bool
+    }{
+        {
+            name: "int to float64",
+            fn: func() bool {
+                var i int = 42
+                pf := (*float64)(unsafe.Pointer(&i))
+                // 验证转换是可逆的
+                pi := (*int)(unsafe.Pointer(pf))
+                return *pi == i
+            },
+        },
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            if !tt.fn() {
+                t.Error("conversion failed")
+            }
+        })
+    }
+}
+```
+
+### 竞态检测
+
+```go
+package main
+
+import (
+    "sync"
+    "testing"
+    "unsafe"
+)
+
+func TestUnsafeRace(t *testing.T) {
+    var x int
+
+    var wg sync.WaitGroup
+    wg.Add(2)
+
+    // 写入
+    go func() {
+        defer wg.Done()
+        for i := 0; i < 1000; i++ {
+            p := (*int)(unsafe.Pointer(&x))
+            *p = i
+        }
+    }()
+
+    // 读取
+    go func() {
+        defer wg.Done()
+        for i := 0; i < 1000; i++ {
+            p := (*int)(unsafe.Pointer(&x))
+            _ = *p
+        }
+    }()
+
+    wg.Wait()
+}
+```
+
+### 模糊测试
+
+```go
+package main
+
+import (
+    "testing"
+    "unsafe"
+)
+
+func FuzzUnsafeConversion(f *testing.F) {
+    f.Add(int64(42))
+    f.Add(int64(-1))
+    f.Add(int64(0))
+
+    f.Fuzz(func(t *testing.T, v int64) {
+        // 转换
+        pf := (*float64)(unsafe.Pointer(&v))
+        pi := (*int64)(unsafe.Pointer(pf))
+
+        // 验证
+        if *pi != v {
+            t.Errorf("got %d, want %d", *pi, v)
+        }
+    })
+}
+```
+
+## 调试技巧
+
+### 打印内存布局
+
+```go
+package main
+
+import (
+    "encoding/hex"
+    "fmt"
+    "unsafe"
+)
+
+func DumpMemory(v any) {
+    p := unsafe.Pointer(&v)
+    size := unsafe.Sizeof(v)
+
+    data := (*[1 << 30]byte)(p)[:size:size]
+
+    fmt.Printf("Memory dump (%d bytes):\n", size)
+    for i := 0; i < int(size); i++ {
+        if i%16 == 0 {
+            fmt.Printf("%04x: ", i)
+        }
+        fmt.Printf("%02x ", data[i])
+        if (i+1)%16 == 0 {
+            fmt.Println()
+        }
+    }
+    fmt.Println()
+}
+
+func main() {
+    type Example struct {
+        a int8
+        b int64
+        c int8
+    }
+
+    e := Example{a: 1, b: 2, c: 3}
+    DumpMemory(e)
+}
+```
+
+### 验证对齐
+
+```go
+package main
+
+import (
+    "fmt"
+    "unsafe"
+)
+
+func CheckAlignment(v any) {
+    p := unsafe.Pointer(&v)
+    addr := uintptr(p)
+
+    fmt.Printf("Address: %#x\n", addr)
+    fmt.Printf("Aligned to 8: %v\n", addr%8 == 0)
+    fmt.Printf("Aligned to 4: %v\n", addr%4 == 0)
+    fmt.Printf("Aligned to 2: %v\n", addr%2 == 0)
+}
+
+func main() {
+    var x int64 = 42
+    CheckAlignment(x)
+}
+```
+
+## 替代方案
+
+### 使用接口代替 unsafe
+
+```go
+// ❌ 使用 unsafe
+func Process(v any) {
+    p := unsafe.Pointer(&v)
+    // ...
+}
+
+// ✅ 使用接口
+type Processor interface {
+    Process()
+}
+
+func ProcessSafe(p Processor) {
+    p.Process()
+}
+```
+
+### 使用代码生成
+
+```go
+//go:generate go run github.com/example/codegen
+
+// 生成的代码是类型安全的
+// 避免了运行时错误
+```
+
+### 使用标准库
+
+```go
+// ❌ 手动实现字节序转换
+func ToLittleEndian(v uint16) uint16 {
+    return (v << 8) | (v >> 8)
+}
+
+// ✅ 使用标准库
+import "encoding/binary"
+
+func ToLittleEndianSafe(v uint16) uint16 {
+    var buf [2]byte
+    binary.LittleEndian.PutUint16(buf[:], v)
+    return binary.LittleEndian.Uint16(buf[:])
+}
+```
+
+## 总结
+
+<Callout type="info" title="Unsafe 使用指南">
+  <strong>使用原则</strong>：
+  <ol>
+    <li><strong>最后手段</strong>：先考虑更安全的替代方案</li>
+    <li><strong>充分理解</strong>：确保理解内存布局和潜在风险</li>
+    <li><strong>封装隔离</strong>：将 unsafe 代码封装在安全接口中</li>
+    <li><strong>完善测试</strong>：编写充分的单元测试和模糊测试</li>
+    <li><strong>文档清晰</strong>：清楚说明约束和风险</li>
+  </ol>
+
+  <strong>常见用途</strong>：
+  <ul>
+    <li>与 C 库交互 (CGO)</li>
+    <li>性能关键路径的优化</li>
+    <li>实现标准库级别的功能</li>
+    <li>系统编程和操作系统交互</li>
+  </ul>
+</Callout>
+
+---
+
+[← 内存布局](./memory-layout.mdx)

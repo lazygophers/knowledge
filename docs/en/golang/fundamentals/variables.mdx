@@ -1,0 +1,358 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# Variables
+
+[← 返回基础概念](overview/)
+
+理解 Go 中变量的声明方式是编写代码的基础。
+
+## <Badge text="变量声明" type="tip" />
+
+### 三种声明方式
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    // 方式1：标准声明（var 变量名 类型）
+    var name string = "Go"
+    var age int = 10
+
+    // 方式2：类型推断（var 变量名 = 值）
+    var language = "Go"  // 自动推断为 string
+    var version = 1.26   // 自动推断为 float64
+
+    // 方式3：简短声明（:= 只能在函数内使用）
+    year := 2026         // 自动推断为 int
+    isActive := true     // 自动推断为 bool
+
+    fmt.Println(name, age, language, version, year, isActive)
+}
+```
+
+<Callout type="tip" title={<Badge text="风格推荐" type="tip" />}>
+  对于需要赋初值的场景，推荐方式 3。
+  对于不需要初值的场景，推荐方式 1。
+</Callout>
+
+### 声明方式选择
+
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': { 'lineColor':'#3b82f6', 'primaryColor':'#e3f2fd', 'primaryTextColor':'#0d47a1'}}}%%
+flowchart TD
+    A[需要声明变量] --> B{在函数外吗?}
+    B -->|是| C[必须使用 var 声明]
+    B -->|否| D{类型明显?}
+
+    C --> E[var name Type = value]
+    D -->|是| F[使用简短声明 :=]
+    D -->|否| G[var name = value]
+
+    linkStyle default stroke:#3b82f6,stroke-width:2px
+    classDef mustVar fill:#ffcdd2,stroke:#d32f2f,stroke-width:2px,color:#7f0000
+    classDef shortDecl fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px,color:#064e3b
+    classDef typeInf fill:#e1f5ff,stroke:#1976d2,stroke-width:2px,color:#0d47a1
+    classDef varDecl fill:#fff9c4,stroke:#f59e0b,stroke-width:2px,color:#78350f
+```
+
+## <Badge text="零值机制" type="info" />
+
+### 默认零值
+
+Go 中每个类型都有默认的"零值"：
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    var (
+        name      string   // ""  (空字符串)
+        age       int      // 0
+        price     float64  // 0
+        isActive  bool     // false
+        numbers   []int    // nil
+        userInfo  map[string]string  // nil
+    )
+
+    fmt.Printf("string: '%s'\\n", name)
+    fmt.Printf("int: %d\\n", age)
+    fmt.Printf("float64: %f\\n", price)
+    fmt.Printf("bool: %t\\n", isActive)
+    fmt.Printf("slice: %v\\n", numbers)
+    fmt.Printf("map: %v\\n", userInfo)
+}
+```
+
+**零值速查表**：
+
+| 类型                       | 零值    | 说明                 |
+| -------------------------- | ------- | -------------------- |
+| `int`, `int8`...`int64`    | `0`     | 数值零               |
+| `uint`, `uint8`...`uint64` | `0`     | 数值零               |
+| `float32`, `float64`       | `0`     | 数值零               |
+| `string`                   | `""`    | 空字符串（不是 nil） |
+| `bool`                     | `false` | 布尔假               |
+| 指针                       | `nil`   | 空指针               |
+| slice                      | `nil`   | 空切片               |
+| map                        | `nil`   | 空映射               |
+| channel                    | `nil`   | 空通道               |
+| interface                  | `nil`   | 空接口               |
+| function                   | `nil`   | 空函数               |
+
+<Badge text="重要" type="warning" /> **Go 没有未初始化的变量**，声明后自动获得零值，避免了"未定义行为"。
+
+## <Badge text="批量声明" type="warning" />
+
+### var 批量声明
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+    // 方式1：因式分解（函数内不推荐，建议用方式2）
+    var (
+        name     string = "Go"
+        age      int    = 10
+        isActive bool   = true
+    )
+
+    // 方式2：多变量短声明（函数内推荐）
+    x, y := 10, 20
+    firstName, lastName := "John", "Doe"
+
+    fmt.Println(name, age, isActive)
+    fmt.Println(x, y, firstName, lastName)
+}
+```
+
+<Badge text="风格建议" type="warning" /> **`var ()` 因式分解语法仅用于包级变量**，函数内局部变量应使用简短声明 `:=`。
+
+### 函数多返回值
+
+```go
+package main
+
+import "fmt"
+
+// 返回多个值
+func divide(a, b int) (int, int) {
+    quotient := a / b
+    remainder := a % b
+    return quotient, remainder
+}
+
+func main() {
+    q, r := divide(10, 3)
+    fmt.Printf("10 / 3 = %d ... %d\\n", q, r)
+
+    // 使用 _ 忽略不需要的返回值
+    q2, _ := divide(10, 3)
+    fmt.Printf("10 / 3 = %d\\n", q2)
+}
+```
+
+## <Badge text="变量作用域" type="danger" />
+
+### 作用域示例
+
+```go
+package main
+
+import "fmt"
+
+// 包级变量（全局作用域）
+var globalVar = "I am global"
+
+func main() {
+    // 函数级变量
+    localVar := "I am local"
+
+    fmt.Println(globalVar)  // ✅ 可访问
+    fmt.Println(localVar)   // ✅ 可访问
+
+    // 块级作用域
+    if true {
+        blockVar := "I am in a block"
+        fmt.Println(localVar)   // ✅ 可访问外层
+        fmt.Println(blockVar)   // ✅ 可访问
+    }
+
+    // fmt.Println(blockVar)  // ❌ 超出作用域
+}
+
+func anotherFunction() {
+    fmt.Println(globalVar)  // ✅ 可访问
+    // fmt.Println(localVar)  // ❌ 超出作用域
+}
+```
+
+### 变量遮蔽
+
+```go
+package main
+
+import "fmt"
+
+var x = "global x"
+
+func main() {
+    fmt.Println(x)  // "global x"
+
+    x := "local x"  // 遮蔽全局变量
+    fmt.Println(x)  // "local x"
+
+    {
+        x := "block x"  // 再次遮蔽
+        fmt.Println(x)  // "block x"
+    }
+
+    fmt.Println(x)  // "local x" (回到函数级)
+}
+```
+
+<Badge text="警告" type="danger" /> **变量遮蔽**可能导致难以发现的 bug，建议使用不同的变量名避免遮蔽。
+
+## 快速参考
+
+| 声明类型  | 语法                 | 使用场景               |
+| --------- | -------------------- | ---------------------- |
+| 标准声明  | `var name Type`      | 包级变量、需要明确类型 |
+| 类型推断  | `var name = value`   | 包级变量、类型不明显   |
+| 简短声明  | `name := value`      | 函数内局部变量（推荐） |
+
+## 练习
+
+1. **声明一个表示用户的变量**，包含姓名、年龄和邮箱
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// 方法一：分别声明
+func method1() {
+    var name string = "张三"
+    var age int = 25
+    var email string = "zhangsan@example.com"
+
+    fmt.Printf("姓名: %s, 年龄: %d, 邮箱: %s\n", name, age, email)
+}
+
+// 方法二：批量声明（推荐）
+func method2() {
+    var (
+        name  string = "李四"
+        age   int    = 30
+        email string = "lisi@example.com"
+    )
+
+    fmt.Printf("姓名: %s, 年龄: %d, 邮箱: %s\n", name, age, email)
+}
+
+// 方法三：使用简短声明
+func method3() {
+    name := "王五"
+    age := 28
+    email := "wangwu@example.com"
+
+    fmt.Printf("姓名: %s, 年龄: %d, 邮箱: %s\n", name, age, email)
+}
+
+func main() {
+    method1()
+    method2()
+    method3()
+}
+```
+
+**解释**：展示了三种变量声明方式，推荐使用方法二的批量声明提高代码可读性。
+</details>
+
+2. **编写函数返回两数之和与积**
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// 返回两数之和与积
+func sumAndProduct(a, b int) (int, int) {
+    sum := a + b
+    product := a * b
+    return sum, product
+}
+
+// 使用命名返回值
+func sumAndProductNamed(a, b int) (sum int, product int) {
+    sum = a + b
+    product = a * b
+    return  // 隐式返回
+}
+
+func main() {
+    s, p := sumAndProduct(5, 3)
+    fmt.Printf("5 + 3 = %d, 5 * 3 = %d\n", s, p)
+
+    s2, p2 := sumAndProductNamed(10, 2)
+    fmt.Printf("10 + 2 = %d, 10 * 2 = %d\n", s2, p2)
+}
+```
+
+**解释**：演示了多返回值和命名返回值的使用。
+</details>
+
+3. **演示变量遮蔽的效果**
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// 全局变量
+var x = "全局 x"
+
+func main() {
+    // 打印全局变量
+    fmt.Println(x)  // 全局 x
+
+    // 遮蔽全局变量
+    x := "局部 x"
+    fmt.Println(x)  // 局部 x
+
+    // 在块中再次遮蔽
+    {
+        x := "块级 x"
+        fmt.Println(x)  // 块级 x
+    }
+
+    // 回到函数级变量
+    fmt.Println(x)  // 局部 x
+
+    // 演示循环中的遮蔽（Go 1.22+ 不会共享变量）
+    for i := 0; i < 3; i++ {
+        i := i * 10  // 创建新变量遮蔽循环变量
+        fmt.Printf("块中的 i: %d\n", i)
+    }
+}
+```
+
+**解释**：变量遮蔽可能导致难以发现的 bug，建议使用不同的变量名避免遮蔽。
+</details>
+
+[← 返回基础概念](overview/) | [命名规则](naming-conventions/) | [常量 →](../data-types/constants.mdx)

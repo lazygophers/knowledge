@@ -1,0 +1,772 @@
+import { Badge } from "@rspress/core/theme";
+
+# net/http Package Interface
+
+<Badge text="标准库" type="info" /> <Badge text="Web 开发" type="success" />
+
+`net/http` 包提供了 HTTP 客户端和服务器实现，其中定义了多个核心接口。本文档介绍这些常用接口及其使用方法。
+
+## 核心接口概览
+
+```go
+// Handler 接口 - HTTP 请求处理
+type Handler interface {
+    ServeHTTP(ResponseWriter, *Request)
+}
+
+// ResponseWriter 接口 - 响应写入
+type ResponseWriter interface {
+    Header() Header
+    Write([]byte) (int, error)
+    WriteHeader(statusCode int)
+}
+
+// RoundTripper 接口 - 请求执行
+type RoundTripper interface {
+    RoundTrip(*Request) (*Response, error)
+}
+
+// Flusher 接口 - 响应刷新
+type Flusher interface {
+    Flush()
+}
+
+// Hijacker 接口 - 连接劫持
+type Hijacker interface {
+    Hijack() (net.Conn, *bufio.ReadWriter, error)
+}
+```
+
+## http.Handler
+
+### 接口定义
+
+```go
+type Handler interface {
+    ServeHTTP(w ResponseWriter, r *Request)
+}
+```
+
+`Handler` 接口是 HTTP 服务器的核心，任何实现了 `ServeHTTP` 方法的类型都可以处理 HTTP 请求。
+
+### 基本实现
+
+```go
+package main
+
+import (
+    "fmt"
+    "net/http"
+)
+
+// MyHandler 实现 http.Handler 接口
+type MyHandler struct {
+    greeting string
+}
+
+func (h *MyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+    fmt.Fprintf(w, "%s! 你访问了: %s", h.greeting, r.URL.Path)
+}
+
+func main() {
+    handler := &MyHandler{greeting: "你好"}
+
+    // 使用自定义 Handler
+    http.Handle("/", handler)
+
+    fmt.Println("服务器启动在 http://localhost:8080")
+    http.ListenAndServe(":8080", nil)
+}
+```
+
+### 使用 http.HandlerFunc
+
+```go
+package main
+
+import (
+    "net/http"
+)
+
+// HandlerFunc 是一个函数类型，实现了 Handler 接口
+// type HandlerFunc func(ResponseWriter, *Request)
+
+func homeHandler(w http.ResponseWriter, r *http.Request) {
+    w.Write([]byte("欢迎来到首页"))
+}
+
+func aboutHandler(w http.ResponseWriter, r *http.Request) {
+    w.Write([]byte("关于我们页面"))
+}
+
+func main() {
+    // 直接使用函数作为 Handler
+    http.HandleFunc("/", homeHandler)
+    http.HandleFunc("/about", aboutHandler)
+
+    http.ListenAndServe(":8080", nil)
+}
+```
+
+### 使用 http.ServeMux
+
+```go
+package main
+
+import (
+    "net/http"
+)
+
+func main() {
+    // 创建新的 ServeMux
+    mux := http.NewServeMux()
+
+    // 注册处理器
+    mux.HandleFunc("/user/", userHandler)
+    mux.HandleFunc("/post/", postHandler)
+
+    // 使用中间件包装
+    loggedMux := loggingMiddleware(mux)
+
+    http.ListenAndServe(":8080", loggedMux)
+}
+
+func loggingMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        log.Printf("请求: %s %s", r.Method, r.URL.Path)
+        next.ServeHTTP(w, r)
+    })
+}
+
+func userHandler(w http.ResponseWriter, r *http.Request) {
+    w.Write([]byte("用户页面"))
+}
+
+func postHandler(w http.ResponseWriter, r *http.Request) {
+    w.Write([]byte("文章页面"))
+}
+```
+
+### 使用场景
+
+- **自定义 HTTP 服务器**：实现特定的业务逻辑
+- **中间件开发**：包装请求处理流程
+- **路由系统**：构建复杂的路由规则
+- **REST API**：实现 RESTful 服务
+
+## http.ResponseWriter
+
+### 接口定义
+
+```go
+type ResponseWriter interface {
+    Header() Header
+    Write([]byte) (int, error)
+    WriteHeader(statusCode int)
+}
+```
+
+`ResponseWriter` 接口用于构造 HTTP 响应。
+
+### 基本使用
+
+```go
+package main
+
+import (
+    "encoding/json"
+    "net/http"
+)
+
+func jsonHandler(w http.ResponseWriter, r *http.Request) {
+    // 设置响应头
+    w.Header().Set("Content-Type", "application/json")
+    w.Header().Set("X-Custom-Header", "MyValue")
+
+    // 设置状态码
+    w.WriteHeader(http.StatusCreated)
+
+    // 写入响应体
+    data := map[string]string{
+        "message": "资源创建成功",
+        "id":      "123",
+    }
+    json.NewEncoder(w).Encode(data)
+}
+
+func errorHandler(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusNotFound)
+
+    json.NewEncoder(w).Encode(map[string]string{
+        "error": "资源未找到",
+    })
+}
+
+func main() {
+    http.HandleFunc("/json", jsonHandler)
+    http.HandleFunc("/error", errorHandler)
+    http.ListenAndServe(":8080", nil)
+}
+```
+
+### 注意事项
+
+```go
+func handler(w http.ResponseWriter, r *http.Request) {
+    // ❌ 错误：先写状态码，再修改头部
+    w.WriteHeader(http.StatusOK)
+    w.Header().Set("Content-Type", "application/json") // 无效
+
+    // ✅ 正确：先设置头部，再写状态码和内容
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusOK)
+    w.Write([]byte(`{"status": "ok"}`))
+
+    // 注意：WriteHeader 只能调用一次
+    // 隐式调用：第一次调用 Write 时会自动写入 200 状态码
+}
+```
+
+### 使用场景
+
+- **API 响应**：返回 JSON/XML 数据
+- **文件下载**：设置下载头和文件内容
+- **重定向**：设置 Location 头
+- **Cookie 设置**：通过 Set-Cookie 头
+
+## http.RoundTripper
+
+### 接口定义
+
+```go
+type RoundTripper interface {
+    RoundTrip(*Request) (*Response, error)
+}
+```
+
+`RoundTripper` 接口用于执行单个 HTTP 事务，可以自定义 HTTP 客户端的行为。
+
+### 自定义 RoundTripper
+
+```go
+package main
+
+import (
+    "log"
+    "net/http"
+    "time"
+)
+
+// LoggingRoundTripper 记录所有请求
+type LoggingRoundTripper struct {
+    transport http.RoundTripper
+}
+
+func (lrt *LoggingRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+    start := time.Now()
+
+    log.Printf("发送请求: %s %s", req.Method, req.URL)
+
+    // 调用底层 Transport
+    resp, err := lrt.transport.RoundTrip(req)
+
+    duration := time.Since(start)
+    log.Printf("请求完成: %s %s (耗时: %v, 状态: %d)",
+        req.Method, req.URL, duration, resp.StatusCode)
+
+    return resp, err
+}
+
+// AuthRoundTripper 添加认证头
+type AuthRoundTripper struct {
+    token     string
+    transport http.RoundTripper
+}
+
+func (art *AuthRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+    // 添加认证头
+    req.Header.Set("Authorization", "Bearer "+art.token)
+    return art.transport.RoundTrip(req)
+}
+
+func main() {
+    // 创建自定义 Transport
+    transport := &http.Transport{
+        MaxIdleConns:        100,
+        MaxIdleConnsPerHost: 10,
+        IdleConnTimeout:     90 * time.Second,
+    }
+
+    // 包装 Transport
+    loggingTransport := &LoggingRoundTripper{transport: transport}
+    authTransport := &AuthRoundTripper{
+        token:     "your-token-here",
+        transport: loggingTransport,
+    }
+
+    // 创建客户端
+    client := &http.Client{
+        Transport: authTransport,
+        Timeout:   30 * time.Second,
+    }
+
+    // 使用客户端发送请求
+    resp, err := client.Get("https://api.example.com/data")
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer resp.Body.Close()
+
+    // 处理响应...
+}
+```
+
+### 使用场景
+
+- **请求重试**：失败时自动重试
+- **认证处理**：自动添加认证信息
+- **请求/响应日志**：记录所有 HTTP 通信
+- **速率限制**：控制请求频率
+- **缓存**：实现 HTTP 缓存层
+
+## http.Flusher
+
+### 接口定义
+
+```go
+type Flusher interface {
+    Flush()
+}
+```
+
+`Flusher` 接口允许将缓冲的数据立即发送给客户端，用于实现服务器推送。
+
+### SSE (Server-Sent Events) 示例
+
+```go
+package main
+
+import (
+    "fmt"
+    "net/http"
+    "time"
+)
+
+func sseHandler(w http.ResponseWriter, r *http.Request) {
+    // 设置 SSE 头
+    w.Header().Set("Content-Type", "text/event-stream")
+    w.Header().Set("Cache-Control", "no-cache")
+    w.Header().Set("Connection", "keep-alive")
+
+    // 检查是否支持 Flusher
+    flusher, ok := w.(http.Flusher)
+    if !ok {
+        http.Error(w, "不支持流式传输", http.StatusInternalServerError)
+        return
+    }
+
+    // 发送多个事件
+    for i := 0; i < 10; i++ {
+        fmt.Fprintf(w, "data: 消息 %d\n\n", i)
+        flusher.Flush() // 立即发送数据
+        time.Sleep(1 * time.Second)
+    }
+
+    fmt.Fprintf(w, "data: 完成\n\n")
+    flusher.Flush()
+}
+
+func streamProgress(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "text/plain")
+    flusher, ok := w.(http.Flusher)
+    if !ok {
+        http.Error(w, "不支持流式传输", http.StatusInternalServerError)
+        return
+    }
+
+    tasks := []string{"初始化", "加载数据", "处理中", "保存", "完成"}
+
+    for _, task := range tasks {
+        fmt.Fprintf(w, "%s...\n", task)
+        flusher.Flush()
+        time.Sleep(500 * time.Millisecond)
+    }
+
+    fmt.Fprintln(w, "所有任务完成!")
+}
+
+func main() {
+    http.HandleFunc("/sse", sseHandler)
+    http.HandleFunc("/progress", streamProgress)
+    http.ListenAndServe(":8080", nil)
+}
+```
+
+### 使用场景
+
+- **实时推送**：SSE、WebSocket 替代方案
+- **进度显示**：长时间任务的进度更新
+- **流式响应**：大数据分块传输
+
+## http.Hijacker
+
+### 接口定义
+
+```go
+type Hijacker interface {
+    Hijack() (net.Conn, *bufio.ReadWriter, error)
+}
+```
+
+`Hijacker` 接口允许接管 HTTP 连接，用于实现 WebSocket 等协议。
+
+### WebSocket 实现
+
+```go
+package main
+
+import (
+    "bufio"
+    "crypto/sha1"
+    "encoding/base64"
+    "fmt"
+    "net"
+    "net/http"
+    "strings"
+)
+
+func websocketHandler(w http.ResponseWriter, r *http.Request) {
+    // 检查 Hijacker 支持
+    hijacker, ok := w.(http.Hijacker)
+    if !ok {
+        http.Error(w, "不支持连接劫持", http.StatusInternalServerError)
+        return
+    }
+
+    // WebSocket 握手
+    key := r.Header.Get("Sec-WebSocket-Key")
+    GUID := "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+    hash := sha1.Sum([]byte(key + GUID))
+    acceptKey := base64.StdEncoding.EncodeToString(hash[:])
+
+    w.Header().Set("Upgrade", "websocket")
+    w.Header().Set("Connection", "Upgrade")
+    w.Header().Set("Sec-WebSocket-Accept", acceptKey)
+    w.WriteHeader(http.StatusSwitchingProtocols)
+
+    // 劫持连接
+    conn, rw, err := hijacker.Hijack()
+    if err != nil {
+        http.Error(w, "连接劫持失败", http.StatusInternalServerError)
+        return
+    }
+    defer conn.Close()
+
+    // 处理 WebSocket 消息
+    handleWebSocketConnection(conn, rw)
+}
+
+func handleWebSocketConnection(conn net.Conn, rw *bufio.ReadWriter) {
+    for {
+        line, err := rw.ReadString('\n')
+        if err != nil {
+            break
+        }
+
+        // 发送回复
+        rw.WriteString("收到: " + line)
+        rw.Flush()
+    }
+}
+
+func main() {
+    http.HandleFunc("/ws", websocketHandler)
+    http.ListenAndServe(":8080", nil)
+}
+```
+
+### 使用场景
+
+- **WebSocket**：实现 WebSocket 服务器
+- **自定义协议**：在 HTTP 上实现其他协议
+- **原始连接访问**：需要直接操作底层连接
+
+## 完整示例：RESTful API 服务器
+
+```go
+package main
+
+import (
+    "encoding/json"
+    "fmt"
+    "log"
+    "net/http"
+    "sync"
+    "time"
+)
+
+// User 用户模型
+type User struct {
+    ID    string `json:"id"`
+    Name  string `json:"name"`
+    Email string `json:"email"`
+}
+
+// UserService 用户服务
+type UserService struct {
+    users map[string]*User
+    mu    sync.RWMutex
+}
+
+func NewUserService() *UserService {
+    return &UserService{
+        users: make(map[string]*User),
+    }
+}
+
+func (s *UserService) GetUser(id string) (*User, bool) {
+    s.mu.RLock()
+    defer s.mu.RUnlock()
+    user, ok := s.users[id]
+    return user, ok
+}
+
+func (s *UserService) CreateUser(user *User) *User {
+    s.mu.Lock()
+    defer s.mu.Unlock()
+    s.users[user.ID] = user
+    return user
+}
+
+// APIHandler API 处理器
+type APIHandler struct {
+    service *UserService
+}
+
+func NewAPIHandler(service *UserService) *APIHandler {
+    return &APIHandler{service: service}
+}
+
+func (h *APIHandler) GetUser(w http.ResponseWriter, r *http.Request) {
+    id := r.URL.Path[len("/users/"):]
+
+    user, ok := h.service.GetUser(id)
+    if !ok {
+        respondWithError(w, http.StatusNotFound, "用户不存在")
+        return
+    }
+
+    respondWithJSON(w, http.StatusOK, user)
+}
+
+func (h *APIHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
+    var user User
+    if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+        respondWithError(w, http.StatusBadRequest, "无效的请求")
+        return
+    }
+
+    created := h.service.CreateUser(&user)
+    respondWithJSON(w, http.StatusCreated, created)
+}
+
+// 中间件：日志记录
+func loggingMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        start := time.Now()
+        log.Printf("[%s] %s", r.Method, r.URL.Path)
+        next.ServeHTTP(w, r)
+        log.Printf("完成 %s (耗时: %v)", r.URL.Path, time.Since(start))
+    })
+}
+
+// 中间件：认证
+func authMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        token := r.Header.Get("Authorization")
+        if token == "" {
+            respondWithError(w, http.StatusUnauthorized, "未授权")
+            return
+        }
+        next.ServeHTTP(w, r)
+    })
+}
+
+// 响应辅助函数
+func respondWithJSON(w http.ResponseWriter, statusCode int, data interface{}) {
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(statusCode)
+    json.NewEncoder(w).Encode(data)
+}
+
+func respondWithError(w http.ResponseWriter, statusCode int, message string) {
+    respondWithJSON(w, statusCode, map[string]string{"error": message})
+}
+
+func main() {
+    service := NewUserService()
+    handler := NewAPIHandler(service)
+
+    // 创建路由
+    mux := http.NewServeMux()
+
+    // 注册路由
+    mux.HandleFunc("/users/", func(w http.ResponseWriter, r *http.Request) {
+        switch r.Method {
+        case http.MethodGet:
+            handler.GetUser(w, r)
+        case http.MethodPost:
+            handler.CreateUser(w, r)
+        default:
+            respondWithError(w, http.StatusMethodNotAllowed, "方法不允许")
+        }
+    })
+
+    // 应用中间件
+    var handlerChain http.Handler = mux
+    handlerChain = authMiddleware(handlerChain)
+    handlerChain = loggingMiddleware(handlerChain)
+
+    // 启动服务器
+    server := &http.Server{
+        Addr:         ":8080",
+        Handler:      handlerChain,
+        ReadTimeout:  10 * time.Second,
+        WriteTimeout: 10 * time.Second,
+        IdleTimeout:  60 * time.Second,
+    }
+
+    log.Println("服务器启动在 http://localhost:8080")
+    if err := server.ListenAndServe(); err != nil {
+        log.Fatal(err)
+    }
+}
+```
+
+## 练习
+
+### 练习 1：实现请求计数中间件
+
+创建一个中间件，记录每个路径的请求次数。
+
+<details>
+<summary>查看答案</summary>
+
+```go
+type RequestCounter struct {
+    counts map[string]int64
+    mu     sync.RWMutex
+}
+
+func (rc *RequestCounter) Increment(path string) {
+    rc.mu.Lock()
+    defer rc.mu.Unlock()
+    rc.counts[path]++
+}
+
+func (rc *RequestCounter) GetCount(path string) int64 {
+    rc.mu.RLock()
+    defer rc.mu.RUnlock()
+    return rc.counts[path]
+}
+
+func counterMiddleware(counter *RequestCounter) func(http.Handler) http.Handler {
+    return func(next http.Handler) http.Handler {
+        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+            counter.Increment(r.URL.Path)
+            next.ServeHTTP(w, r)
+        })
+    }
+}
+```
+
+</details>
+
+### 练习 2：实现响应缓存中间件
+
+创建一个中间件，缓存 GET 请求的响应。
+
+<details>
+<summary>查看答案</summary>
+
+```go
+type CacheMiddleware struct {
+    cache map[string][]byte
+    mu    sync.RWMutex
+    ttl   time.Duration
+}
+
+func (cm *CacheMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.Handler) {
+    if r.Method != http.MethodGet {
+        next.ServeHTTP(w, r)
+        return
+    }
+
+    key := r.URL.String()
+
+    // 检查缓存
+    cm.mu.RLock()
+    if data, ok := cm.cache[key]; ok {
+        cm.mu.RUnlock()
+        w.Header().Set("X-Cache", "HIT")
+        w.Write(data)
+        return
+    }
+    cm.mu.RUnlock()
+
+    // 缓存未命中，执行请求
+    cm.mu.Lock()
+    defer cm.mu.Unlock()
+    w.Header().Set("X-Cache", "MISS")
+    next.ServeHTTP(w, r)
+}
+```
+
+</details>
+
+### 练习 3：实现简单的文件服务器
+
+使用 `http.FileSystem` 接口实现一个文件服务器。
+
+<details>
+<summary>查看答案</summary>
+
+```go
+func fileServerHandler() http.Handler {
+    fs := http.FileServer(http.Dir("./static"))
+
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        // 添加自定义头
+        w.Header().Set("Server", "MyFileServer/1.0")
+
+        // 处理文件请求
+        fs.ServeHTTP(w, r)
+    })
+}
+
+func main() {
+    http.Handle("/files/", http.StripPrefix("/files/", fileServerHandler()))
+    http.ListenAndServe(":8080", nil)
+}
+```
+
+</details>
+
+## 总结
+
+`net/http` 包的核心接口：
+
+| 接口 | 用途 | 应用场景 |
+|------|------|----------|
+| `Handler` | 处理 HTTP 请求 | 自定义服务器、中间件 |
+| `ResponseWriter` | 写入 HTTP 响应 | API 响应、文件下载 |
+| `RoundTripper` | 执行 HTTP 请求 | 自定义客户端、认证 |
+| `Flusher` | 刷新响应缓冲 | 实时推送、SSE |
+| `Hijacker` | 接管底层连接 | WebSocket、自定义协议 |
+
+掌握这些接口，你就能构建强大的 HTTP 应用程序。
+
+## 导航
+
+[← io 包接口](./io.mdx) | [继续：error 接口 →](./error.mdx)

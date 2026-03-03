@@ -1,0 +1,574 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# Type Conversions
+
+<Badge text="专业" type="danger" /> <Badge text="Go 1.0+" type="info" />
+
+CGO 涉及 Go 和 C 两种类型系统，理解类型转换规则对于正确使用 CGO 至关重要。
+
+## 基础类型转换
+
+### 数值类型
+
+```go
+package main
+
+/*
+#include <stdio.h>
+*/
+import "C"
+import (
+    "fmt"
+)
+
+func main() {
+    // Go int -> C int
+    var goInt int = 42
+    cInt := C.int(goInt)
+    fmt.Printf("C.int: %d\n", cInt)
+
+    // Go int32 -> C int32_t
+    var goInt32 int32 = 100
+    cInt32 := C.int32_t(goInt32)
+
+    // Go float64 -> C double
+    var goFloat float64 = 3.14
+    cDouble := C.double(goFloat)
+    fmt.Printf("C.double: %f\n", cDouble)
+
+    // C int -> Go int
+    back := int(cInt)
+    fmt.Printf("Back to Go: %d\n", back)
+}
+```
+
+### 类型大小检查
+
+```go
+package main
+
+/*
+#include <limits.h>
+*/
+import "C"
+import (
+    "fmt"
+    "unsafe"
+)
+
+func main() {
+    // 检查类型大小
+    fmt.Printf("C.int size: %d\n", unsafe.Sizeof(C.int(0)))
+    fmt.Printf("Go int size: %d\n", unsafe.Sizeof(int(0)))
+
+    fmt.Printf("C.long size: %d\n", unsafe.Sizeof(C.long(0)))
+    fmt.Printf("C.long long size: %d\n", unsafe.Sizeof(C.longlong(0)))
+
+    // 使用 C 定义的常量
+    fmt.Printf("INT_MAX: %d\n", C.INT_MAX)
+    fmt.Printf("LONG_MAX: %d\n", C.LONG_MAX)
+}
+```
+
+## 指针类型转换
+
+### unsafe.Pointer 转换
+
+```go
+package main
+
+/*
+#include <stdlib.h>
+*/
+import "C"
+import (
+    "fmt"
+    "unsafe"
+)
+
+func main() {
+    // Go 指针 -> C 指针
+    goInt := 42
+    cPtr := unsafe.Pointer(&goInt)
+    fmt.Printf("C pointer: %p\n", cPtr)
+
+    // C 指针 -> Go 指针
+    backPtr := (*int)(cPtr)
+    fmt.Printf("Value: %d\n", *backPtr)
+
+    // C.malloc 返回的指针
+    mem := C.malloc(1024)
+    defer C.free(mem)
+
+    // 转换为 Go 切片
+    goSlice := (*[1024]byte)(mem)[:1024:1024]
+    goSlice[0] = 42
+    fmt.Printf("First byte: %d\n", goSlice[0])
+}
+```
+
+### 函数指针转换
+
+```go
+package main
+
+/*
+#include <stdio.h>
+
+typedef int (*Operation)(int, int);
+
+int add(int a, int b) {
+    return a + b;
+}
+
+int callFunc(Operation op, int a, int b) {
+    return op(a, b);
+}
+*/
+import "C"
+import (
+    "fmt"
+    "unsafe"
+)
+
+//export Add
+func Add(a, b C.int) C.int {
+    return a + b
+}
+
+func main() {
+    // Go 函数 -> C 函数指针
+    goAdd := C.Add
+
+    // 调用 C 函数，传入 Go 函数指针
+    result := C.callFunc(
+        (C.Operation)(unsafe.Pointer(&goAdd)),
+        10, 20,
+    )
+    fmt.Println("Result:", result)
+}
+```
+
+## 结构体转换
+
+### C 结构体定义
+
+```go
+package main
+
+/*
+#include <stdlib.h>
+
+typedef struct {
+    int x;
+    int y;
+} Point;
+
+Point* createPoint(int x, int y) {
+    Point* p = (Point*)malloc(sizeof(Point));
+    p->x = x;
+    p->y = y;
+    return p;
+}
+
+void freePoint(Point* p) {
+    free(p);
+}
+*/
+import "C"
+import (
+    "fmt"
+    "unsafe"
+)
+
+type CPoint C.struct_Point
+
+func main() {
+    // 创建 C 结构体
+    cPoint := C.createPoint(10, 20)
+    defer C.freePoint(cPoint)
+
+    // 转换为 Go 可访问的结构体
+    point := (*CPoint)(unsafe.Pointer(cPoint))
+    fmt.Printf("Point: x=%d, y=%d\n", point.x, point.y)
+}
+```
+
+### Go 结构体传给 C
+
+```go
+package main
+
+/*
+#include <stdlib.h>
+
+typedef struct {
+    double x;
+    double y;
+} Vector;
+
+void printVector(Vector* v) {
+    printf("Vector: (%.2f, %.2f)\n", v->x, v->y);
+}
+*/
+import "C"
+import (
+    "unsafe"
+)
+
+type Vector struct {
+    X float64
+    Y float64
+}
+
+func main() {
+    v := Vector{X: 3.14, Y: 2.71}
+
+    // 传递 Go 结构体给 C
+    C.printVector((*C.struct_Vector)(unsafe.Pointer(&v)))
+}
+```
+
+### 结构体字段对齐
+
+```go
+package main
+
+/*
+#include <stddef.h>
+
+typedef struct {
+    char a;
+    int b;
+    char c;
+} Misaligned;
+
+typedef struct {
+    int b;
+    char a;
+    char c;
+} Aligned;
+*/
+import "C"
+import (
+    "fmt"
+    "unsafe"
+)
+
+func main() {
+    // 检查 C 结构体大小
+    fmt.Printf("C Misaligned size: %d\n",
+        C.sizeof_Misaligned)  // 可能是 12
+
+    fmt.Printf("C Aligned size: %d\n",
+        C.sizeof_Aligned)  // 可能是 8
+
+    // Go 结构体
+    type Misaligned struct {
+        A int8
+        B int32
+        C int8
+    }
+
+    type Aligned struct {
+        B int32
+        A int8
+        C int8
+    }
+
+    fmt.Printf("Go Misaligned size: %d\n",
+        unsafe.Sizeof(Misaligned{}))
+    fmt.Printf("Go Aligned size: %d\n",
+        unsafe.Sizeof(Aligned{}))
+}
+```
+
+## 枚举类型
+
+### C 枚举转 Go
+
+```go
+package main
+
+/*
+typedef enum {
+    COLOR_RED,
+    COLOR_GREEN,
+    COLOR_BLUE
+} Color;
+
+const char* getColorName(Color c) {
+    switch (c) {
+        case COLOR_RED: return "Red";
+        case COLOR_GREEN: return "Green";
+        case COLOR_BLUE: return "Blue";
+        default: return "Unknown";
+    }
+}
+*/
+import "C"
+import (
+    "fmt"
+)
+
+func main() {
+    // 使用 C 枚举
+    var color C.Color
+    color = C.COLOR_RED
+
+    // 获取枚举名称
+    name := C.getColorName(color)
+    fmt.Println("Color:", C.GoString(name))
+}
+```
+
+### Go 常量转 C
+
+```go
+package main
+
+/*
+#include <stdio.h>
+
+void printStatus(int status) {
+    printf("Status: %d\n", status);
+}
+*/
+import "C"
+
+const (
+    StatusOK C.int = 0
+    StatusError C.int = -1
+)
+
+func main() {
+    C.printStatus(StatusOK)
+    C.printStatus(StatusError)
+}
+```
+
+## 联合体
+
+### 访问 C 联合体
+
+```go
+package main
+
+/*
+#include <stdlib.h>
+
+typedef union {
+    int i;
+    float f;
+    char str[20];
+} Data;
+
+Data* createIntData(int value) {
+    Data* d = (Data*)malloc(sizeof(Data));
+    d->i = value;
+    return d;
+}
+
+Data* createFloatData(float value) {
+    Data* d = (Data*)malloc(sizeof(Data));
+    d->f = value;
+    return d;
+}
+
+void freeData(Data* d) {
+    free(d);
+}
+*/
+import "C"
+import (
+    "fmt"
+    "unsafe"
+)
+
+func main() {
+    // 创建 int 数据
+    intData := C.createIntData(42)
+    defer C.freeData(intData)
+
+    fmt.Println("Int:", (*C.struct_Data)(unsafe.Pointer(intData))._u.i)
+
+    // 创建 float 数据
+    floatData := C.createFloatData(3.14)
+    defer C.freeData(floatData)
+
+    fmt.Println("Float:", (*C.struct_Data)(unsafe.Pointer(floatData))._u.f)
+}
+```
+
+## 函数签名转换
+
+### C 函数指针
+
+```go
+package main
+
+/*
+#include <stdio.h>
+
+typedef int (*CompareFunc)(const void*, const void*);
+
+int compareInts(const void* a, const void* b) {
+    return (*(int*)a - *(int*)b);
+}
+
+void sortInts(int* arr, int size, CompareFunc compare) {
+    // 简化的排序逻辑
+    for (int i = 0; i < size - 1; i++) {
+        for (int j = 0; j < size - i - 1; j++) {
+            if (compare(&arr[j], &arr[j+1]) > 0) {
+                int temp = arr[j];
+                arr[j] = arr[j+1];
+                arr[j+1] = temp;
+            }
+        }
+    }
+}
+*/
+import "C"
+import (
+    "fmt"
+    "unsafe"
+)
+
+func main() {
+    arr := []int{5, 2, 8, 1, 9}
+
+    // 调用 C 排序函数
+    C.sortInts(
+        (*C.int)(unsafe.Pointer(&arr[0])),
+        C.int(len(arr)),
+        (C.CompareFunc)(C.compareInts),
+    )
+
+    fmt.Println("Sorted:", arr)
+}
+```
+
+### Go 函数导出
+
+```go
+package main
+
+/*
+#include <stdio.h>
+
+// 声明 Go 回调函数
+extern int GoCompare(int a, int b);
+
+void callGoCompare(int a, int b) {
+    int result = GoCompare(a, b);
+    printf("GoCompare(%d, %d) = %d\n", a, b, result);
+}
+*/
+import "C"
+
+//export GoCompare
+func GoCompare(a, b C.int) C.int {
+    if a < b {
+        return -1
+    } else if a > b {
+        return 1
+    }
+    return 0
+}
+
+func main() {
+    C.callGoCompare(10, 20)
+}
+```
+
+## 练习
+
+1. **结构体双向转换**：实现 Go 和 C 结构体的双向转换
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+/*
+#include <stdlib.h>
+
+typedef struct {
+    char name[50];
+    int age;
+    double score;
+} Student;
+
+Student* createStudent(const char* name, int age, double score) {
+    Student* s = (Student*)malloc(sizeof(Student));
+    snprintf(s->name, 50, "%s", name);
+    s->age = age;
+    s->score = score;
+    return s;
+}
+
+void printStudent(Student* s) {
+    printf("Student: %s, %d, %.2f\n", s->name, s->age, s->score);
+}
+
+void freeStudent(Student* s) {
+    free(s);
+}
+*/
+import "C"
+import (
+    "fmt"
+    "unsafe"
+)
+
+type Student struct {
+    Name  string
+    Age   int32
+    Score float64
+}
+
+func GoToCStudent(goS Student) *C.struct_Student {
+    cName := C.CString(goS.Name)
+    defer C.free(unsafe.Pointer(cName))
+
+    cS := C.createStudent(cName, C.int(goS.Age), C.double(goS.Score))
+    return cS
+}
+
+func CStudentToGo(cS *C.struct_Student) Student {
+    return Student{
+        Name:  C.GoString(&cS.name[0]),
+        Age:   int32(cS.age),
+        Score: float64(cS.score),
+    }
+}
+
+func main() {
+    // Go -> C
+    goS := Student{
+        Name:  "Alice",
+        Age:   20,
+        Score: 95.5,
+    }
+
+    cS := GoToCStudent(goS)
+    defer C.freeStudent(cS)
+
+    C.printStudent(cS)
+
+    // C -> Go
+    backS := CStudentToGo(cS)
+    fmt.Printf("Go Student: %+v\n", backS)
+}
+```
+
+**解释**：展示了 Go 和 C 结构体之间的完整转换流程，包括字符串和数值类型的转换。
+
+</details>
+
+---
+
+[← CGO 基础](./basics.mdx) | [内存管理 →](./memory-management.mdx)

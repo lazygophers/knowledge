@@ -1,0 +1,635 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# 缓冲 I/O - Buffered I/O
+
+<Badge text="性能优化" type="danger" />
+
+bufio 包提供了缓冲的 I/O 操作，显著提高读写性能。
+
+## 为什么需要缓冲？
+
+<Badge text="初级开发者" type="tip" />
+
+### 直接 I/O vs 缓冲 I/O
+
+```go
+// ❌ 直接 I/O：每次读写都调用系统调用
+file, _ := os.Create("output.txt")
+for i := 0; i < 1000; i++ {
+    file.WriteString("line\n")  // 1000 次系统调用
+}
+
+// ✅ 缓冲 I/O：减少系统调用
+file, _ := os.Create("output.txt")
+writer := bufio.NewWriter(file)
+for i := 0; i < 1000; i++ {
+    writer.WriteString("line\n")  // 写入内存缓冲
+}
+writer.Flush()  // 1 次系统调用
+```
+
+<Callout type="info">
+**性能提升**：缓冲 I/O 可以将性能提高 10-100 倍，特别是小量频繁读写场景。
+</Callout>
+
+## bufio.Reader
+
+<Badge text="初级开发者" type="tip" />
+
+### 创建 Reader
+
+```go
+// 使用默认缓冲区大小（4096 字节）
+reader := bufio.NewReader(os.Stdin)
+
+// 指定缓冲区大小
+reader := bufio.NewReaderSize(os.Stdin, 32*1024)  // 32KB
+```
+
+### Read 方法
+
+```go
+package main
+
+import (
+    "bufio"
+    "fmt"
+    "os"
+    "strings"
+)
+
+func main() {
+    // 从字符串创建 Reader
+    reader := bufio.NewReader(strings.NewReader("Hello, World!"))
+
+    // Read - 读取到缓冲区
+    buf := make([]byte, 5)
+    n, err := reader.Read(buf)
+    fmt.Printf("读取 %d 字节: %s\n", n, string(buf[:n]))
+
+    // ReadByte - 读取单个字节
+    b, err := reader.ReadByte()
+    fmt.Printf("读取字节: %c\n", b)
+
+    // UnreadByte - 放回一个字节
+    reader.UnreadByte()
+    b, _ = reader.ReadByte()
+    fmt.Printf("再次读取: %c\n", b)
+}
+```
+
+### ReadString 和 ReadLine
+
+```go
+package main
+
+import (
+    "bufio"
+    "fmt"
+    "strings"
+)
+
+func main() {
+    reader := bufio.NewReader(strings.NewReader("line1\nline2\nline3"))
+
+    // ReadString - 读取直到分隔符
+    for {
+        line, err := reader.ReadString('\n')
+        if err != nil {
+            break
+        }
+        fmt.Print(line)
+    }
+
+    // ReadLine - 低级别按行读取（不包含换行符）
+    reader = bufio.NewReader(strings.NewReader("line1\nline2\n"))
+    for {
+        line, isPrefix, err := reader.ReadLine()
+        if err != nil {
+            break
+        }
+        fmt.Println(string(line))
+        if isPrefix {
+            fmt.Println("(行太长，继续读取)")
+        }
+    }
+}
+```
+
+<Callout type="warning">
+**ReadString vs ReadLine**：
+- `ReadString('\n')` - 推荐，包含换行符，简单易用
+- `ReadLine()` - 不推荐，不包含换行符，更复杂
+</Callout>
+
+### ReadBytes
+
+```go
+// 读取直到分隔符，返回 []byte
+data, err := reader.ReadBytes('\n')
+fmt.Println(string(data))
+```
+
+### Peek
+
+```go
+// Peek 查看接下来 n 个字节但不移动读取位置
+reader := bufio.NewReader(strings.NewReader("Hello"))
+
+data, err := reader.Peek(3)
+fmt.Println(string(data))  // "Hel"
+
+// 再次读取，数据还在
+b, _ := reader.ReadByte()
+fmt.Println(string(b))  // "H"
+```
+
+## bufio.Writer
+
+<Badge text="初级开发者" type="tip" />
+
+### 创建 Writer
+
+```go
+// 使用默认缓冲区大小
+writer := bufio.NewWriter(os.Stdout)
+
+// 指定缓冲区大小
+writer := bufio.NewWriterSize(os.Stdout, 32*1024)
+```
+
+### Write 方法
+
+```go
+package main
+
+import (
+    "bufio"
+    "fmt"
+    "os"
+)
+
+func main() {
+    writer := bufio.NewWriter(os.Stdout)
+
+    // WriteString - 写入字符串
+    writer.WriteString("Hello, ")
+
+    // WriteByte - 写入单个字节
+    writer.WriteByte('W')
+
+    // WriteRune - 写入 Unicode 字符
+    writer.WriteRune('世')
+
+    // Flush - 刷新缓冲区
+    writer.Flush()
+
+    fmt.Println("\n缓冲区已刷新")
+}
+```
+
+### 缓冲区管理
+
+```go
+// Flush - 手动刷新缓冲区
+writer.Flush()
+
+// Buffered - 返回缓冲区中已缓冲的字节数
+size := writer.Buffered()
+
+// Available - 返回缓冲区中还剩余的字节数
+avail := writer.Available()
+
+// Reset - 重置 Writer，丢弃缓冲区内容
+writer.Reset(newWriter)
+```
+
+## bufio.Scanner
+
+<Badge text="中级开发者" type="warning" />
+
+Scanner 是读取文本文件的最佳方式，简单高效。
+
+### 基本用法
+
+```go
+package main
+
+import (
+    "bufio"
+    "fmt"
+    "os"
+    "strings"
+)
+
+func main() {
+    // 从字符串创建 Scanner
+    scanner := bufio.NewScanner(strings.NewReader("line1\nline2\nline3"))
+
+    // 逐行扫描
+    for scanner.Scan() {
+        line := scanner.Text()
+        fmt.Println(line)
+    }
+
+    // 检查错误
+    if err := scanner.Err(); err != nil {
+        fmt.Printf("扫描错误: %v\n", err)
+    }
+}
+```
+
+### 自定义分割函数
+
+```go
+package main
+
+import (
+    "bufio"
+    "fmt"
+    "strings"
+)
+
+func main() {
+    // 使用单词分割
+    scanner := bufio.NewScanner(strings.NewReader("Hello World Go"))
+    scanner.Split(bufio.ScanWords)
+
+    for scanner.Scan() {
+        word := scanner.Text()
+        fmt.Println(word)
+    }
+}
+```
+
+### 内置分割函数
+
+```go
+// ScanRunes - 按 Unicode 字符分割
+scanner.Split(bufio.ScanRunes)
+
+// ScanBytes - 按字节分割
+scanner.Split(bufio.ScanBytes)
+
+// ScanLines - 按行分割（默认）
+scanner.Split(bufio.ScanLines)
+
+// ScanWords - 按单词分割
+scanner.Split(bufio.ScanWords)
+```
+
+<Callout type="tip">
+**自定义分割**：可以实现 `SplitFunc` 来定义自己的分割逻辑。
+</Callout>
+
+### 自定义分割函数
+
+```go
+// SplitFunc 类型定义
+type SplitFunc func(data []byte, atEOF bool) (advance int, token []byte, err error)
+
+// 示例：按逗号分割
+func CommaSplit(data []byte, atEOF bool) (advance int, token []byte, err error) {
+    // 查找逗号
+    for i, b := range data {
+        if b == ',' {
+            return i + 1, data[:i], nil
+        }
+    }
+
+    // 没有找到逗号
+    if atEOF {
+        return len(data), data, bufio.ErrFinalToken
+    }
+
+    // 请求更多数据
+    return 0, nil, nil
+}
+
+// 使用
+scanner := bufio.NewScanner(strings.NewReader("a,b,c"))
+scanner.Split(CommaSplit)
+
+for scanner.Scan() {
+    fmt.Println(scanner.Text())  // a, b, c
+}
+```
+
+### Scanner 高级用法
+
+```go
+// 读取到字节切片（避免字符串分配）
+scanner := bufio.NewScanner(strings.NewReader("line1\nline2"))
+buf := make([]byte, 0, 64)  // 预分配容量
+scanner.Buffer(buf, 1024)     // 设置最大 token 大小
+
+for scanner.Scan() {
+    token := scanner.Bytes()  // 返回 []byte
+    fmt.Println(string(token))
+}
+```
+
+## 性能优化
+
+<Badge text="高级开发者" type="danger" />
+
+### 缓冲区大小选择
+
+```go
+// 小文件（< 1MB）
+reader := bufio.NewReader(file)  // 默认 4KB
+
+// 大文件（> 10MB）
+reader := bufio.NewReaderSize(file, 64*1024)  // 64KB
+
+// 网络 I/O
+reader := bufio.NewReaderSize(conn, 16*1024)  // 16KB
+```
+
+### 批量写入
+
+```go
+// ❌ 频繁 Flush
+writer := bufio.NewWriter(file)
+for _, item := range items {
+    writer.WriteString(item.String())
+    writer.Flush()  // 每次都刷新
+}
+
+// ✅ 批量写入后 Flush
+writer := bufio.NewWriter(file)
+for _, item := range items {
+    writer.WriteString(item.String())
+}
+writer.Flush()  // 只刷新一次
+```
+
+### Peek 的性能陷阱
+
+```go
+// ❌ 错误：使用 Peek 会复制数据
+data, _ := reader.Peek(1024)
+process(data)  // 复制 1024 字节
+
+// ✅ 正确：直接使用 Read 方法
+buf := make([]byte, 1024)
+reader.Read(buf)
+process(buf)
+```
+
+## 实战案例
+
+<Badge text="高级开发者" type="danger" />
+
+### 案例 1: CSV 解析器
+
+```go
+package main
+
+import (
+    "bufio"
+    "encoding/csv"
+    "fmt"
+    "os"
+)
+
+func main() {
+    file, err := os.Open("data.csv")
+    if err != nil {
+        panic(err)
+    }
+    defer file.Close()
+
+    // 使用 csv.Reader 解析 CSV
+    reader := csv.NewReader(file)
+
+    // 读取所有记录
+    records, err := reader.ReadAll()
+    if err != nil {
+        panic(err)
+    }
+
+    for _, record := range records {
+        fmt.Println(record)
+    }
+}
+```
+
+### 案例 2: 日志文件轮转读取
+
+```go
+package main
+
+import (
+    "bufio"
+    "fmt"
+    "os"
+    "strings"
+)
+
+// TailReader 从文件末尾开始读取
+type TailReader struct {
+    file     *os.File
+    reader   *bufio.Reader
+    position int64
+}
+
+func NewTailReader(filename string) (*TailReader, error) {
+    file, err := os.Open(filename)
+    if err != nil {
+        return nil, err
+    }
+
+    // 移动到文件末尾
+    info, _ := file.Stat()
+    position := info.Size()
+
+    return &TailReader{
+        file:     file,
+        reader:   bufio.NewReader(file),
+        position: position,
+    }, nil
+}
+
+func (tr *TailReader) ReadNewLines(n int) ([]string, error) {
+    // 移动到保存的位置
+    _, err := tr.file.Seek(tr.position, 0)
+    if err != nil {
+        return nil, err
+    }
+    tr.reader.Reset(tr.file)
+
+    // 读取新行
+    var lines []string
+    for i := 0; i < n; i++ {
+        line, err := tr.reader.ReadString('\n')
+        if err != nil {
+            break
+        }
+        lines = append(lines, strings.TrimRight(line, "\n"))
+        tr.position += int64(len(line))
+    }
+
+    return lines, nil
+}
+
+func (tr *TailReader) Close() error {
+    return tr.file.Close()
+}
+```
+
+### 案例 3: 带超时的读取
+
+```go
+package main
+
+import (
+    "bufio"
+    "context"
+    "fmt"
+    "os"
+    "time"
+)
+
+// ReadWithTimeout 带超时的读取
+func ReadWithTimeout(reader *bufio.Reader, ctx context.Context) ([]byte, error) {
+    result := make([]byte, 0)
+    buf := make([]byte, 1024)
+
+    done := make(chan error, 1)
+
+    go func() {
+        for {
+            n, err := reader.Read(buf)
+            if n > 0 {
+                result = append(result, buf[:n]...)
+            }
+            if err != nil {
+                done <- err
+                return
+            }
+        }
+    }()
+
+    select {
+    case <-ctx.Done():
+        return result, ctx.Err()
+    case err := <-done:
+        return result, err
+    }
+}
+
+func main() {
+    file, _ := os.Open("large.log")
+    defer file.Close()
+
+    reader := bufio.NewReader(file)
+
+    ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+    defer cancel()
+
+    data, err := ReadWithTimeout(reader, ctx)
+    if err != nil {
+        fmt.Printf("读取超时或错误: %v\n", err)
+    }
+
+    fmt.Printf("读取了 %d 字节\n", len(data))
+}
+```
+
+## 练习
+
+<Badge text="实战练习" type="success" />
+
+### 练习：实现反向 Reader
+
+创建一个 Reader，从后往前读取数据：
+
+```go
+// TODO: 实现
+type ReverseReader struct {
+    // ...
+}
+
+func (rr *ReverseReader) Read(p []byte) (n int, err error) {
+    // 从后往前读取
+}
+```
+
+<details>
+<summary>查看答案</summary>
+
+```go
+type ReverseReader struct {
+    data []byte
+    pos  int  // 从末尾开始的位置
+}
+
+func NewReverseReader(data []byte) *ReverseReader {
+    return &ReverseReader{
+        data: data,
+        pos:  len(data),
+    }
+}
+
+func (rr *ReverseReader) Read(p []byte) (n int, err error) {
+    if rr.pos <= 0 {
+        return 0, io.EOF
+    }
+
+    // 计算可以读取的字节数
+    available := rr.pos
+    n = len(p)
+    if n > available {
+        n = available
+    }
+
+    // 从后往前复制
+    for i := 0; i < n; i++ {
+        p[i] = rr.data[rr.pos-1-i]
+    }
+
+    rr.pos -= n
+    return n, nil
+}
+```
+
+</details>
+
+---
+
+## 总结
+
+### 关键要点
+
+| 读者水平 | 核心要点 |
+|---------|---------|
+| <Badge text="初级开发者" type="tip" /> | 使用 bufio.Scanner 逐行读取。使用 bufio.Writer 批量写入。 |
+| <Badge text="中级开发者" type="warning" /> | 选择合适的缓冲区大小。自定义分割函数。 |
+| <Badge text="高级开发者" type="danger" /> | 实现 Reader/Writer 包装器。性能优化。 |
+
+### 速查表
+
+```go
+// Reader
+reader := bufio.NewReader(reader)
+line, _ := reader.ReadString('\n')
+
+// Writer
+writer := bufio.NewWriter(writer)
+writer.WriteString("data")
+writer.Flush()
+
+// Scanner
+scanner := bufio.NewScanner(reader)
+for scanner.Scan() {
+    line := scanner.Text()
+}
+```
+
+### 下一步
+
+- [← IO 接口](./io-interfaces.mdx)
+- [文件系统 →](./filesystem.mdx)
+- [序列化 →](./serialization.mdx)

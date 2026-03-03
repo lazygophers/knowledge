@@ -1,0 +1,32 @@
+[
+  {
+    "type": "file",
+    "name": "index",
+    "label": "I/O 操作概览"
+  },
+  {
+    "type": "file",
+    "name": "file-io",
+    "label": "文件读写"
+  },
+  {
+    "type": "file",
+    "name": "bufio",
+    "label": "缓冲 I/O"
+  },
+  {
+    "type": "file",
+    "name": "io-interfaces",
+    "label": "IO 接口"
+  },
+  {
+    "type": "file",
+    "name": "filesystem",
+    "label": "文件系统操作"
+  },
+  {
+    "type": "file",
+    "name": "serialization",
+    "label": "序列化"
+  }
+]

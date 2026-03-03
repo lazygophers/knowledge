@@ -1,0 +1,27 @@
+# Go Best Practices (Chinese Source)
+
+> English llms.txt for best-practices directory.
+
+## Module Index
+
+- [Best Practices Overview](./index.mdx): Overview of Go best practices with learning paths and skill level navigation.
+
+## Code Style
+
+- [Code Style Conventions](./code-style.mdx): Go code style conventions including gofmt, goimports, naming conventions, comment standards, code organization, common pitfalls, tools and setup, and code review checklist.
+
+## Error Patterns
+
+- [Error Handling Patterns](./error-patterns.mdx): Go error handling best practices including error wrapping, sentinel errors, error chains, custom errors, error handling patterns, layered error handling, common pitfalls, and code review checklist.
+
+## Concurrency Patterns
+
+- [Concurrency Patterns](./concurrency-patterns.mdx): Go concurrency patterns including worker pool patterns, fan-in/fan-out, pipeline patterns, semaphore patterns, context cancellation patterns, performance optimization, and code review checklist.
+
+## Testing Strategies
+
+- [Testing Strategies](./testing-strategies.mdx): Go testing strategies including table-driven tests, mocks, benchmarks, fuzzing, test coverage, test architecture, tools, and code review checklist.
+
+## Anti-Patterns
+
+- [Common Anti-Patterns](./anti-patterns.mdx): Common Go anti-patterns to avoid including performance, concurrency, memory, and design anti-patterns, detection methods, and code review checklist.

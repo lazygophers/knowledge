@@ -1,0 +1,712 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# Value Reflection
+
+<Badge text="中级" type="warning" /> <Badge text="Go 1.0+" type="info" />
+
+`reflect.Value` 提供了读取和修改值的能力，是反射系统中用于操作实际数据的部分。
+
+## 获取 Value
+
+```go
+package main
+
+import (
+    "fmt"
+    "reflect"
+)
+
+func main() {
+    // 从值获取
+    x := 42
+    v1 := reflect.ValueOf(x)
+
+    // 从指针获取
+    v2 := reflect.ValueOf(&x)
+
+    fmt.Println("v1:", v1)           // 42
+    fmt.Println("v1 can set:", v1.CanSet())  // false
+    fmt.Println("v2:", v2)           // &{...}
+    fmt.Println("v2 can set:", v2.CanSet())  // false
+
+    // 解引用指针获取可设置值
+    v3 := v2.Elem()
+    fmt.Println("v3:", v3)           // 42
+    fmt.Println("v3 can set:", v3.CanSet())  // true
+}
+```
+
+## 值的读取
+
+### 基础类型读取
+
+```go
+package main
+
+import (
+    "fmt"
+    "reflect"
+)
+
+func main() {
+    var (
+        i     int     = 42
+        f     float64 = 3.14
+        b     bool    = true
+        s     string  = "hello"
+    )
+
+    // Int 系列
+    vi := reflect.ValueOf(i)
+    fmt.Println("Int:", vi.Int())           // 42
+    fmt.Println("CanInt:", vi.CanInt())     // true
+
+    // Uint 系列
+    u := uint(42)
+    vu := reflect.ValueOf(u)
+    fmt.Println("Uint:", vu.Uint())         // 42
+    fmt.Println("CanUint:", vu.CanUint())   // true
+
+    // Float 系列
+    vf := reflect.ValueOf(f)
+    fmt.Println("Float:", vf.Float())       // 3.14
+    fmt.Println("CanFloat:", vf.CanFloat()) // true
+
+    // Bool
+    vb := reflect.ValueOf(b)
+    fmt.Println("Bool:", vb.Bool())         // true
+    fmt.Println("CanBool:", vb.CanBool())   // true
+
+    // String
+    vs := reflect.ValueOf(s)
+    fmt.Println("String:", vs.String())     // hello
+    fmt.Println("CanAddr:", vs.CanAddr())   // false
+
+    // Interface
+    fmt.Println("Interface:", vi.Interface())  // 42
+}
+```
+
+### 复合类型读取
+
+```go
+package main
+
+import (
+    "fmt"
+    "reflect"
+)
+
+func main() {
+    // 数组
+    arr := [3]int{1, 2, 3}
+    varr := reflect.ValueOf(arr)
+    fmt.Println("Array Len:", varr.Len())           // 3
+    fmt.Println("Array[0]:", varr.Index(0).Int())   // 1
+
+    // 切片
+    slice := []int{1, 2, 3}
+    vslice := reflect.ValueOf(slice)
+    fmt.Println("Slice Len:", vslice.Len())         // 3
+    fmt.Println("Slice Cap:", vslice.Cap())         // 3
+    fmt.Println("Slice[1]:", vslice.Index(1).Int()) // 2
+
+    // Map
+    m := map[string]int{"a": 1, "b": 2}
+    vm := reflect.ValueOf(m)
+    fmt.Println("Map Len:", vm.Len())               // 2
+    fmt.Println("Map Keys:", vm.MapKeys())          // [a b]
+    fmt.Println("Map[a]:", vm.MapIndex(reflect.ValueOf("a")).Int()) // 1
+
+    // 遍历 Map
+    iter := vm.MapRange()
+    for iter.Next() {
+        fmt.Printf("  %s: %d\n",
+            iter.Key().String(),
+            iter.Value().Int())
+    }
+
+    // 通道
+    ch := make(chan int, 1)
+    ch <- 42
+    vch := reflect.ValueOf(ch)
+    fmt.Println("Chan Len:", vch.Len())            // 1
+    fmt.Println("Chan Cap:", vch.Cap())            // 1
+
+    // 尝试接收
+    val, ok := vch.TryRecv()
+    fmt.Println("TryRecv:", val.Int(), ok)         // 42 true
+}
+```
+
+### 结构体读取
+
+```go
+package main
+
+import (
+    "fmt"
+    "reflect"
+)
+
+type Person struct {
+    Name string
+    Age  int
+    Address
+}
+
+type Address struct {
+    City string
+}
+
+func main() {
+    p := Person{
+        Name:    "Alice",
+        Age:     30,
+        Address: Address{City: "Beijing"},
+    }
+
+    v := reflect.ValueOf(p)
+
+    // 字段数量
+    fmt.Println("NumField:", v.NumField())  // 3 (包括嵌入字段)
+
+    // 通过索引访问
+    fmt.Println("Field(0):", v.Field(0).String())  // Alice
+    fmt.Println("Field(1):", v.Field(1).Int())     // 30
+
+    // 通过名称访问
+    nameField := v.FieldByName("Name")
+    fmt.Println("FieldByName('Name'):", nameField.String())  // Alice
+
+    // 访问嵌入字段
+    cityField := v.FieldByName("City")
+    fmt.Println("FieldByName('City'):", cityField.String())  // Beijing
+
+    // 检查字段是否存在
+    _, ok := v.FieldByName("Unknown")
+    fmt.Println("FieldByName('Unknown') ok:", ok)  // false
+
+    // 获取字段值（递归查找嵌入字段）
+    fieldByIndex := v.FieldByIndex([]int{2, 0})  // Address.City
+    fmt.Println("FieldByIndex([2,0]):", fieldByIndex.String())  // Beijing
+}
+```
+
+## 值的修改
+
+### 可设置性检查
+
+```go
+package main
+
+import (
+    "fmt"
+    "reflect"
+)
+
+func main() {
+    x := 42
+
+    // 直接获取值：不可设置
+    v1 := reflect.ValueOf(x)
+    fmt.Println("v1.CanSet():", v1.CanSet())  // false
+
+    // 通过指针获取：指针本身不可设置
+    v2 := reflect.ValueOf(&x)
+    fmt.Println("v2.CanSet():", v2.CanSet())  // false
+
+    // 解引用指针：可设置
+    v3 := v2.Elem()
+    fmt.Println("v3.CanSet():", v3.CanSet())  // true
+
+    // 修改值
+    v3.SetInt(100)
+    fmt.Println("x =", x)  // x = 100
+}
+```
+
+<Callout type="warning" title="可设置条件">
+  值可设置需要满足：
+  <ul>
+    <li>值必须可寻址（addressable）</li>
+    <li>值必须是通过解引用指针获得的</li>
+    <li>不能是结构体的未导出字段</li>
+    <li>不能是 map 的值</li>
+  </ul>
+</Callout>
+
+### 修改基础类型
+
+```go
+package main
+
+import (
+    "fmt"
+    "reflect"
+)
+
+func main() {
+    var i int = 10
+    var f float64 = 3.14
+    var b bool = false
+    var s string = "hello"
+
+    vi := reflect.ValueOf(&i).Elem()
+    vf := reflect.ValueOf(&f).Elem()
+    vb := reflect.ValueOf(&b).Elem()
+    vs := reflect.ValueOf(&s).Elem()
+
+    // SetInt
+    vi.SetInt(42)
+    fmt.Println("i =", i)  // 42
+
+    // SetUint
+    var u uint = 10
+    vu := reflect.ValueOf(&u).Elem()
+    vu.SetUint(100)
+    fmt.Println("u =", u)  // 100
+
+    // SetFloat
+    vf.SetFloat(2.71)
+    fmt.Println("f =", f)  // 2.71
+
+    // SetBool
+    vb.SetBool(true)
+    fmt.Println("b =", b)  // true
+
+    // SetString
+    vs.SetString("world")
+    fmt.Println("s =", s)  // world
+}
+```
+
+### 修改复合类型
+
+```go
+package main
+
+import (
+    "fmt"
+    "reflect"
+)
+
+func main() {
+    // 修改切片元素
+    slice := []int{1, 2, 3}
+    vslice := reflect.ValueOf(&slice).Elem()
+    vslice.Index(0).SetInt(10)
+    fmt.Println("slice:", slice)  // [10 2 3]
+
+    // 修改数组元素
+    arr := [3]int{1, 2, 3}
+    varr := reflect.ValueOf(&arr).Elem()
+    varr.Index(1).SetInt(20)
+    fmt.Println("arr:", arr)  // [1 20 3]
+
+    // 修改 map
+    m := map[string]int{"a": 1}
+    vm := reflect.ValueOf(&m).Elem()
+    vm.SetMapIndex(reflect.ValueOf("b"), reflect.ValueOf(2))
+    vm.SetMapIndex(reflect.ValueOf("a"), reflect.ValueOf(10))
+    fmt.Println("m:", m)  // map[a:10 b:2]
+
+    // 删除 map 元素
+    vm.SetMapIndex(reflect.ValueOf("a"), reflect.Value{})  // 零值表示删除
+    fmt.Println("m after delete:", m)  // map[b:2]
+}
+```
+
+### 修改结构体字段
+
+```go
+package main
+
+import (
+    "fmt"
+    "reflect"
+)
+
+type Person struct {
+    Name     string
+    Age      int
+    password string // 未导出
+}
+
+func main() {
+    p := Person{Name: "Alice", Age: 30}
+    v := reflect.ValueOf(&p).Elem()
+
+    // 修改导出字段
+    nameField := v.FieldByName("Name")
+    if nameField.CanSet() {
+        nameField.SetString("Bob")
+    }
+
+    ageField := v.FieldByName("Age")
+    if ageField.CanSet() {
+        ageField.SetInt(25)
+    }
+
+    // 尝试修改未导出字段
+    passField := v.FieldByName("password")
+    if passField.CanSet() {
+        passField.SetString("secret")  // 不会执行
+    }
+
+    fmt.Printf("%+v\n", p)  // {Name:Bob Age:25 password:}
+}
+```
+
+## 动态创建值
+
+### 创建基础类型
+
+```go
+package main
+
+import (
+    "fmt"
+    "reflect"
+)
+
+func main() {
+    // 创建零值
+    intType := reflect.TypeOf(0)
+    intZero := reflect.New(intType).Elem()
+    fmt.Println("int zero:", intZero.Int())  // 0
+
+    // 创建并设置值
+    intPtr := reflect.New(intType)
+    intPtr.Elem().SetInt(42)
+    fmt.Println("int value:", intPtr.Elem().Int())  // 42
+
+    // 使用 ValueOf 获取类型
+    stringType := reflect.TypeOf("")
+    strPtr := reflect.New(stringType)
+    strPtr.Elem().SetString("hello")
+    fmt.Println("string value:", strPtr.Elem().String())  // hello
+}
+```
+
+### 创建切片
+
+```go
+package main
+
+import (
+    "fmt"
+    "reflect"
+)
+
+func main() {
+    // MakeSlice(Type, len, cap)
+    sliceType := reflect.TypeOf([]int{})
+    slice := reflect.MakeSlice(sliceType, 3, 5)
+
+    for i := 0; i < 3; i++ {
+        slice.Index(i).SetInt(reflect.ValueOf(i + 1).Int())
+    }
+
+    fmt.Println("slice:", slice)         // [1 2 3]
+    fmt.Println("len:", slice.Len())     // 3
+    fmt.Println("cap:", slice.Cap())     // 5
+
+    // 转换为原生类型
+    s := slice.Interface().([]int)
+    fmt.Println("native:", s)  // [1 2 3]
+}
+```
+
+### 创建 Map
+
+```go
+package main
+
+import (
+    "fmt"
+    "reflect"
+)
+
+func main() {
+    // MakeMap(Type)
+    mapType := reflect.TypeOf(map[string]int{})
+    m := reflect.MakeMap(mapType)
+
+    // 设置键值
+    key := reflect.ValueOf("a")
+    value := reflect.ValueOf(1)
+    m.SetMapIndex(key, value)
+
+    m.SetMapIndex(reflect.ValueOf("b"), reflect.ValueOf(2))
+
+    fmt.Println("map:", m)  // map[a:1 b:2]
+
+    // 转换为原生类型
+    mm := m.Interface().(map[string]int)
+    fmt.Println("native:", mm)  // map[a:1 b:2]
+}
+```
+
+### 创建结构体
+
+```go
+package main
+
+import (
+    "fmt"
+    "reflect"
+)
+
+type Person struct {
+    Name string
+    Age  int
+}
+
+func main() {
+    personType := reflect.TypeOf(Person{})
+
+    // New 创建指针
+    personPtr := reflect.New(personType)
+    person := personPtr.Elem()
+
+    // 设置字段
+    nameField := person.FieldByName("Name")
+    nameField.SetString("Alice")
+
+    ageField := person.FieldByName("Age")
+    ageField.SetInt(30)
+
+    fmt.Printf("%+v\n", person.Interface())  // {Name:Alice Age:30}
+}
+```
+
+### 创建通道
+
+```go
+package main
+
+import (
+    "fmt"
+    "reflect"
+)
+
+func main() {
+    // MakeChan(Type, buffer)
+    chanType := reflect.TypeOf(make(chan int, 0))
+    ch := reflect.MakeChan(chanType, 10)
+
+    // 发送
+    go func() {
+        ch.Send(reflect.ValueOf(42))
+    }()
+
+    // 接收
+    val, ok := ch.Recv()
+    fmt.Println("received:", val.Int(), "ok:", ok)  // received: 42 ok: true
+
+    // 转换为原生类型
+    nativeCh := ch.Interface().(chan int)
+    fmt.Printf("native channel: %T\n", nativeCh)
+}
+```
+
+## 值的比较
+
+```go
+package main
+
+import (
+    "fmt"
+    "reflect"
+)
+
+type Person struct {
+    Name string
+    Age  int
+}
+
+func main() {
+    p1 := Person{Name: "Alice", Age: 30}
+    p2 := Person{Name: "Alice", Age: 30}
+    p3 := Person{Name: "Bob", Age: 25}
+
+    v1 := reflect.ValueOf(p1)
+    v2 := reflect.ValueOf(p2)
+    v3 := reflect.ValueOf(p3)
+
+    // Comparable 检查是否可比较
+    fmt.Println("Person Comparable:", v1.CanComparable())  // Go 1.20+
+
+    // Compare (Go 1.20+)
+    if v1.CanComparable() {
+        cmp := reflect.Value.Compare(v1, v2, reflect.LessEqual)
+        fmt.Println("p1 == p2:", cmp == 0)  // true
+
+        cmp = reflect.Value.Compare(v1, v3, reflect.LessEqual)
+        fmt.Println("p1 != p3:", cmp != 0)  // true
+    }
+
+    // DeepEqual 深度比较
+    slice1 := []int{1, 2, 3}
+    slice2 := []int{1, 2, 3}
+    slice3 := []int{1, 2, 4}
+
+    fmt.Println("slice1 == slice2:", reflect.DeepEqual(slice1, slice2))  // true
+    fmt.Println("slice1 == slice3:", reflect.DeepEqual(slice1, slice3))  // false
+
+    // 比较包含不可比较类型的值
+    m1 := map[int]int{1: 1}
+    m2 := map[int]int{1: 1}
+    fmt.Println("m1 == m2:", reflect.DeepEqual(m1, m2))  // true
+}
+```
+
+## 零值判断
+
+```go
+package main
+
+import (
+    "fmt"
+    "reflect"
+)
+
+type Person struct {
+    Name string
+    Age  int
+}
+
+func main() {
+    var (
+        zeroInt    int
+        zeroStr    string
+        zeroSlice  []int
+        zeroMap    map[string]int
+        zeroPtr    *int
+        zeroPerson Person
+    )
+
+    tests := []struct {
+        name string
+        val  any
+    }{
+        {"int", zeroInt},
+        {"string", zeroStr},
+        {"slice", zeroSlice},
+        {"map", zeroMap},
+        {"ptr", zeroPtr},
+        {"Person", zeroPerson},
+    }
+
+    for _, tt := range tests {
+        v := reflect.ValueOf(tt.val)
+        fmt.Printf("%s.IsZero(): %v\n", tt.name, v.IsZero())
+    }
+}
+```
+
+## 练习
+
+1. **通用克隆函数**：实现一个可以克隆任意类型的函数
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import (
+    "fmt"
+    "reflect"
+)
+
+func Clone(src any) any {
+    v := reflect.ValueOf(src)
+
+    // 处理指针
+    if v.Kind() == reflect.Ptr {
+        if v.IsNil() {
+            return src
+        }
+        v = v.Elem()
+    }
+
+    // 创建目标值
+    dst := reflect.New(v.Type()).Elem()
+
+    // 根据类型克隆
+    switch v.Kind() {
+    case reflect.Struct:
+        cloneStruct(v, dst)
+    case reflect.Slice:
+        cloneSlice(v, dst)
+    case reflect.Map:
+        cloneMap(v, dst)
+    default:
+        // 基础类型直接复制
+        dst.Set(v)
+    }
+
+    return dst.Interface()
+}
+
+func cloneStruct(src, dst reflect.Value) {
+    for i := 0; i < src.NumField(); i++ {
+        field := src.Field(i)
+        if field.CanSet() {
+            dst.Field(i).Set(field)
+        }
+    }
+}
+
+func cloneSlice(src, dst reflect.Value) {
+    slice := reflect.MakeSlice(src.Type(), src.Len(), src.Cap())
+    reflect.Copy(slice, src)
+    dst.Set(slice)
+}
+
+func cloneMap(src, dst reflect.Value) {
+    m := reflect.MakeMap(src.Type())
+    for _, key := range src.MapKeys() {
+        val := src.MapIndex(key)
+        m.SetMapIndex(key, val)
+    }
+    dst.Set(m)
+}
+
+type Person struct {
+    Name string
+    Age  int
+}
+
+func main() {
+    // 基础类型
+    x := 42
+    fmt.Println("Clone int:", Clone(x))
+
+    // 结构体
+    p := Person{Name: "Alice", Age: 30}
+    pc := Clone(p)
+    fmt.Printf("Clone Person: %+v\n", pc)
+
+    // 切片
+    s := []int{1, 2, 3}
+    sc := Clone(s)
+    fmt.Println("Clone slice:", sc)
+
+    // Map
+    m := map[string]int{"a": 1, "b": 2}
+    mc := Clone(m)
+    fmt.Println("Clone map:", mc)
+}
+```
+
+**解释**：使用反射根据类型创建相应的克隆逻辑，处理结构体、切片、map 等不同类型。
+
+</details>
+
+---
+
+[← 类型反射](./type-reflection.mdx) | [结构体标签 →](./struct-tags.mdx)

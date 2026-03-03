@@ -1,7 +1,7 @@
 [
   {
     "text": "Home",
-    "link": "/en/",
+    "link": "/",
     "activeMatch": "/en/$"
   },
   {
@@ -11,17 +11,17 @@
   },
   {
     "text": "Golang",
-    "link": "/en/golang/",
-    "activeMatch": "/en/golang/"
+    "link": "/golang/",
+    "activeMatch": "/golang/"
   },
   {
     "text": "MySQL",
-    "link": "/en/mysql/",
-    "activeMatch": "/en/mysql/"
+    "link": "/mysql/",
+    "activeMatch": "/mysql/"
   },
   {
     "text": "Redis",
-    "link": "/en/redis/",
-    "activeMatch": "/en/redis/"
+    "link": "/redis/",
+    "activeMatch": "/redis/"
   }
 ]

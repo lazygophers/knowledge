@@ -1,0 +1,17 @@
+[
+  {
+    "type": "file",
+    "name": "conventions",
+    "label": "命名与规范"
+  },
+  {
+    "type": "file",
+    "name": "architecture",
+    "label": "测试架构"
+  },
+  {
+    "type": "file",
+    "name": "ci-cd",
+    "label": "CI/CD 集成"
+  }
+]

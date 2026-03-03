@@ -2,6 +2,12 @@
 
 ## Optimization Order
 
-1. Find the heaviest SQL first.
-2. Correct indexing and query plans.
-3. Scale architecture only after SQL hygiene.
+1. 先定位最重 SQL
+2. 再校正索引与执行计划
+3. 最后考虑架构扩展
+
+## 常用手段
+
+- 复合索引前缀优化
+- 覆盖索引减少回表
+- 查询改写避免 filesort / 临时表

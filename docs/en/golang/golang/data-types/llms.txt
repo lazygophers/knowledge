@@ -1,0 +1,17 @@
+# Data Types Module (Chinese Source)
+
+> English llms.txt for files under `docs/zh/golang/data-types`.
+
+## Docs
+
+- [Bool Types](./bool.mdx): Boolean type basics, logical operators, control flow, best practices, naming conventions, and common pitfalls.
+- [Constants](./constants.mdx): Go constants including const declarations, iota enumerations, typed vs untyped constants, constant expressions, and common use cases.
+- [Numeric Types](./numeric.mdx): Integer and floating-point types, type selection guide, literals, and conversions.
+- [String Types](./string.mdx): String fundamentals, byte/rune conversions, immutability, common operations, and traversal.
+- [Array Types](./array.mdx): Fixed-length arrays, initialization, value type semantics, multi-dimensional arrays, and comparison.
+- [Slice Types](./slice.mdx): Dynamic slices, internal structure, append mechanism, common pitfalls, and operations.
+- [Map Types](./map.mdx): Hash tables, CRUD operations, traversal, concurrency safety, and usage patterns.
+- [Struct Types](./struct.mdx): Aggregate data types, struct tags, anonymous fields, comparison, memory layout, and common patterns including method chaining.
+- [Pointer Types](./pointer.mdx): Memory addresses, pointer semantics, function parameters, best practices, and common pitfalls.
+- [Generics](./generics.mdx): Go 1.18+ generics including type parameters, constraints, type inference, built-in constraints, and practical patterns.
+- [Module Metadata](./_meta.json): Navigation metadata for data-types subdirectory.

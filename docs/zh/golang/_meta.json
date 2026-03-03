@@ -1,7 +1,7 @@
 [
     {
         "type": "section-header",
-        "label": "快速入门"
+        "label": "01-快速入门"
     },
     {
         "type": "file",
@@ -14,17 +14,13 @@
         "label": "环境搭建"
     },
     {
-        "type": "section-header",
-        "label": "编程入门"
-    },
-    {
         "type": "file",
         "name": "hello",
         "label": "Hello World"
     },
     {
         "type": "section-header",
-        "label": "基础概念"
+        "label": "02-语言核心"
     },
     {
         "type": "dir",
@@ -48,8 +44,26 @@
     },
     {
         "type": "dir",
-        "name": "reflection",
-        "label": "反射"
+        "name": "error-handling",
+        "label": "错误处理"
+    },
+    {
+        "type": "dir",
+        "name": "io",
+        "label": "I/O 操作"
+    },
+    {
+        "type": "section-header",
+        "label": "03-标准库"
+    },
+    {
+        "type": "dir",
+        "name": "stdlib",
+        "label": "常用标准库"
+    },
+    {
+        "type": "section-header",
+        "label": "04-高级特性"
     },
     {
         "type": "dir",
@@ -57,17 +71,9 @@
         "label": "并发"
     },
     {
-        "type": "section-header",
-        "label": "测试"
-    },
-    {
         "type": "dir",
-        "name": "testing",
-        "label": "测试"
-    },
-    {
-        "type": "section-header",
-        "label": "高级主题"
+        "name": "reflection",
+        "label": "反射"
     },
     {
         "type": "dir",
@@ -78,5 +84,38 @@
         "type": "dir",
         "name": "cgo",
         "label": "CGO"
+    },
+    {
+        "type": "section-header",
+        "label": "05-工程实践"
+    },
+    {
+        "type": "dir",
+        "name": "testing",
+        "label": "测试"
+    },
+    {
+        "type": "dir",
+        "name": "build-tools",
+        "label": "构建工具"
+    },
+    {
+        "type": "dir",
+        "name": "optimization",
+        "label": "性能优化"
+    },
+    {
+        "type": "dir",
+        "name": "best-practices",
+        "label": "最佳实践"
+    },
+    {
+        "type": "section-header",
+        "label": "06-生态"
+    },
+    {
+        "type": "dir",
+        "name": "ecosystem",
+        "label": "生态系统"
     }
 ]

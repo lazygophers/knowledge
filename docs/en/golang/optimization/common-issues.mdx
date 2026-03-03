@@ -1,0 +1,201 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# Common Performance Issues
+
+<Badge text="反模式" type="danger" />
+
+识别和避免常见的性能问题。
+
+## 字符串拼接
+
+<Badge text="初级开发者" type="tip" />
+
+### 问题：循环中拼接
+
+```go
+// ❌ 性能差：每次都分配新字符串
+func buildStrings(items []string) string {
+    var result string
+    for _, item := range items {
+        result += item + " "
+    }
+    return result
+}
+
+// ✅ 使用 strings.Builder
+func buildStringsOptimized(items []string) string {
+    var builder strings.Builder
+    builder.Grow(len(items) * 10)
+
+    for _, item := range items {
+        builder.WriteString(item)
+        builder.WriteString(" ")
+    }
+    return builder.String()
+}
+```
+
+## map 操作
+
+<Badge text="中级开发者" type="warning" />
+
+### 问题：频繁 map 访问
+
+```go
+// ❌ 每次都查找
+func getCounts(items []string) map[string]int {
+    counts := make(map[string]int)
+    for _, item := range items {
+        if count, ok := counts[item]; ok {
+            counts[item] = count + 1
+        } else {
+            counts[item] = 1
+        }
+    }
+    return counts
+}
+
+// ✅ 直接访问
+func getCountsOptimized(items []string) map[string]int {
+    counts := make(map[string]int, len(items))
+    for _, item := range items {
+        counts[item]++
+    }
+    return counts
+}
+```
+
+## Goroutine 泄漏
+
+<Badge text="高级开发者" type="danger" />
+
+### 问题：忘记读取 channel
+
+```go
+// ❌ 泄漏 goroutine
+func leak() {
+    ch := make(chan int)
+    go func() {
+        ch <- 1
+    }()
+    // 忘记读取 ch
+}
+
+// ✅ 正确处理
+func noLeak() {
+    ch := make(chan int)
+    go func() {
+        ch <- 1
+    }()
+    result := <-ch
+    _ = result
+}
+```
+
+## 内存分配
+
+<Badge text="中级开发者" type="warning" />
+
+### 问题：不必要的分配
+
+```go
+// ❌ 每次都分配
+func isEven(n int) bool {
+    s := strconv.Itoa(n)  // 分配字符串
+    return s[len(s)-1] == '0' || s[len(s)-1] == '2' ||
+           s[len(s)-1] == '4' || s[len(s)-1] == '6' ||
+           s[len(s)-1] == '8'
+}
+
+// ✅ 使用位运算
+func isEvenOptimized(n int) bool {
+    return n%2 == 0
+}
+```
+
+## I/O 操作
+
+<Badge text="中级开发者" type="warning" />
+
+### 问题：小量频繁写入
+
+```go
+// ❌ 每次都写入磁盘
+func writeLogs(logs []string) error {
+    file, _ := os.OpenFile("app.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+    defer file.Close()
+
+    for _, log := range logs {
+        file.WriteString(log + "\n")  // 每次 I/O
+    }
+    return nil
+}
+
+// ✅ 使用 bufio 批量写入
+func writeLogsOptimized(logs []string) error {
+    file, _ := os.OpenFile("app.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+    defer file.Close()
+
+    writer := bufio.NewWriter(file)
+    for _, log := range logs {
+        writer.WriteString(log + "\n")
+    }
+    writer.Flush()
+    return nil
+}
+```
+
+## 锁竞争
+
+<Badge text="高级开发者" type="danger" />
+
+### 问题：细粒度锁
+
+```go
+// ❌ 过度锁
+type Counter struct {
+    mu    sync.Mutex
+    value int
+}
+
+func (c *Counter) Increment() {
+    c.mu.Lock()
+    c.value++
+    c.mu.Unlock()
+}
+
+// ✅ 使用 atomic
+type Counter struct {
+    value int64
+}
+
+func (c *Counter) Increment() {
+    atomic.AddInt64(&c.value, 1)
+}
+```
+
+## 常见陷阱清单
+
+| # | 问题 | 解决方案 |
+|---|------|---------|
+| 1 | 循环中字符串拼接 | 使用 strings.Builder |
+| 2 | 频繁 map 访问 | 考虑 sync.Map |
+| 3 | 不必要的类型转换 | 避免转换 |
+| 4 | goroutine 泄漏 | 使用 context 控制 |
+| 5 | 过度锁 | 使用 atomic 或 RWMutex |
+| 6 | 小量频繁 I/O | 使用 bufio |
+| 7 | 未预分配切片 | make(cap, len) |
+| 8 | for range 闭包陷阱 | Go 1.22+ 自动处理 |
+
+---
+
+## 总结
+
+### 关键要点
+
+| 读者水平 | 核心要点 |
+|---------|---------|
+| <Badge text="初级开发者" type="tip" /> | 避免字符串拼接陷阱。预分配容量。 |
+| <Badge text="中级开发者" type="warning" /> | 注意 goroutine 泄漏。使用 bufio。 |
+| <Badge text="高级开发者" type="danger" /> | 使用 atomic。锁优化。性能 profile。 |

@@ -1,0 +1,32 @@
+[
+  {
+    "type": "file",
+    "name": "index",
+    "label": "标准库概览"
+  },
+  {
+    "type": "file",
+    "name": "strings-strconv",
+    "label": "字符串处理"
+  },
+  {
+    "type": "file",
+    "name": "time",
+    "label": "时间处理"
+  },
+  {
+    "type": "file",
+    "name": "math-rand",
+    "label": "数学与随机"
+  },
+  {
+    "type": "file",
+    "name": "log",
+    "label": "日志"
+  },
+  {
+    "type": "file",
+    "name": "context",
+    "label": "上下文"
+  }
+]

@@ -1,0 +1,939 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# Best Practices
+
+<Badge text="高级" type="danger" /> <Badge text="Go 1.0+" type="info" />
+
+掌握反射的最佳实践，帮助你正确、高效地使用反射。
+
+## 何时使用反射
+
+### 适合使用反射的场景
+
+```go
+// 1. 通用序列化/反序列化
+func Marshal(v any) ([]byte, error) {
+    // JSON、XML 等需要反射处理未知类型
+}
+
+// 2. 依赖注入框架
+type Container struct {
+    services map[reflect.Type]any
+}
+
+// 3. ORM 框架
+func (db *DB) Save(v any) error {
+    // 需要反射获取结构体信息
+}
+
+// 4. 深度比较
+func Equal(a, b any) bool {
+    return reflect.DeepEqual(a, b)
+}
+
+// 5. 通用函数（如 fmt.Printf）
+func Printf(format string, args ...any) {
+    // 反射处理任意类型
+}
+```
+
+### 不适合使用反射的场景
+
+```go
+// ❌ 避免反射处理已知类型
+func ProcessUser(u *User) error {
+    v := reflect.ValueOf(u)
+    name := v.FieldByName("Name").String()
+    // 直接访问更快
+    name = u.Name
+}
+
+// ❌ 避免在热路径中使用反射
+func Process(items []Item) {
+    for _, item := range items {
+        // 反射在循环中性能很差
+        v := reflect.ValueOf(item)
+    }
+}
+
+// ❌ 避免反射处理简单情况
+func GetInt(v any) int {
+    if i, ok := v.(int); ok {
+        return i  // 类型断言更清晰
+    }
+    // 不需要反射
+}
+```
+
+<Callout type="warning" title="使用原则">
+  <strong>优先使用接口而非反射</strong>：
+  <ul>
+    <li>接口类型安全更好</li>
+    <li>接口性能更高</li>
+    <li>接口代码更清晰</li>
+    <li>反射用于处理<strong>未知类型</strong></li>
+  </ul>
+</Callout>
+
+## 性能优化
+
+### 性能基准数据
+
+<Callout type="warning" title="反射 vs 直接调用性能对比">
+  <strong>最新基准测试数据 (2024-2025)</strong>
+  <table>
+    <tr>
+      <th>操作</th>
+      <th>直接访问</th>
+      <th>反射访问</th>
+      <th>性能损失</th>
+    </tr>
+    <tr>
+      <td>结构体字段访问</td>
+      <td>0.31 ns/op</td>
+      <td>28.5 ns/op</td>
+      <td><strong>92x</strong></td>
+    </tr>
+    <tr>
+      <td>方法调用</td>
+      <td>基准</td>
+      <td>50-100x</td>
+      <td><strong>50-100x</strong></td>
+    </tr>
+    <tr>
+      <td>FieldByName</td>
+      <td>基准</td>
+      <td>1000x+</td>
+      <td><strong>1000x+</strong></td>
+    </tr>
+    <tr>
+      <td>泛型 vs 反射</td>
+      <td>~5 ns/op</td>
+      <td>~500 ns/op</td>
+      <td><strong>100x</strong></td>
+    </tr>
+  </table>
+</Callout>
+
+### 缓存反射信息（最重要）
+
+```go
+package main
+
+import (
+    "fmt"
+    "reflect"
+    "sync"
+)
+
+type FieldInfo struct {
+    Index     int
+    Name      string
+    Type      reflect.Type
+    Tag       reflect.StructTag
+}
+
+type StructCache struct {
+    mu    sync.RWMutex
+    cache map[reflect.Type][]FieldInfo
+}
+
+var globalCache = &StructCache{
+    cache: make(map[reflect.Type][]FieldInfo),
+}
+
+// GetFields 获取字段信息（带缓存）
+func GetFields(t reflect.Type) []FieldInfo {
+    // 读缓存
+    globalCache.mu.RLock()
+    if fields, ok := globalCache.cache[t]; ok {
+        globalCache.mu.RUnlock()
+        return fields
+    }
+    globalCache.mu.RUnlock()
+
+    // 构建缓存
+    var fields []FieldInfo
+    for i := 0; i < t.NumField(); i++ {
+        field := t.Field(i)
+        if field.IsExported() {
+            fields = append(fields, FieldInfo{
+                Index: i,
+                Name:  field.Name,
+                Type:  field.Type,
+                Tag:   field.Tag,
+            })
+        }
+    }
+
+    // 写缓存
+    globalCache.mu.Lock()
+    globalCache.cache[t] = fields
+    globalCache.mu.Unlock()
+
+    return fields
+}
+
+type User struct {
+    Name     string `json:"name"`
+    Age      int    `json:"age"`
+    Email    string `json:"email"`
+}
+
+func main() {
+    t := reflect.TypeOf(User{})
+    fields := GetFields(t)
+    for _, f := range fields {
+        fmt.Printf("%s (%s): %q\n", f.Name, f.Type, f.Tag.Get("json"))
+    }
+}
+```
+
+**性能提升：**
+- 首次调用：~1000 ns/op
+- 缓存后调用：~10 ns/op
+- **提升：100x**
+
+### 使用 sync.Pool 复用反射对象
+
+```go
+package main
+
+import (
+    "reflect"
+    "sync"
+)
+
+// 反射对象池
+type ReflectPool struct {
+    pool *sync.Pool
+}
+
+func NewReflectPool(typ reflect.Type) *ReflectPool {
+    return &ReflectPool{
+        pool: &sync.Pool{
+            New: func() any {
+                // 创建新的反射值
+                return reflect.New(typ).Elem()
+            },
+        },
+    }
+}
+
+func (p *ReflectPool) Get() reflect.Value {
+    return p.pool.Get().(reflect.Value)
+}
+
+func (p *ReflectPool) Put(v reflect.Value) {
+    p.pool.Put(v)
+}
+
+// 使用示例
+type User struct {
+    Name string
+    Age  int
+}
+
+func ProcessWithPool() {
+    pool := NewReflectPool(reflect.TypeOf(User{}))
+
+    // 获取反射值
+    v := pool.Get()
+    defer pool.Put(v)
+
+    // 使用反射值
+    v.FieldByName("Name").SetString("Alice")
+    v.FieldByName("Age").SetInt(30)
+}
+```
+
+### 代码生成替代方案
+
+<Callout type="info" title="推荐工具">
+  <strong>高性能序列化工具</strong>：
+  <ul>
+    <li><code>easyjson</code> - JSON 序列化（快 10x）</li>
+    <li><code>ffjson</code> - JSON 序列化（快 5x）</li>
+    <li><code>go generate</code> - 自定义代码生成</li>
+    <li><code>protobuf</code> - 二进制序列化</li>
+  </ul>
+</Callout>
+
+```go
+//go:generate easyjson -all user.go
+
+// 生成的代码性能接近直接调用
+//easyjson:json
+type User struct {
+    Name string `json:"name"`
+    Age  int    `json:"age"`
+}
+
+// 使用生成的 MarshalJSON
+func MarshalUser(u *User) ([]byte, error) {
+    return u.MarshalJSON()  // 快 10x
+}
+```
+
+### 避免重复反射调用
+
+```go
+package main
+
+import (
+    "reflect"
+    "sync"
+)
+
+// ❌ 每次都调用反射
+func Bad(items []any) string {
+    for _, item := range items {
+        v := reflect.ValueOf(item)
+        // 重复调用反射
+    }
+    return ""
+}
+
+// ✅ 缓存反射类型和方法
+type MethodCache struct {
+    mu    sync.RWMutex
+    cache map[reflect.Type]map[string]reflect.Method
+}
+
+func (mc *MethodCache) GetMethod(t reflect.Type, name string) (reflect.Method, bool) {
+    mc.mu.RLock()
+    methods, ok := mc.cache[t]
+    mc.mu.RUnlock()
+
+    if !ok {
+        mc.mu.Lock()
+        // 双重检查
+        if methods, ok = mc.cache[t]; !ok {
+            methods = make(map[string]reflect.Method)
+            for i := 0; i < t.NumMethod(); i++ {
+                m := t.Method(i)
+                methods[m.Name] = m
+            }
+            mc.cache[t] = methods
+        }
+        mc.mu.Unlock()
+    }
+
+    method, ok := methods[name]
+    return method, ok
+}
+```
+
+### 性能分析工具
+
+```go
+package main
+
+import (
+    "fmt"
+    "os"
+    "reflect"
+    "runtime/pprof"
+)
+
+// 启用 CPU 性能分析
+func startCPUProfile(filename string) func() {
+    f, err := os.Create(filename)
+    if err != nil {
+        panic(err)
+    }
+
+    if err := pprof.StartCPUProfile(f); err != nil {
+        panic(err)
+    }
+
+    return func() {
+        pprof.StopCPUProfile()
+        f.Close()
+        fmt.Printf("CPU profile saved to %s\n", filename)
+        fmt.Println("Run: go tool pprof", filename)
+    }
+}
+
+// 启用内存分析
+func writeMemProfile(filename string) {
+    f, err := os.Create(filename)
+    if err != nil {
+        panic(err)
+    }
+    defer f.Close()
+
+    if err := pprof.WriteHeapProfile(f); err != nil {
+        panic(err)
+    }
+    fmt.Printf("Memory profile saved to %s\n", filename)
+}
+
+type User struct {
+    Name string
+    Age  int
+}
+
+func main() {
+    // CPU 性能分析
+    stop := startCPUProfile("cpu.prof")
+    defer stop()
+
+    // 执行反射操作
+    u := User{Name: "Alice", Age: 30}
+    for i := 0; i < 100000; i++ {
+        v := reflect.ValueOf(u)
+        _ = v.FieldByName("Name").String()
+    }
+
+    // 内存分析
+    writeMemProfile("mem.prof")
+}
+```
+
+**分析命令：**
+```bash
+# CPU 分析
+go tool pprof cpu.prof
+# 在 pprof 交互中：
+# (pprof) top    # 显示占用 CPU 最多的函数
+# (pprof) list functionName  # 查看具体代码
+# (pprof) web   # 生成可视化图表
+
+# 内存分析
+go tool pprof mem.prof
+```
+
+## 错误处理
+
+### 适当的错误检查
+
+```go
+package main
+
+import (
+    "fmt"
+    "reflect"
+)
+
+func SetValue(obj any, field string, value any) error {
+    v := reflect.ValueOf(obj)
+
+    // 检查是否为指针
+    if v.Kind() != reflect.Ptr {
+        return fmt.Errorf("expected pointer, got %s", v.Kind())
+    }
+
+    // 解引用
+    v = v.Elem()
+
+    // 检查是否为结构体
+    if v.Kind() != reflect.Struct {
+        return fmt.Errorf("expected struct, got %s", v.Kind())
+    }
+
+    // 获取字段
+    f := v.FieldByName(field)
+    if !f.IsValid() {
+        return fmt.Errorf("field %s not found", field)
+    }
+
+    // 检查是否可设置
+    if !f.CanSet() {
+        return fmt.Errorf("field %s is not settable", field)
+    }
+
+    // 检查是否导出
+    if !f.CanInterface() {
+        return fmt.Errorf("field %s is not exported", field)
+    }
+
+    // 设置值
+    val := reflect.ValueOf(value)
+    if !val.Type().AssignableTo(f.Type()) {
+        return fmt.Errorf("type mismatch: cannot assign %s to %s",
+            val.Type(), f.Type())
+    }
+
+    f.Set(val)
+    return nil
+}
+
+func main() {
+    type User struct {
+        Name     string
+        password string
+    }
+
+    u := &User{}
+    err := SetValue(u, "Name", "Alice")
+    fmt.Println("Set Name:", err)  // <nil>
+
+    err = SetValue(u, "password", "secret")
+    fmt.Println("Set password:", err)  // field password is not exported
+}
+```
+
+### 恐慌恢复
+
+```go
+package main
+
+import (
+    "fmt"
+    "reflect"
+)
+
+func SafeCall(fn any, args ...any) (results []reflect.Value, err error) {
+    defer func() {
+        if r := recover(); r != nil {
+            err = fmt.Errorf("panic in reflection call: %v", r)
+        }
+    }()
+
+    fnValue := reflect.ValueOf(fn)
+    if fnValue.Kind() != reflect.Func {
+        return nil, fmt.Errorf("expected function, got %s", fnValue.Kind())
+    }
+
+    fnType := fnValue.Type()
+    if fnType.NumIn() != len(args) {
+        return nil, fmt.Errorf("argument count mismatch")
+    }
+
+    in := make([]reflect.Value, len(args))
+    for i, arg := range args {
+        in[i] = reflect.ValueOf(arg)
+    }
+
+    return fnValue.Call(in), nil
+}
+
+func main() {
+    results, err := SafeCall(func(a, b int) int {
+        return a + b
+    }, 10, 20)
+
+    if err != nil {
+        fmt.Println("Error:", err)
+    } else {
+        fmt.Println("Result:", results[0].Int())  // Result: 30
+    }
+}
+```
+
+## 常见陷阱
+
+### 未导出字段
+
+```go
+package main
+
+import (
+    "fmt"
+    "reflect"
+)
+
+type User struct {
+    Name     string
+    password string // 未导出
+}
+
+func main() {
+    u := User{Name: "Alice", password: "secret"}
+    v := reflect.ValueOf(u)
+
+    // 可以读取未导出字段的值
+    passField := v.FieldByName("password")
+    fmt.Println("CanInterface:", passField.CanInterface())  // false
+    fmt.Println("CanSet:", passField.CanSet())              // false
+
+    // 无法通过 Interface() 获取未导出字段
+    // value := passField.Interface()  // panic
+
+    // 无法修改未导出字段
+    // passField.SetString("new")  // CanSet() 返回 false
+
+    // 正确做法：只处理导出字段
+    for i := 0; i < v.NumField(); i++ {
+        field := v.Field(i)
+        if field.CanInterface() {
+            fmt.Printf("Field %d: %v\n", i, field.Interface())
+        }
+    }
+}
+```
+
+### 可寻址性
+
+```go
+package main
+
+import (
+    "fmt"
+    "reflect"
+)
+
+type User struct {
+    Name string
+}
+
+func main() {
+    // ❌ 直接获取值：不可寻址
+    u := User{Name: "Alice"}
+    v1 := reflect.ValueOf(u)
+    fmt.Println("v1 CanAddr:", v1.CanAddr())  // false
+    fmt.Println("v1 CanSet:", v1.CanSet())    // false
+
+    // ✅ 通过指针：可寻址
+    v2 := reflect.ValueOf(&u).Elem()
+    fmt.Println("v2 CanAddr:", v2.CanAddr())  // true
+    fmt.Println("v2 CanSet:", v2.CanSet())    // true
+
+    // ❌ 切片索引的值可能不可寻址
+    users := []User{{Name: "Alice"}}
+    v3 := reflect.ValueOf(users).Index(0)
+    fmt.Println("v3 CanAddr:", v3.CanAddr())  // true (但取决于上下文)
+
+    // ✅ map 的值不可设置
+    m := map[string]User{"alice": {Name: "Alice"}}
+    v4 := reflect.ValueOf(m).MapIndex(reflect.ValueOf("alice"))
+    fmt.Println("v4 CanSet:", v4.CanSet())  // false
+}
+```
+
+### 循环引用
+
+```go
+package main
+
+import (
+    "fmt"
+    "reflect"
+)
+
+type Node struct {
+    Value int
+    Next  *Node
+}
+
+func main() {
+    // 创建循环引用
+    node1 := &Node{Value: 1}
+    node2 := &Node{Value: 2}
+    node1.Next = node2
+    node2.Next = node1
+
+    // reflect.DeepEqual 会检测循环引用
+    equal := reflect.DeepEqual(node1, node2)
+    fmt.Println("DeepEqual:", equal)  // false
+
+    // 但自定义比较函数可能陷入死循环
+    // func Equal(a, b any) bool {
+    //     va, vb := reflect.ValueOf(a), reflect.ValueOf(b)
+    //     // 递归比较，没有检测循环引用会死循环
+    // }
+}
+```
+
+## 设计模式
+
+### 适配器模式
+
+```go
+package main
+
+import (
+    "fmt"
+    "reflect"
+)
+
+// 通用适配器
+type Adapter struct {
+    target any
+}
+
+func NewAdapter(target any) *Adapter {
+    return &Adapter{target: target}
+}
+
+func (a *Adapter) Call(method string, args ...any) ([]any, error) {
+    v := reflect.ValueOf(a.target)
+
+    // 处理指针接收者
+    if v.Kind() == reflect.Ptr {
+        v = v.Elem()
+    }
+
+    m := v.MethodByName(method)
+    if !m.IsValid() {
+        return nil, fmt.Errorf("method %s not found", method)
+    }
+
+    // 准备参数
+    in := make([]reflect.Value, len(args))
+    for i, arg := range args {
+        in[i] = reflect.ValueOf(arg)
+    }
+
+    // 调用方法
+    out := m.Call(in)
+
+    // 转换返回值
+    results := make([]any, len(out))
+    for i, v := range out {
+        results[i] = v.Interface()
+    }
+
+    return results, nil
+}
+
+type Calculator struct{}
+
+func (c Calculator) Add(a, b int) int {
+    return a + b
+}
+
+func main() {
+    calc := &Calculator{}
+    adapter := NewAdapter(calc)
+
+    results, err := adapter.Call("Add", 10, 20)
+    if err != nil {
+        fmt.Println("Error:", err)
+        return
+    }
+
+    fmt.Println("Result:", results[0].(int))  // Result: 30
+}
+```
+
+### 插件系统
+
+```go
+package main
+
+import (
+    "fmt"
+    "plugin"
+    "reflect"
+)
+
+// 插件接口
+type Plugin interface {
+    Name() string
+    Execute(args ...string) error
+}
+
+// 插件管理器
+type PluginManager struct {
+    plugins map[string]Plugin
+}
+
+func NewPluginManager() *PluginManager {
+    return &PluginManager{
+        plugins: make(map[string]Plugin),
+    }
+}
+
+func (pm *PluginManager) Load(path string) error {
+    p, err := plugin.Open(path)
+    if err != nil {
+        return err
+    }
+
+    // 查找插件符号
+    sym, err := p.Lookup("Plugin")
+    if err != nil {
+        return err
+    }
+
+    // 反射获取插件
+    pluginValue := reflect.ValueOf(sym).Elem()
+    plugin, ok := pluginValue.Interface().(Plugin)
+    if !ok {
+        return fmt.Errorf("plugin does not implement Plugin interface")
+    }
+
+    pm.plugins[plugin.Name()] = plugin
+    return nil
+}
+
+func (pm *PluginManager) Execute(name string, args ...string) error {
+    plugin, ok := pm.plugins[name]
+    if !ok {
+        return fmt.Errorf("plugin %s not found", name)
+    }
+
+    return plugin.Execute(args...)
+}
+
+func main() {
+    // 使用示例
+    pm := NewPluginManager()
+
+    // 加载插件
+    if err := pm.Load("plugins/myplugin.so"); err != nil {
+        fmt.Println("Load error:", err)
+        return
+    }
+
+    // 执行插件
+    if err := pm.Execute("myplugin", "arg1", "arg2"); err != nil {
+        fmt.Println("Execute error:", err)
+    }
+}
+```
+
+## 测试反射代码
+
+### 单元测试
+
+```go
+package main
+
+import (
+    "reflect"
+    "testing"
+)
+
+func TestSetField(t *testing.T) {
+    type User struct {
+        Name string
+        Age  int
+    }
+
+    tests := []struct {
+        name      string
+        field     string
+        value     any
+        wantErr   bool
+        checkUser func(*User) bool
+    }{
+        {
+            name:    "set name",
+            field:   "Name",
+            value:   "Alice",
+            wantErr: false,
+            checkUser: func(u *User) bool {
+                return u.Name == "Alice"
+            },
+        },
+        {
+            name:    "unknown field",
+            field:   "Unknown",
+            value:   "value",
+            wantErr: true,
+            checkUser: func(u *User) bool {
+                return u.Name == ""
+            },
+        },
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            u := &User{}
+            v := reflect.ValueOf(u).Elem()
+            f := v.FieldByName(tt.field)
+
+            if !f.IsValid() {
+                if !tt.wantErr {
+                    t.Errorf("field %s not found", tt.field)
+                }
+                return
+            }
+
+            if !f.CanSet() {
+                t.Errorf("field %s is not settable", tt.field)
+                return
+            }
+
+            val := reflect.ValueOf(tt.value)
+            f.Set(val)
+
+            if !tt.checkUser(u) {
+                t.Errorf("field validation failed")
+            }
+        })
+    }
+}
+```
+
+### 基准测试
+
+```go
+package main
+
+import (
+    "reflect"
+    "testing"
+)
+
+type User struct {
+    Name string
+    Age  int
+}
+
+func BenchmarkDirectAccess(b *testing.B) {
+    u := User{Name: "Alice", Age: 30}
+    for i := 0; i < b.N; i++ {
+        _ = u.Name
+    }
+}
+
+func BenchmarkReflectAccess(b *testing.B) {
+    u := User{Name: "Alice", Age: 30}
+    v := reflect.ValueOf(u)
+    f := v.FieldByName("Name")
+    for i := 0; i < b.N; i++ {
+        _ = f.String()
+    }
+}
+
+func BenchmarkCachedReflectAccess(b *testing.B) {
+    u := User{Name: "Alice", Age: 30}
+    v := reflect.ValueOf(&u).Elem()
+    f := v.FieldByName("Name")
+    for i := 0; i < b.N; i++ {
+        _ = f.String()
+    }
+}
+```
+
+```bash
+$ go test -bench=.
+BenchmarkDirectAccess-8         1000000000           0.31 ns/op
+BenchmarkReflectAccess-8        50000000            28.5 ns/op
+BenchmarkCachedReflectAccess-8  100000000           12.3 ns/op
+```
+
+## 总结
+
+<Callout type="info" title="反射使用检查清单">
+  <strong>使用前检查：</strong>
+  <ul>
+    <li>是否真的需要反射？</li>
+    <li>能否用接口替代？</li>
+    <li>能否用代码生成替代？</li>
+  </ul>
+
+  <strong>使用时注意：</strong>
+  <ul>
+    <li>缓存反射信息</li>
+    <li>正确处理错误</li>
+    <li>检查可设置性</li>
+    <li>注意性能影响</li>
+  </ul>
+
+  <strong>使用后测试：</strong>
+  <ul>
+    <li>编写单元测试</li>
+    <li>进行基准测试</li>
+    <li>验证正确性</li>
+  </ul>
+</Callout>
+
+---
+
+[← 动态调用](./dynamic-calls.mdx)

@@ -1,0 +1,419 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# Mocking Framework
+
+<Badge text="高级" type="danger" /> <Badge text="Go 1.0+" type="info" />
+
+Mock 框架简化了测试替身的创建和使用，是 Go 测试中最常用的工具之一。
+
+## testify/mock
+
+testify/mock 是流行的 Go mock 框架，提供了简洁的 API。
+
+### 安装
+
+```bash
+go get github.com/stretchr/testify/mock
+```
+
+### 基础用法
+
+```go
+package user_test
+
+import (
+    "testing"
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/mock"
+)
+
+// 定义接口
+type Database interface {
+    GetUser(id int) (*User, error)
+    SaveUser(user *User) error
+}
+
+// Mock 对象
+type MockDatabase struct {
+    mock.Mock
+}
+
+func (m *MockDatabase) GetUser(id int) (*User, error) {
+    args := m.Called(id)
+    if args.Get(0) == nil {
+        return nil, args.Error(1)
+    }
+    return args.Get(0).(*User), args.Error(1)
+}
+
+func (m *MockDatabase) SaveUser(user *User) error {
+    args := m.Called(user)
+    return args.Error(0)
+}
+
+// 测试
+func TestUserService(t *testing.T) {
+    mockDB := new(MockDatabase)
+
+    // 设置期望
+    mockDB.On("GetUser", 1).Return(&User{ID: 1, Name: "Alice"}, nil)
+    mockDB.On("GetUser", 999).Return(nil, errors.New("not found"))
+    mockDB.On("SaveUser", mock.AnythingOfType("*user.User")).Return(nil)
+
+    service := NewUserService(mockDB)
+
+    // 测试获取用户
+    user, err := service.GetUser(1)
+    assert.NoError(t, err)
+    assert.Equal(t, "Alice", user.Name)
+
+    // 测试用户不存在
+    _, err = service.GetUser(999)
+    assert.Error(t, err)
+
+    // 测试保存用户
+    err = service.SaveUser(&User{Name: "Bob"})
+    assert.NoError(t, err)
+
+    // 验证所有期望都被满足
+    mockDB.AssertExpectations(t)
+}
+```
+
+### 匹配器
+
+```go
+func TestMatchers(t *testing.T) {
+    mockDB := new(MockDatabase)
+
+    // 精确匹配
+    mockDB.On("GetUser", 1).Return(&User{ID: 1}, nil)
+
+    // 任意值
+    mockDB.On("SaveUser", mock.Anything).Return(nil)
+
+    // 类型匹配
+    mockDB.On("SaveUser", mock.AnythingOfType("*user.User")).Return(nil)
+
+    // nil 检查
+    mockDB.On("DeleteUser", mock.IsNil).Return(errors.New("invalid user"))
+
+    // 正则匹配
+    mockDB.On("FindUser", mock.MatchedBy(func(id int) bool {
+        return id > 0 && id < 100
+    })).Return(&User{}, nil)
+
+    service := NewUserService(mockDB)
+
+    // 测试代码...
+}
+```
+
+### 调用次数验证
+
+```go
+func TestCallCount(t *testing.T) {
+    mockDB := new(MockDatabase)
+
+    // 调用一次
+    mockDB.On("GetUser", 1).Return(&User{ID: 1}, nil).Once()
+
+    // 调用两次
+    mockDB.On("GetUser", 2).Return(&User{ID: 2}, nil).Twice()
+
+    // 调用指定次数
+    mockDB.On("GetUser", 3).Return(&User{ID: 3}, nil).Times(3)
+
+    // 调用 0 次或多次
+    mockDB.On("GetUser", 4).Return(&User{ID: 4}, nil).Maybe()
+
+    service := NewUserService(mockDB)
+
+    // 测试代码...
+}
+```
+
+### 顺序验证
+
+```go
+func TestOrder(t *testing.T) {
+    mockDB := new(MockDatabase)
+    mockCache := new(MockCache)
+
+    // 设置有序调用
+    mockDB.On("GetUser", 1).Return(&User{ID: 1}, nil)
+    mockCache.On("Set", "user:1", mock.Anything).Return(nil)
+
+    // 创建有序 mock
+    order := NewOrderedMock(t)
+    order.On("mockDB", "GetUser", 1)
+    order.On("mockCache", "Set", "user:1", mock.Anything)
+
+    service := NewUserService(mockDB, mockCache)
+    service.GetUserWithCache(1)
+
+    order.AssertExpectations()
+}
+```
+
+<Callout type="warning" title="Mock 最佳实践">
+  <strong>优先使用 Fake 而非 Mock</strong>
+
+  - Mock 测试脆弱，容易因实现细节变化而失败
+  - Fake 更接近真实行为，测试更稳定
+  - 只在必须验证交互行为时使用 Mock
+</Callout>
+
+## gomock
+
+gomock 是官方推荐的 mock 框架，通过代码生成创建 mock。
+
+### 安装
+
+```bash
+go install go.uber.org/mock/mockgen@latest
+```
+
+### 定义接口
+
+```go
+// repository.go
+package user
+
+type Repository interface {
+    GetUser(ctx context.Context, id int) (*User, error)
+    SaveUser(ctx context.Context, user *User) error
+    DeleteUser(ctx context.Context, id int) error
+}
+
+// service.go
+type Service struct {
+    repo Repository
+}
+
+func NewService(repo Repository) *Service {
+    return &Service{repo: repo}
+}
+
+func (s *Service) GetUser(ctx context.Context, id int) (*User, error) {
+    return s.repo.GetUser(ctx, id)
+}
+```
+
+### 生成 Mock
+
+```bash
+# 生成 mock 文件
+mockgen -source=repository.go -destination=mock_repository.go
+
+# 或使用 //go:generate 指令
+//go:generate mockgen -source=repository.go -destination=mock_repository.go
+```
+
+### 使用 Mock
+
+```go
+//go:generate mockgen -source=repository.go -destination=mock_repository.go
+
+package user_test
+
+import (
+    "context"
+    "testing"
+    "go.uber.org/mock/gomock"
+
+    "yourmodule/user"
+)
+
+func TestService_GetUser(t *testing.T) {
+    ctrl := gomock.NewController(t)
+    defer ctrl.Finish()
+
+    mockRepo := NewMockRepository(ctrl)
+
+    // 设置期望
+    mockRepo.EXPECT().
+        GetUser(gomock.Any(), gomock.Eq(1)).
+        Return(&user.User{ID: 1, Name: "Alice"}, nil).
+        Times(1)
+
+    service := user.NewService(mockRepo)
+
+    // 测试
+    u, err := service.GetUser(context.Background(), 1)
+    if err != nil {
+        t.Fatalf("GetUser() error = %v", err)
+    }
+
+    if u.Name != "Alice" {
+        t.Errorf("got %s, want Alice", u.Name)
+    }
+}
+```
+
+### gomock 匹配器
+
+```go
+func TestMatchers(t *testing.T) {
+    ctrl := gomock.NewController(t)
+    defer ctrl.Finish()
+
+    mockRepo := NewMockRepository(ctrl)
+
+    // 精确匹配
+    mockRepo.EXPECT().GetUser(gomock.Any(), gomock.Eq(1))
+
+    // 任意值
+    mockRepo.EXPECT().SaveUser(gomock.Any(), gomock.Any())
+
+    // 类型匹配
+    mockRepo.EXPECT().SaveUser(gomock.Any(), gomock.AssignableToTypeOf(&user.User{}))
+
+    // 自定义匹配
+    mockRepo.EXPECT().GetUser(gomock.Any(), gomock.InRange(1, 100))
+
+    // 正则匹配
+    mockRepo.EXPECT().FindUser(gomock.Any(), gomock.Matcher(func(id int) bool {
+        return id > 0
+    })).Return(&user.User{}, nil)
+
+    // nil 检查
+    mockRepo.EXPECT().UpdateUser(gomock.Any(), gomock.Nil())
+
+    service := user.NewService(mockRepo)
+    // 测试代码...
+}
+```
+
+### 调用顺序
+
+```go
+func TestOrder(t *testing.T) {
+    ctrl := gomock.NewController(t)
+    defer ctrl.Finish()
+
+    mockRepo := NewMockRepository(ctrl)
+    mockCache := NewMockCache(ctrl)
+
+    // 设置有序调用
+    gomock.InOrder(
+        mockRepo.EXPECT().GetUser(gomock.Any(), 1).Return(&user.User{ID: 1}, nil),
+        mockCache.EXPECT().Set(gomock.Any(), "user:1", gomock.Any()).Return(nil),
+    )
+
+    service := NewServiceWithCache(mockRepo, mockCache)
+    service.GetUserWithCache(context.Background(), 1)
+}
+```
+
+## testify vs gomock
+
+| 特性 | testify/mock | gomock |
+|------|-------------|--------|
+| 类型安全 | 运行时检查 | 编译时检查 |
+| 代码生成 | 不需要 | 需要 |
+| 易用性 | 简单直观 | 稍复杂 |
+| 性能 | 稍慢 | 更快 |
+| IDE 支持 | 有限 | 更好 |
+
+## 练习
+
+1. **使用 testify/mock**：为邮件服务编写 mock 测试
+
+<details>
+<summary>查看答案</summary>
+
+```go
+// email.go
+package email
+
+type Email struct {
+    To      string
+    Subject string
+    Body    string
+}
+
+type Sender interface {
+    Send(email Email) error
+}
+
+type Service struct {
+    sender Sender
+}
+
+func NewService(sender Sender) *Service {
+    return &Service{sender: sender}
+}
+
+func (s *Service) SendWelcome(to string) error {
+    return s.sender.Send(Email{
+        To:      to,
+        Subject: "Welcome!",
+        Body:    "Welcome to our service!",
+    })
+}
+```
+
+```go
+// email_test.go
+package email_test
+
+import (
+    "errors"
+    "testing"
+
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/mock"
+
+    email "yourmodule/email"
+)
+
+// Mock Sender
+type MockSender struct {
+    mock.Mock
+}
+
+func (m *MockSender) Send(e email.Email) error {
+    args := m.Called(e)
+    return args.Error(0)
+}
+
+func TestService_SendWelcome(t *testing.T) {
+    mockSender := new(MockSender)
+
+    // 设置期望
+    expectedEmail := email.Email{
+        To:      "user@example.com",
+        Subject: "Welcome!",
+        Body:    "Welcome to our service!",
+    }
+    mockSender.On("Send", expectedEmail).Return(nil)
+
+    service := email.NewService(mockSender)
+
+    // 测试
+    err := service.SendWelcome("user@example.com")
+    assert.NoError(t, err)
+
+    // 验证期望
+    mockSender.AssertExpectations(t)
+}
+
+func TestService_SendWelcome_Error(t *testing.T) {
+    mockSender := new(MockSender)
+
+    // 设置错误期望
+    mockSender.On("Send", mock.Anything).Return(errors.New("SMTP error"))
+
+    service := email.NewService(mockSender)
+
+    err := service.SendWelcome("user@example.com")
+    assert.Error(t, err)
+    assert.Contains(t, err.Error(), "SMTP error")
+}
+```
+
+**解释**：使用 testify/mock 创建了 Sender 接口的 mock 实现，验证了邮件发送逻辑。
+
+</details>

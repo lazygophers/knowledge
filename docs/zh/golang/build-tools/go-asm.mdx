@@ -1,0 +1,379 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# Go 汇编 - Go Assembly
+
+<Badge text="高级主题" type="danger" />
+
+Go 汇编是一种特定于 Go 的汇编语言，用于编写性能关键代码和底层系统操作。
+
+## 基础概念
+
+<Badge text="高级开发者" type="danger" />
+
+### Go 汇编特点
+
+- **跨平台**：不直接对应机器指令
+- **寄存器虚拟化**：使用伪寄存器
+- **Go 特定**：与 Go 运行时紧密集成
+
+### 伪寄存器
+
+| 伪寄存器 | 说明 |
+|---------|------|
+| SB | 静态基址指针 (static base) |
+| SP | 栈指针 (stack pointer) |
+| FP | 帧指针 (frame pointer, 已废弃) |
+| PC | 程序计数器 (program counter) |
+
+## 基础语法
+
+<Badge text="高级开发者" type="danger" />
+
+### 汇编文件结构
+
+```asm
+// hello_asm.go
+package main
+
+func add(a, b int64) int64
+
+func main() {
+    println(add(3, 5))
+}
+```
+
+```asm
+// hello_asm.s
+TEXT ·add(SB),NOSPLIT,$0
+    MOVQ a+0(FP), AX
+    MOVQ b+8(FP), BX
+    ADDQ BX, AX
+    MOVQ AX, ret+16(FP)
+    RET
+```
+
+### TEXT 指令
+
+```asm
+TEXT name(SB), [flags], $frame_size
+```
+
+**组成部分：**
+- `name`：函数名，前缀 `·` 表示包导出
+- `SB`：静态基址
+- `flags`：NOSPLIT, NOSPLIT, WRAPPER 等
+- `frame_size`：栈帧大小
+
+### 常用指令
+
+```asm
+// 数据传输
+MOVQ src, dst   // 64位传送
+MOVW src, dst   // 16位传送
+MOVB src, dst   // 8位传送
+
+// 算术运算
+ADDQ src, dst   // 加法
+SUBQ src, dst   // 减法
+MULQ src, dst   // 乘法
+DIVQ src        // 除法
+
+// 逻辑运算
+ANDQ src, dst   // 与
+ORQ  src, dst   // 或
+XORQ src, dst   // 异或
+SHLQ imm, dst   // 左移
+SHRQ imm, dst   // 右移
+
+// 比较
+CMPQ a, b       // 比较
+JE  target      // 相等跳转
+JNE target      // 不等跳转
+JG  target      // 大于跳转
+JL  target      // 小于跳转
+```
+
+## 参数和返回值
+
+<Badge text="高级开发者" type="danger" />
+
+### 函数参数
+
+```go
+func sum(a, b, c int64) int64
+```
+
+```asm
+TEXT ·sum(SB),NOSPLIT,$0
+    // 参数从 FP+0 开始
+    MOVQ a+0(FP), AX   // a
+    MOVQ b+8(FP), BX   // b
+    MOVQ c+16(FP), CX  // c
+
+    ADDQ BX, AX
+    ADDQ CX, AX
+
+    // 返回值
+    MOVQ AX, ret+24(FP)
+    RET
+```
+
+### 多返回值
+
+```go
+func divmod(a, b int64) (div, mod int64)
+```
+
+```asm
+TEXT ·divmod(SB),NOSPLIT,$0
+    MOVQ a+0(FP), AX
+    MOVQ b+8(FP), CX
+    MOVQ AX, BX
+
+    CMOVQEQ CX, BX    // 条件移动
+
+    MOVQ BX, div+16(FP)
+    MOVQ DX, mod+24(FP)
+    RET
+```
+
+## 栈操作
+
+<Badge text="高级开发者" type="danger" />
+
+### 局部变量
+
+```asm
+TEXT ·example(SB),NOSPLIT,$32  // 分配32字节栈空间
+    // 局部变量从 SP-8 开始向下分配
+    MOVQ $0, -8(SP)    // var1
+    MOVQ $0, -16(SP)   // var2
+    MOVQ $0, -24(SP)   // var3
+    MOVQ $0, -32(SP)   // var4
+
+    // 使用局部变量
+    MOVQ -8(SP), AX
+    ADDQ $1, AX
+    MOVQ AX, -8(SP)
+
+    RET
+```
+
+### 栈指针调整
+
+```asm
+TEXT ·grow(SB),NOSPLIT,$0
+    MOVQ SP, BX        // 保存旧 SP
+    SUBQ $32, SP       // 扩展栈
+    MOVQ BX, -8(SP)    // 保存旧 SP
+
+    // ... 使用栈 ...
+
+    MOVQ -8(SP), SP    // 恢复栈
+    RET
+```
+
+## 实战示例
+
+<Badge text="高级开发者" type="danger" />
+
+### 字符串快速比较
+
+```go
+//go:build !ignore
+
+package main
+
+func equal_asm(a, b string) bool
+
+func main() {
+    s1 := "hello, world!"
+    s2 := "hello, world!"
+    println(equal_asm(s1, s2))
+}
+```
+
+```asm
+// TEXT ·equal_asm(SB),NOSPLIT,$0
+    MOVQ a_len+8(FP), DI
+    MOVQ b_len+32(FP), SI
+    CMPQ DI, SI
+    JNE  neq
+
+    MOVQ a_ptr+0(FP), AX
+    MOVQ b_ptr+24(FP), BX
+    CMPQ AX, BX
+    JEQ  eq
+
+    MOVQ DI, CX
+    CLD
+    REP CMPSB
+    JNE  neq
+
+eq:
+    MOVQ $1, AX
+    MOVQ AX, ret+40(FP)
+    RET
+
+neq:
+    MOVQ $0, AX
+    MOVQ AX, ret+40(FP)
+    RET
+```
+
+### 位操作优化
+
+```asm
+TEXT ·popcount(SB),NOSPLIT,$0
+    MOVQ a+0(FP), AX
+    XORQ CX, CX
+    MOVQ $1, DX
+
+loop:
+    TESTQ AX, AX
+    JZ    done
+    ANDQ  AX, DX
+    JZ    skip
+    INCQ  CX
+skip:
+    SHLQ  $1, AX
+    JMP   loop
+
+done:
+    MOVQ CX, ret+8(FP)
+    RET
+```
+
+### SIMD 优化 (AVX2)
+
+```asm
+// 需要 Go 1.11+ 和支持 AVX2 的 CPU
+TEXT ·add_vectors(SB),NOSPLIT,$0
+    MOVQ a_ptr+0(FP), AX
+    MOVQ b_ptr+24(FP), BX
+    MOVQ result_ptr+48(FP), CX
+
+    MOVDQU (AX), X0
+    MOVDQU (BX), X1
+    VPADDB X0, X1, X0
+    MOVDQU X0, (CX)
+
+    VZEROUPPER
+    RET
+```
+
+## 调试和优化
+
+<Badge text="高级开发者" type="danger" />
+
+### 查看汇编输出
+
+```bash
+# 查看函数的汇编代码
+go tool compile -S main.go
+
+# 反汇编可执行文件
+go tool objdump -S main
+
+# 查看特定函数
+go tool objdump -S main | grep -A 20 "main.add"
+```
+
+### 性能分析
+
+```bash
+# CPU 性能分析
+go test -cpuprofile=cpu.prof -bench=.
+go tool pprof cpu.prof
+
+# 查看汇编热力图
+go tool pprof -disasm func_name cpu.prof
+```
+
+### 优化技巧
+
+```go
+//go:nosplit       // 禁止栈增长
+//go:norace        // 禁用竞态检测
+//go:noescape      // 阻止逃逸分析
+//go:uintptrescapes // 指针逃逸到堆
+
+func optimized() {
+    // 优化的汇编代码
+}
+```
+
+## 最佳实践
+
+<Badge text="高级开发者" type="danger" />
+
+### 何时使用汇编
+
+<Callout type="tip">
+**适用场景**：
+- 加密算法
+- 图像处理
+- SIMD 优化
+- 系统调用
+- 特定硬件操作
+</Callout>
+
+### 编写建议
+
+```asm
+// 1. 使用有意义的标签
+loop:
+    CMPQ $0, AX
+    JLE  done
+
+    // 2. 注释复杂逻辑
+    // 计数器减一，继续循环
+    DECQ AX
+    JMP  loop
+
+done:
+    RET
+
+// 3. 对齐数据
+ALIGN $16
+data:
+    QUAD $0
+
+// 4. 使用 NOSPLIT 避免栈检查
+TEXT ·fast(SB),NOSPLIT,$0
+    // ...
+```
+
+---
+
+## 总结
+
+### 速查表
+
+```bash
+# 查看汇编
+go tool compile -S file.go
+go tool objdump -S binary
+
+# 常用伪寄存器
+SB - 静态基址
+SP - 栈指针
+FP - 帧指针 (已废弃)
+
+# 常用指令
+MOVQ - 数据传送
+ADDQ - 加法
+CMPQ - 比较
+JNE  - 条件跳转
+```
+
+### 注意事项
+
+| # | 说明 |
+|---|------|
+| 1 | Go 汇编是跨平台的伪汇编 |
+| 2 | 伪寄存器由编译器映射到实际寄存器 |
+| 3 | 栈向下增长 |
+| 4 | 参数在 FP+0，返回值在 FP+N |
+| 5 | 使用 NOSPLIT 避免栈增长检查 |

@@ -1,0 +1,296 @@
+import { Badge } from "@rspress/core/theme";
+
+# Numeric Types
+
+[← 返回数据类型](../)
+
+Go 语言提供多种数值类型，包括整型和浮点型。
+
+## <Badge text="整型" type="tip" />
+
+### 平台相关整型
+
+```go
+var i int = 42   // 有符号，平台相关（32位系统为int32，64位系统为int64）
+var u uint = 42  // 无符号，平台相关
+```
+
+### 有符号整型
+
+```go
+var i8  int8  = 127           // 8位有符号 (-128 到 127)
+var i16 int16 = 32767         // 16位有符号 (-32768 到 32767)
+var i32 int32 = 2147483647    // 32位有符号 (-21亿 到 21亿)
+var i64 int64 = 9000000000    // 64位有符号
+```
+
+### 无符号整型
+
+```go
+var u8  uint8  = 255          // 8位无符号 (0 到 255)，别名 byte
+var u16 uint16 = 65535        // 16位无符号 (0 到 65535)
+var u32 uint32 = 4294967295   // 32位无符号 (0 到 42亿)
+var u64 uint64 = 18446744073709551615  // 64位无符号
+```
+
+## <Badge text="整型选择指南" type="info" />
+
+| 场景           | 推荐类型 | 说明                                   |
+| -------------- | -------- | -------------------------------------- |
+| 一般计数、索引 | `int`    | 性能最优，跨平台兼容                   |
+| ID、数据库主键 | `uint64` | 无符号64位整数，保证不溢出，跨平台一致 |
+| 字节处理       | `byte`   | 明确语义                               |
+| 文件大小       | `int64`  | 文件可能超过 4GB                       |
+| 端口号         | `uint16` | 0-65535                                |
+
+## <Badge text="浮点型" type="tip" />
+
+### 浮点类型
+
+```go
+var f32 float32 = 3.14              // IEEE-754 32位浮点数
+var f64 float64 = 3.141592653589793 // IEEE-754 64位浮点数
+```
+
+### 浮点型选择
+
+<Badge text="建议" type="tip" /> 除非有特殊内存限制，否则
+<strong>始终使用 `float64`</strong>。
+
+| 类型      | 精度      | 范围     | 使用场景     |
+| --------- | --------- | -------- | ------------ |
+| `float32` | ~7位小数  | ±3.4e38  | 内存受限环境 |
+| `float64` | ~15位小数 | ±1.8e308 | 默认选择     |
+
+## <Badge text="数值字面量" type="info" />
+
+```go
+// 十进制
+var dec = 42
+
+// 八进制（以0开头）
+var oct = 052  // = 42
+
+// 十六进制（以0x开头）
+var hex = 0x2A  // = 42
+
+// 浮点数
+var f1 = 3.14
+var f2 = .5     // = 0.5
+var f3 = 1.     // = 1.0
+
+// 科学计数法
+var e1 = 1.2e3  // = 1200
+var e2 = 1.2e-3 // = 0.001
+```
+
+## <Badge text="类型转换" type="warning" />
+
+```go
+var i int = 42
+var f float64 = float64(i)
+var u uint = uint(i)
+
+// 注意：浮点转整数会截断小数部分
+var x float64 = 3.9
+var y int = int(x)  // y = 3，不是4
+```
+
+<Badge text="警告" type="danger" /> 数值类型<strong>不会自动转换</strong>
+，必须显式转换。
+
+## 练习
+
+1. 编写函数计算圆的面积，使用 `float64`
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// CircleArea 计算圆的面积
+func CircleArea(radius float64) float64 {
+    return 3.141592653589793 * radius * radius
+}
+
+// CircleAreaWithPrecision 计算圆的面积（指定精度）
+func CircleAreaWithPrecision(radius float64, precision int) float64 {
+    area := 3.141592653589793 * radius * radius
+
+    // 简单的四舍五入
+    multiplier := 1.0
+    for i := 0; i < precision; i++ {
+        multiplier *= 10
+    }
+
+    return float64(int64(area*multiplier+0.5)) / multiplier
+}
+
+func main() {
+    radius := 5.0
+    area := CircleArea(radius)
+
+    fmt.Printf("半径 %.2f 的圆面积: %.2f\n", radius, area)
+    fmt.Printf("精确到4位小数: %.4f\n", CircleAreaWithPrecision(radius, 4))
+}
+```
+
+**解释**：展示了 float64 类型的数学计算和精度处理。
+</details>
+
+2. 实现字节转换为 KB、MB、GB 的函数
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// ByteSize 字节大小类型
+type ByteSize int64
+
+const (
+    KB = 1024
+    MB = 1024 * KB
+    GB = 1024 * MB
+    TB = 1024 * GB
+)
+
+// String 实现 Stringer 接口
+func (b ByteSize) String() string {
+    switch {
+    case b >= TB:
+        return fmt.Sprintf("%.2f TB", float64(b)/float64(TB))
+    case b >= GB:
+        return fmt.Sprintf("%.2f GB", float64(b)/float64(GB))
+    case b >= MB:
+        return fmt.Sprintf("%.2f MB", float64(b)/float64(MB))
+    case b >= KB:
+        return fmt.Sprintf("%.2f KB", float64(b)/float64(KB))
+    default:
+        return fmt.Sprintf("%d B", b)
+    }
+}
+
+// ToKB 转换为 KB
+func ToKB(bytes int64) float64 {
+    return float64(bytes) / float64(KB)
+}
+
+// ToMB 转换为 MB
+func ToMB(bytes int64) float64 {
+    return float64(bytes) / float64(MB)
+}
+
+// ToGB 转换为 GB
+func ToGB(bytes int64) float64 {
+    return float64(bytes) / float64(GB)
+}
+
+func main() {
+    sizes := []int64{
+        500,                    // 500 B
+        1024,                   // 1 KB
+        1024 * 1024,            // 1 MB
+        1024 * 1024 * 1024,     // 1 GB
+        5 * 1024 * 1024 * 1024, // 5 GB
+    }
+
+    for _, size := range sizes {
+        bs := ByteSize(size)
+        fmt.Printf("%20d: %s\n", size, bs.String())
+    }
+
+    fmt.Println("\n使用转换函数:")
+    bytes := int64(10485760) // 10 MB
+    fmt.Printf("%d 字节 = %.2f KB\n", bytes, ToKB(bytes))
+    fmt.Printf("%d 字节 = %.2f MB\n", bytes, ToMB(bytes))
+}
+```
+
+**解释**：展示了字节单位转换和类型方法的使用。
+</details>
+
+3. 创建演示不同整型溢出的程序
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// DemonstrateOverflow 演示整型溢出
+func DemonstrateOverflow() {
+    fmt.Println("=== 整型溢出演示 ===\n")
+
+    // int8 溢出（范围: -128 到 127）
+    var i8 int8 = 127
+    fmt.Printf("int8 最大值: %d\n", i8)
+    i8++  // 溢出，变为 -128
+    fmt.Printf("int8 溢出后: %d\n\n", i8)
+
+    // int8 下溢
+    var i8min int8 = -128
+    fmt.Printf("int8 最小值: %d\n", i8min)
+    i8min--  // 下溢，变为 127
+    fmt.Printf("int8 下溢后: %d\n\n", i8min)
+
+    // uint8 溢出（范围: 0 到 255）
+    var u8 uint8 = 255
+    fmt.Printf("uint8 最大值: %d\n", u8)
+    u8++  // 溢出，变为 0
+    fmt.Printf("uint8 溢出后: %d\n\n", u8)
+
+    // int64 溢出
+    var i64 int64 = 9223372036854775807 // 最大值
+    fmt.Printf("int64 最大值: %d\n", i64)
+    i64++  // 溢出，变为最小值
+    fmt.Printf("int64 溢出后: %d\n\n", i64)
+
+    // 浮点数溢出
+    var f64 float64 = 1.7976931348623157e+308 // 接近最大值
+    fmt.Printf("float64 接近最大值: %e\n", f64)
+    f64 = f64 * 2  // 溢出，变为 Inf
+    fmt.Printf("float64 溢出后: %e\n\n", f64)
+}
+
+// SafeAdd 安全加法（检查溢出）
+func SafeAdd(a, b int64) (int64, bool) {
+    if b > 0 && a > (1<<63-1-b) {
+        return 0, false // 正溢出
+    }
+    if b < 0 && a < (-1<<63-b) {
+        return 0, false // 负溢出
+    }
+    return a + b, true
+}
+
+func main() {
+    DemonstrateOverflow()
+
+    fmt.Println("=== 安全加法 ===")
+    result, ok := SafeAdd(9223372036854775806, 1)
+    if ok {
+        fmt.Println("加法成功:", result)
+    } else {
+        fmt.Println("加法溢出!")
+    }
+
+    _, ok = SafeAdd(9223372036854775806, 2)
+    if !ok {
+        fmt.Println("加法溢出!")
+    }
+}
+```
+
+**解释**：展示了各种整型的溢出行为和安全检查方法。
+</details>
+
+[← 返回数据类型](../) | [字符串 →](./string.mdx)

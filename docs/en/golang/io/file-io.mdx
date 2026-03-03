@@ -1,0 +1,19 @@
+import { Badge } from "@rspress/core/theme";
+
+# File I/O
+
+<Badge text="基础操作" type="tip" />
+
+文件读写操作。
+
+## 读取文件
+
+```go
+data, err := os.ReadFile("file.txt")
+```
+
+## 写入文件
+
+```go
+err := os.WriteFile("out.txt", data, 0644)
+```

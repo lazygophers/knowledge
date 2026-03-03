@@ -1,13 +1,13 @@
-# MySQL Transactions and Locks
+# MySQL Transactions & Locks
 
 ## Key Concepts
 
 - Isolation levels: RU / RC / RR / SERIALIZABLE
-- Lock types: row lock, gap lock and next-key lock
-- Deadlocks are expected; fast detection and retry matter most
+- 锁类型：行锁、间隙锁、临键锁
+- 死锁：必然存在，重点是快速检测与重试
 
-## Troubleshooting Path
+## 排查路径
 
-1. Inspect deadlock reports in InnoDB status.
-2. Review hot SQL and index hit ratio.
-3. Reduce transaction scope and enforce access order.
+1. `show engine innodb status` 观察死锁信息
+2. 查看热点 SQL 与索引命中
+3. 缩小事务范围并优化访问顺序

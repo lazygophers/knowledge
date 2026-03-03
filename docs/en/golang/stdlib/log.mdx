@@ -1,0 +1,516 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# Logging
+
+<Badge text="实用技能" type="success" />
+
+Go 的 log 包提供简单的日志功能，生产环境通常使用第三方日志库。
+
+## log 包基础
+
+<Badge text="初级开发者" type="tip" />
+
+### 基本使用
+
+```go
+package main
+
+import (
+    "log"
+)
+
+func main() {
+    // 默认输出到 stderr
+    log.Println("普通日志")
+    log.Fatal("致命错误")      // 打印后调用 os.Exit(1)
+    log.Panic("恐慌错误")     // 打印后调用 panic()
+}
+```
+
+### 日志级别
+
+```go
+package main
+
+import (
+    "log"
+)
+
+func main() {
+    // Print - 普通日志
+    log.Print("普通日志")
+    log.Println("普通日志带换行")
+
+    // Fatal - 致命错误
+    // log.Fatal("程序结束")
+
+    // Panic - 恐慌错误
+    // log.Panic("程序崩溃")
+
+    // 前缀设置
+    log.SetPrefix("APP: ")
+    log.Println("带前缀的日志")
+
+    // 设置 flags
+    log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+    log.Println("完整信息")
+}
+```
+
+### 日志 Flags
+
+```go
+const (
+    Ldate         = 1 << iota  // 日期：2024/03/15
+    Ltime                      // 时间：14:30:00
+    Lmicroseconds              // 微秒：14:30:00.123456
+    Llongfile                  // 完整文件名：/a/b/c.go:123
+    Lshortfile                 // 短文件名：c.go:123
+    LUTC                       // 使用 UTC 时间
+    LstdFlags    = Ldate | Ltime  // 标准日志格式
+)
+```
+
+## 结构化日志
+
+<Badge text="中级开发者" type="warning" />
+
+### 自定义 Logger
+
+```go
+package main
+
+import (
+    "log"
+    "os"
+)
+
+func main() {
+    // 创建自定义 logger
+    logger := log.New(os.Stdout, "APP: ", log.LstdFlags|log.Lshortfile)
+    logger.Println("自定义日志")
+
+    // 输出到文件
+    file, err := os.OpenFile("app.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer file.Close()
+
+    fileLogger := log.New(file, "APP: ", log.LstdFlags)
+    fileLogger.Println("写入文件的日志")
+}
+```
+
+### 日志配置
+
+```go
+package main
+
+import (
+    "io"
+    "log"
+    "os"
+)
+
+func SetupLogger(output io.Writer, prefix string) *log.Logger {
+    return log.New(output, prefix, log.LstdFlags|log.Lshortfile)
+}
+
+func main() {
+    // 输出到标准输出和文件
+    file, _ := os.OpenFile("app.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+    defer file.Close()
+
+    multiWriter := io.MultiWriter(os.Stdout, file)
+    logger := log.New(multiWriter, "APP: ", log.LstdFlags|log.Lshortfile)
+
+    logger.Println("同时输出到控制台和文件")
+}
+```
+
+## 第三方日志库
+
+<Badge text="高级开发者" type="danger" />
+
+### logrus - 流行日志库
+
+```go
+package main
+
+import (
+    "github.com/sirupsen/logrus"
+)
+
+func main() {
+    // 创建 logger
+    logger := logrus.New()
+
+    // 设置 JSON 格式
+    logger.SetFormatter(&logrus.JSONFormatter{})
+
+    // 设置日志级别
+    logger.SetLevel(logrus.InfoLevel)
+
+    // 记录不同级别
+    logger.WithFields(logrus.Fields{
+        "event": "user_login",
+        "user":  "alice",
+    }).Info("用户登录")
+
+    logger.Warn("警告信息")
+    logger.Error("错误信息")
+}
+```
+
+### zap - Uber 高性能日志
+
+```go
+package main
+
+import (
+    "go.uber.org/zap"
+)
+
+func main() {
+    // 创建 logger
+    logger, _ := zap.NewProduction()
+    defer logger.Sync()
+
+    // 记录日志
+    logger.Info("服务启动",
+        zap.String("host", "localhost"),
+        zap.Int("port", 8080),
+    )
+
+    // 带字段的日志
+    logger.Error("数据库错误",
+        zap.Error(err),
+        zap.String("query", "SELECT * FROM users"),
+    )
+}
+```
+
+### slog - Go 1.21+ 结构化日志
+
+```go
+package main
+
+import (
+    "log/slog"
+)
+
+func main() {
+    // 设置默认 logger
+    slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout)))
+
+    // 结构化日志
+    slog.Info("用户登录",
+        "user_id", 12345,
+        "ip", "192.168.1.1",
+    )
+
+    slog.Error("操作失败",
+        "error", err,
+        "operation", "database_query",
+    )
+}
+```
+
+## 日志级别
+
+<Badge text="中级开发者" type="warning" />
+
+### 常见级别
+
+```go
+import "log/slog"
+
+// 级别（从低到高）
+slog.Debug()    // 调试信息
+slog.Info()     // 一般信息
+slog.Warn()     // 警告信息
+slog.Error()    // 错误信息
+
+// slog 没有 Fatal，需要自己实现
+func Fatal(v ...any) {
+    slog.Log(nil, slog.LevelError, v)
+    os.Exit(1)
+}
+```
+
+### 条件日志
+
+```go
+package main
+
+import (
+    "log/slog"
+    "os"
+)
+
+func main() {
+    level := new(slog.LevelVar)
+
+    // 设置日志级别
+    slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout)))
+    level.Set(slog.LevelDebug)
+
+    // 条件日志
+    slog.Log(nil, slog.LevelDebug, "调试信息", "key", "value")
+
+    slog.Debug("只在调试模式显示")
+    slog.Info("总是显示")
+}
+```
+
+## 日志轮转
+
+<Badge text="高级开发者" type="danger" />
+
+### lumberjack - 日志轮转
+
+```go
+package main
+
+import (
+    "os"
+
+    "gopkg.in/natefinch/lumberjack.v2"
+)
+
+func main() {
+    // 创建 lumberjack logger
+    logger := lumberjack.NewLogger(&lumberjack.LoggerConfig{
+        Filename:   "app.log",
+        MaxSize:    100, // MB
+        MaxBackups: 3,
+        MaxAge:     28, // days
+        Compress:   true,
+    })
+
+    // 使用 logger
+    logger.Write([]byte("日志内容\n"))
+}
+```
+
+### 日志轮转配置
+
+```go
+package main
+
+import (
+    "os"
+    "time"
+
+    "gopkg.in/natefinch/lumberjack.v2"
+)
+
+func main() {
+    // 按大小和时间轮转
+    logger := lumberjack.NewLogger(&lumberjack.LoggerConfig{
+        Filename:   "app.log",
+        MaxSize:    100,  // MB
+        MaxBackups: 5,
+        MaxAge:     7,   // days
+        Compress:   true,
+        LocalTime:  true,
+    })
+
+    // 自定义轮转策略
+    logger.Rotate()
+}
+```
+
+## 性能考虑
+
+<Badge text="高级开发者" type="danger" />
+
+### 避免频繁日志
+
+```go
+// ❌ 在循环中频繁日志
+for i := 0; i < 100000; i++ {
+    log.Printf("处理第 %d 条记录", i)  // 性能差
+}
+
+// ✅ 定期日志
+for i := 0; i < 100000; i++ {
+    if i%1000 == 0 {
+        log.Printf("已处理 %d 条记录", i)
+    }
+}
+```
+
+### 延迟日志格式化
+
+```go
+import "log/slog"
+
+// ✅ 使用延迟格式化
+slog.Info("处理数据",
+    "count", 1000,
+    "duration", time.Since(start),
+)
+
+// slog 会延迟格式化直到真正需要输出
+```
+
+## 实战案例
+
+<Badge text="高级开发者" type="danger" />
+
+### 案例：请求日志中间件
+
+```go
+package main
+
+import (
+    "context"
+    "log/slog"
+    "net/http"
+    "time"
+)
+
+type responseWriter struct {
+    http.ResponseWriter
+    status int
+}
+
+func (rw *responseWriter) WriteHeader(statusCode int, h http.Header) {
+    rw.status = statusCode
+    rw.ResponseWriter.WriteHeader(statusCode, h)
+}
+
+func LoggingMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        start := time.Now()
+
+        // 包装 ResponseWriter
+        rw := &responseWriter{ResponseWriter: w}
+
+        // 调用下一个处理器
+        next.ServeHTTP(rw, r)
+
+        // 记录日志
+        slog.Info("请求完成",
+            "method", r.Method,
+            "path", r.URL.Path,
+            "status", rw.status,
+            "duration", time.Since(start),
+        )
+    })
+}
+```
+
+### 案例：分级日志配置
+
+```go
+package main
+
+import (
+    "io"
+    "log/slog"
+    "os"
+)
+
+type LevelConfig struct {
+    Level     slog.Level
+    Output    io.Writer
+    AddSource bool
+}
+
+func NewLogger(config LevelConfig) *slog.Logger {
+    opts := &slog.HandlerOptions{
+        AddSource: config.AddSource,
+    }
+
+    var handler slog.Handler
+    if config.Output != nil {
+        handler = slog.NewJSONHandler(config.Output).Handler(opts)
+    } else {
+        handler = slog.NewTextHandler(os.Stdout, opts)
+    }
+
+    logger := slog.New(handler)
+    logger.SetLevel(config.Level)
+    return logger
+}
+
+func main() {
+    // 开发环境配置
+    devLogger := NewLogger(LevelConfig{
+        Level:     slog.LevelDebug,
+        AddSource: true,
+    })
+
+    // 生产环境配置
+    prodLogger := NewLogger(LevelConfig{
+        Level:     slog.LevelInfo,
+        Output:    mustOpenFile("app.log"),
+        AddSource: false,
+    })
+
+    slog.SetDefault(devLogger)
+    slog.Debug("开发环境调试信息")
+
+    slog.SetDefault(prodLogger)
+    slog.Info("生产环境日志")
+}
+```
+
+## 练习
+
+<Badge text="实战练习" type="success" />
+
+### 练习：实现异步日志
+
+实现一个异步日志库，避免阻塞主程序：
+
+```go
+// TODO: 实现
+type AsyncLogger struct {
+    // ...
+}
+
+func (l *AsyncLogger) Write(p []byte) (n int, err error) {
+    // 异步写入
+}
+```
+
+---
+
+## 总结
+
+### 关键要点
+
+| 读者水平 | 核心要点 |
+|---------|---------|
+| <Badge text="初级开发者" type="tip" /> | 使用 log 包基础功能。设置合适的前缀和 flags。 |
+| <Badge text="中级开发者" type="warning" /> | 使用第三方日志库（logrus、zap、slog）。日志级别管理。 |
+| <Badge text="高级开发者" type="danger" /> | 日志轮转。性能优化。结构化日志。 |
+
+### 速查表
+
+```go
+// 标准库
+log.Println()
+log.SetPrefix("APP: ")
+log.SetFlags(log.LstdFlags)
+
+// slog
+slog.Info("message", "key", "value")
+slog.Error("error", "err", err)
+
+// logrus
+log.WithFields(log.Fields{"user": "alice"}).Info("message")
+
+// zap
+logger.Info("message", zap.String("key", "value"))
+```
+
+### 下一步
+
+- [← Context](./context.mdx)
+- [← 标准库概览](./index.mdx)

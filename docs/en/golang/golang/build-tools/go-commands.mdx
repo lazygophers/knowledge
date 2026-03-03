@@ -1,0 +1,111 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# Go 命令 - Go Commands
+
+<Badge text="开发工具" type="info" />
+
+掌握 Go 命令行工具是高效开发的基础。
+
+## 基础命令
+
+<Badge text="初级开发者" type="tip" />
+
+### 编译运行
+
+```bash
+# go run - 编译并运行
+go run main.go
+
+# go build - 编译可执行文件
+go build              # 输出当前目录名
+go build -o myapp ./cmd  # 指定输出名
+
+# go install - 安装到 GOPATH/bin
+go install ./cmd/myapp
+```
+
+### 测试命令
+
+```bash
+# go test - 运行测试
+go test                    # 当前包
+go test ./...              # 所有包
+
+# 带标志的测试
+go test -v                  # 详细输出
+go test -run TestXxx        # 运行特定测试
+go test -race              # 竞态检测
+go test -cover              # 覆盖率
+```
+
+### 依赖管理
+
+```bash
+# go mod - 模块管理
+go mod init               # 初始化模块
+go mod tidy               # 整理依赖
+go mod download           # 下载依赖
+go mod verify             # 验证依赖
+```
+
+## 高级命令
+
+<Badge text="中级开发者" type="warning" />
+
+### 环境变量
+
+```bash
+# 设置环境变量
+go env -w GOOS=linux
+go env -w GOARCH=amd64
+go env -w CGO_ENABLED=0
+
+# 查看环境变量
+go env
+```
+
+### 工具命令
+
+```bash
+# go fmt - 格式化代码
+go fmt ./...
+
+# go vet - 静态分析
+go vet ./...
+
+# go fix - 自动修复
+go fix ./...
+```
+
+### 交叉编译
+
+```bash
+# Linux 可执行文件
+GOOS=linux GOARCH=amd64 go build -o app-linux
+
+# Windows 可执行文件
+GOOS=windows GOARCH=amd64 go build -o app.exe
+
+# macOS 可执行文件
+GOOS=darwin GOARCH=amd64 go build -o app-mac
+```
+
+---
+
+## 总结
+
+### 速查表
+
+```bash
+# 编译
+go run main.go
+go build -o app
+
+# 测试
+go test -v
+go test -race
+
+# 依赖
+go mod tidy
+```

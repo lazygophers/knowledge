@@ -1,0 +1,22 @@
+[
+  {
+    "type": "file",
+    "name": "test-doubles",
+    "label": "测试替身"
+  },
+  {
+    "type": "file",
+    "name": "mocking",
+    "label": "Mock 框架"
+  },
+  {
+    "type": "file",
+    "name": "test-main",
+    "label": "TestMain"
+  },
+  {
+    "type": "file",
+    "name": "parallel",
+    "label": "并发测试"
+  }
+]
