@@ -1,0 +1,562 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# Pointer Type
+
+[← 返回数据类型](../)
+
+指针存储变量的<strong>内存地址</strong>。
+
+## <Badge text="指针基础" type="tip" />
+
+### 指针声明
+
+```go
+x := 42
+
+// 获取地址（&运算符）
+p := &x
+fmt.Printf("%p\n", p)  // 0xc0000140a0（地址值）
+
+// 解引用（*运算符）
+fmt.Println(*p)  // 42
+
+// 通过指针修改值
+*p = 100
+fmt.Println(x)   // 100
+fmt.Println(*p)  // 100
+```
+
+### 指针零值
+
+```go
+var p *int
+fmt.Println(p == nil)  // true
+
+// ❌ 解引用 nil 指针会 panic
+// fmt.Println(*p)  // panic: nil pointer dereference
+```
+
+## <Badge text="指针与函数" type="info" />
+
+### 值传递 vs 指针传递
+
+```go
+// 值传递：函数内修改不影响原值
+func modifyValue(x int) {
+    x = 100
+}
+
+func modifyPointer(x *int) {
+    *x = 100
+}
+
+n := 50
+modifyValue(n)
+fmt.Println(n)  // 50 - 未改变
+
+modifyPointer(&n)
+fmt.Println(n)  // 100 - 已改变
+```
+
+### 返回指针
+
+```go
+func createInt() *int {
+    x := 42
+    return &x  // ✅ Go 允许返回局部变量的地址
+}
+
+p := createInt()
+fmt.Println(*p)  // 42
+```
+
+<Badge text="逃逸分析" type="info" /> Go 编译器会进行逃逸分析，将需要返回的局部变量分配到堆上。
+
+## <Badge text="指针最佳实践" type="warning" />
+
+<Callout type="warning" title={<Badge text="最佳实践" type="warning" />}>
+  <strong>优先使用值类型，仅在必要时使用指针</strong>
+
+  • 需要修改原值时使用指针
+  • 大结构体使用指针避免拷贝
+  • 一致性：同一类型全部使用值或全部使用指针
+</Callout>
+
+### 何时使用指针
+
+| 场景 | 值类型 | 指针类型 |
+|-----|-------|---------|
+| 基本类型（int, bool） | ✅ 推荐 | ❌ 不推荐 |
+| 小结构体（< 64字节） | ✅ 推荐 | ⚠️ 可选 |
+| 大结构体（> 64字节） | ❌ 性能开销 | ✅ 推荐 |
+| 需要修改原值 | ❌ 不能修改 | ✅ 推荐 |
+| 实现接口 | ✅ 值接收者 | ⚠️ 根据需求 |
+
+## <Badge text="指针陷阱" type="danger" />
+
+### 陷阱1：nil 指针解引用
+
+```go
+var p *int
+// *p = 10  // panic: nil pointer dereference
+
+// ✅ 检查后再使用
+if p != nil {
+    *p = 10
+}
+```
+
+### 陷阱2：返回局部变量的指针（安全但需理解）
+
+```go
+func dangerous() *int {
+    x := 42
+    return &x  // ✅ Go 中安全，但 x 会分配到堆上
+}
+
+// 更好的做法
+func better() *int {
+    x := new(int)  // 直接在堆上分配
+    *x = 42
+    return x
+}
+```
+
+### 陷阱3：指针与切片
+
+```go
+s := []int{1, 2, 3}
+p := &s[0]  // 指向第一个元素
+
+s = append(s, 4)  // 可能触发扩容，重新分配内存
+// p 现在可能指向无效内存！
+
+fmt.Println(*p)  // 可能是旧值
+```
+
+## <Badge text="指针与结构体" type="info" />
+
+### 结构体指针
+
+```go
+type User struct {
+    Name string
+    Age  int
+}
+
+// 值类型
+u1 := User{Name: "Alice", Age: 25}
+fmt.Println(u1.Name)  // Alice
+
+// 指针类型
+u2 := &User{Name: "Bob", Age: 30}
+fmt.Println(u2.Name)  // Bob（自动解引用）
+
+// 等价于
+fmt.Println((*u2).Name)  // Bob
+```
+
+### 结构体字段指针
+
+```go
+type Config struct {
+    Host string
+    Port int
+}
+
+c := Config{Host: "localhost", Port: 8080}
+
+p := &c.Host
+*p = "example.com"
+fmt.Println(c.Host)  // example.com
+```
+
+## <Badge text="指针运算" type="warning" />
+
+```go
+arr := [3]int{1, 2, 3}
+p := &arr[0]
+
+// ❌ Go 不支持指针运算
+// p++  // 编译错误
+// p = p + 1  // 编译错误
+
+// ✅ 使用 slice 代替
+s := arr[:]
+for i, v := range s {
+    fmt.Printf("%d: %d\n", i, v)
+}
+```
+
+<Badge text="注意" type="danger" /> Go <strong>不支持指针运算</strong>，这是与 C/C++ 的主要区别。
+
+## <Badge text="指针比较" type="info" />
+
+```go
+x := 42
+y := 42
+
+p1 := &x
+p2 := &x
+p3 := &y
+
+fmt.Println(p1 == p2)  // true - 指向同一变量
+fmt.Println(p1 == p3)  // false - 指向不同变量
+fmt.Println(p1 != nil)  // true
+```
+
+## <Badge text="new() 函数" type="info" />
+
+```go
+// new() 创建零值的指针
+p := new(int)
+fmt.Println(*p)  // 0（int 的零值）
+fmt.Println(p == nil)  // false
+
+*p = 42
+fmt.Println(*p)  // 42
+
+// 等价于
+var p2 *int
+p2 = new(int)
+```
+
+## <Badge text="常见用法" type="info" />
+
+### 修改接收者
+
+```go
+type Counter struct {
+    count int
+}
+
+// 值接收者：不修改原值
+func (c Counter) Value() int {
+    return c.count
+}
+
+// 指针接收者：修改原值
+func (c *Counter) Increment() {
+    c.count++
+}
+
+c := Counter{count: 0}
+c.Increment()
+fmt.Println(c.Value())  // 1
+```
+
+### 可选参数
+
+```go
+func process(data []byte, timeout *time.Duration) {
+    t := 30 * time.Second
+    if timeout != nil {
+        t = *timeout
+    }
+    // 使用 t...
+}
+
+// 不传超时（使用默认值）
+process(data, nil)
+
+// 传超时
+to := 10 * time.Second
+process(data, &to)
+```
+
+## 练习
+
+1. 编写函数交换两个变量的值（使用指针）
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// Swap 使用指针交换两个变量的值
+func Swap(a, b *int) {
+    *a, *b = *b, *a
+}
+
+// Swap3 交换三个变量的值（循环移位）
+func Swap3(a, b, c *int) {
+    *a, *b, *c = *c, *a, *b
+}
+
+func main() {
+    // 交换两个变量
+    x, y := 10, 20
+    fmt.Printf("交换前: x=%d, y=%d\n", x, y)
+
+    Swap(&x, &y)
+    fmt.Printf("交换后: x=%d, y=%d\n", x, y)
+
+    // 交换三个变量
+    a, b, c := 1, 2, 3
+    fmt.Printf("\n交换前: a=%d, b=%d, c=%d\n", a, b, c)
+
+    Swap3(&a, &b, &c)
+    fmt.Printf("交换后: a=%d, b=%d, c=%d\n", a, b, c)
+}
+```
+
+**解释**：通过指针传递，函数可以直接修改原始变量的值。
+</details>
+
+2. 实现链表节点结构
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// Node 链表节点
+type Node struct {
+    Data int
+    Next *Node
+}
+
+// LinkedList 链表
+type LinkedList struct {
+    Head *Node
+}
+
+// Append 在链表末尾添加节点
+func (ll *LinkedList) Append(data int) {
+    newNode := &Node{Data: data}
+
+    if ll.Head == nil {
+        ll.Head = newNode
+        return
+    }
+
+    current := ll.Head
+    for current.Next != nil {
+        current = current.Next
+    }
+    current.Next = newNode
+}
+
+// Display 打印链表
+func (ll *LinkedList) Display() {
+    current := ll.Head
+    for current != nil {
+        fmt.Printf("%d -> ", current.Data)
+        current = current.Next
+    }
+    fmt.Println("nil")
+}
+
+// Delete 删除指定值的节点
+func (ll *LinkedList) Delete(data int) {
+    if ll.Head == nil {
+        return
+    }
+
+    // 删除头节点
+    if ll.Head.Data == data {
+        ll.Head = ll.Head.Next
+        return
+    }
+
+    current := ll.Head
+    for current.Next != nil {
+        if current.Next.Data == data {
+            current.Next = current.Next.Next
+            return
+        }
+        current = current.Next
+    }
+}
+
+// Reverse 反转链表
+func (ll *LinkedList) Reverse() {
+    var prev *Node
+    current := ll.Head
+
+    for current != nil {
+        next := current.Next
+        current.Next = prev
+        prev = current
+        current = next
+    }
+
+    ll.Head = prev
+}
+
+func main() {
+    ll := LinkedList{}
+
+    // 添加节点
+    ll.Append(10)
+    ll.Append(20)
+    ll.Append(30)
+    ll.Append(40)
+
+    fmt.Println("原始链表:")
+    ll.Display()
+
+    // 删除节点
+    ll.Delete(20)
+    fmt.Println("\n删除20后:")
+    ll.Display()
+
+    // 反转链表
+    ll.Reverse()
+    fmt.Println("\n反转后:")
+    ll.Display()
+}
+```
+
+**解释**：展示了如何使用指针实现链表的基本操作。
+</details>
+
+3. 创建二叉树结构，实现插入和遍历
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import "fmt"
+
+// TreeNode 二叉树节点
+type TreeNode struct {
+    Data   int
+    Left   *TreeNode
+    Right  *TreeNode
+}
+
+// BinaryTree 二叉树
+type BinaryTree struct {
+    Root *TreeNode
+}
+
+// Insert 插入节点
+func (bt *BinaryTree) Insert(data int) {
+    newNode := &TreeNode{Data: data}
+
+    if bt.Root == nil {
+        bt.Root = newNode
+        return
+    }
+
+    bt.insertRecursive(bt.Root, newNode)
+}
+
+func (bt *BinaryTree) insertRecursive(node, newNode *TreeNode) {
+    if newNode.Data < node.Data {
+        if node.Left == nil {
+            node.Left = newNode
+        } else {
+            bt.insertRecursive(node.Left, newNode)
+        }
+    } else {
+        if node.Right == nil {
+            node.Right = newNode
+        } else {
+            bt.insertRecursive(node.Right, newNode)
+        }
+    }
+}
+
+// InOrder 中序遍历（左-根-右）
+func (bt *BinaryTree) InOrder() {
+    bt.inOrderRecursive(bt.Root)
+    fmt.Println()
+}
+
+func (bt *BinaryTree) inOrderRecursive(node *TreeNode) {
+    if node != nil {
+        bt.inOrderRecursive(node.Left)
+        fmt.Printf("%d ", node.Data)
+        bt.inOrderRecursive(node.Right)
+    }
+}
+
+// PreOrder 前序遍历（根-左-右）
+func (bt *BinaryTree) PreOrder() {
+    bt.preOrderRecursive(bt.Root)
+    fmt.Println()
+}
+
+func (bt *BinaryTree) preOrderRecursive(node *TreeNode) {
+    if node != nil {
+        fmt.Printf("%d ", node.Data)
+        bt.preOrderRecursive(node.Left)
+        bt.preOrderRecursive(node.Right)
+    }
+}
+
+// PostOrder 后序遍历（左-右-根）
+func (bt *BinaryTree) PostOrder() {
+    bt.postOrderRecursive(bt.Root)
+    fmt.Println()
+}
+
+func (bt *BinaryTree) postOrderRecursive(node *TreeNode) {
+    if node != nil {
+        bt.postOrderRecursive(node.Left)
+        bt.postOrderRecursive(node.Right)
+        fmt.Printf("%d ", node.Data)
+    }
+}
+
+// Search 搜索节点
+func (bt *BinaryTree) Search(data int) bool {
+    return bt.searchRecursive(bt.Root, data)
+}
+
+func (bt *BinaryTree) searchRecursive(node *TreeNode, data int) bool {
+    if node == nil {
+        return false
+    }
+
+    if data == node.Data {
+        return true
+    }
+
+    if data < node.Data {
+        return bt.searchRecursive(node.Left, data)
+    }
+
+    return bt.searchRecursive(node.Right, data)
+}
+
+func main() {
+    bt := BinaryTree{}
+
+    // 插入节点
+    values := []int{50, 30, 70, 20, 40, 60, 80}
+    for _, v := range values {
+        bt.Insert(v)
+    }
+
+    fmt.Println("中序遍历（升序）:")
+    bt.InOrder()
+
+    fmt.Println("前序遍历:")
+    bt.PreOrder()
+
+    fmt.Println("后序遍历:")
+    bt.PostOrder()
+
+    // 搜索
+    fmt.Printf("搜索40: %v\n", bt.Search(40))   // true
+    fmt.Printf("搜索100: %v\n", bt.Search(100)) // false
+}
+```
+
+**解释**：展示了二叉搜索树的实现，包括插入、遍历和搜索操作。
+</details>
+
+
+[← 结构体](./struct.mdx) | [接口 →](/golang/interface/interface-basics.mdx)

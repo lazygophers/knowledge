@@ -1,0 +1,52 @@
+[
+  {
+    "type": "file",
+    "name": "bool",
+    "label": "Bool"
+  },
+  {
+    "type": "file",
+    "name": "constants",
+    "label": "Constants"
+  },
+  {
+    "type": "file",
+    "name": "numeric",
+    "label": "数值类型"
+  },
+  {
+    "type": "file",
+    "name": "string",
+    "label": "String"
+  },
+  {
+    "type": "file",
+    "name": "array",
+    "label": "Array"
+  },
+  {
+    "type": "file",
+    "name": "slice",
+    "label": "Slice"
+  },
+  {
+    "type": "file",
+    "name": "map",
+    "label": "Map"
+  },
+  {
+    "type": "file",
+    "name": "struct",
+    "label": "Struct"
+  },
+  {
+    "type": "file",
+    "name": "pointer",
+    "label": "Pointer"
+  },
+  {
+    "type": "file",
+    "name": "generics",
+    "label": "Generics"
+  }
+]

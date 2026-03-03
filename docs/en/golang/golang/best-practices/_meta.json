@@ -1,0 +1,32 @@
+[
+    {
+        "type": "file",
+        "name": "index",
+        "label": "最佳实践概览"
+    },
+    {
+        "type": "file",
+        "name": "code-style",
+        "label": "代码风格"
+    },
+    {
+        "type": "file",
+        "name": "error-patterns",
+        "label": "错误处理模式"
+    },
+    {
+        "type": "file",
+        "name": "concurrency-patterns",
+        "label": "并发模式"
+    },
+    {
+        "type": "file",
+        "name": "testing-strategies",
+        "label": "测试策略"
+    },
+    {
+        "type": "file",
+        "name": "anti-patterns",
+        "label": "常见反模式"
+    }
+]

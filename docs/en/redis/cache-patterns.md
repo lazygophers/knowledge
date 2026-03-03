@@ -1,4 +1,4 @@
-# Redis Caching Patterns
+# Redis Cache Patterns
 
 ## Common Patterns
 
@@ -6,8 +6,8 @@
 2. Read Through
 3. Write Through / Write Back
 
-## Risk Controls
+## 风险治理
 
-- Cache breakdown: mutex rebuild on hot keys
-- Cache penetration: Bloom filter or null caching
-- Cache avalanche: randomized TTL + rate limiting
+- 缓存击穿：热点 key 互斥重建
+- 缓存穿透：布隆过滤或空值缓存
+- 缓存雪崩：过期时间随机化 + 限流

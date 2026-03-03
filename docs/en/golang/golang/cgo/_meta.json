@@ -1,0 +1,22 @@
+[
+    {
+        "type": "file",
+        "name": "basics",
+        "label": "CGO 基础"
+    },
+    {
+        "type": "file",
+        "name": "type-conversions",
+        "label": "类型转换"
+    },
+    {
+        "type": "file",
+        "name": "memory-management",
+        "label": "内存管理"
+    },
+    {
+        "type": "file",
+        "name": "best-practices",
+        "label": "最佳实践"
+    }
+]

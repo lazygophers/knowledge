@@ -1,0 +1,554 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# Custom Error Types
+
+<Badge text="中级内容" type="warning" />
+
+预定义错误（如 `errors.New()`）适合简单场景，但复杂应用需要自定义错误类型来携带更多信息。
+
+## 为什么需要自定义错误？
+
+<Badge text="初级开发者" type="tip" />
+
+```go
+// ❌ 使用字符串：难以判断错误类型
+err := fmt.Errorf("user %s not found", userID)
+
+// ✅ 自定义错误：类型安全，可携带更多信息
+type UserError struct {
+    UserID  string
+    Code    int
+    Message string
+}
+```
+
+## 基础自定义错误
+
+<Badge text="初级开发者" type="tip" />
+
+### 实现 error 接口
+
+```go
+package main
+
+import "fmt"
+
+// 自定义错误类型
+type ValidationError struct {
+    Field   string
+    Value   interface{}
+    Message string
+}
+
+// 实现 error 接口
+func (e *ValidationError) Error() string {
+    return fmt.Sprintf("validation failed for field '%s': %s (value: %v)",
+        e.Field, e.Message, e.Value)
+}
+
+// 使用
+func ValidateAge(age int) error {
+    if age < 0 {
+        return &ValidationError{
+            Field:   "age",
+            Value:   age,
+            Message: "cannot be negative",
+        }
+    }
+    if age < 18 {
+        return &ValidationError{
+            Field:   "age",
+            Value:   age,
+            Message: "must be 18 or older",
+        }
+    }
+    return nil
+}
+
+func main() {
+    err := ValidateAge(15)
+    if err != nil {
+        fmt.Println(err) // validation failed for field 'age': must be 18 or older (value: 15)
+    }
+}
+```
+
+## 支持错误包装
+
+<Badge text="中级开发者" type="warning" />
+
+### 实现 Unwrap 方法
+
+```go
+package main
+
+import (
+    "errors"
+    "fmt"
+)
+
+type DatabaseError struct {
+    Query string
+    Err   error
+}
+
+func (e *DatabaseError) Error() string {
+    return fmt.Sprintf("database query '%s' failed: %v", e.Query, e.Err)
+}
+
+// 实现 Unwrap 方法
+func (e *DatabaseError) Unwrap() error {
+    return e.Err
+}
+
+// 使用
+func QueryUser(id int) error {
+    err := db.Query("SELECT * FROM users WHERE id = ?", id)
+    if err != nil {
+        return &DatabaseError{
+            Query: fmt.Sprintf("SELECT * FROM users WHERE id = %d", id),
+            Err:   err,
+        }
+    }
+    return nil
+}
+
+// 使用 errors.Is 检查原始错误
+func main() {
+    err := QueryUser(123)
+    if errors.Is(err, sql.ErrConnDone) {
+        fmt.Println("Database connection lost")
+    }
+}
+```
+
+<Callout type="tip">
+**提示**：实现 `Unwrap()` 方法后，可以使用 `errors.Is()` 和 `errors.As()` 遍历错误链。
+</Callout>
+
+## 带额外方法的错误
+
+<Badge text="高级开发者" type="danger" />
+
+### 可恢复错误
+
+```go
+package main
+
+import "time"
+
+// TemporaryError 表示可重试的错误
+type TemporaryError struct {
+    Err     error
+    RetryIn time.Duration
+}
+
+func (e *TemporaryError) Error() string {
+    return fmt.Sprintf("temporary error: %v (retry in %v)", e.Err, e.RetryIn)
+}
+
+func (e *TemporaryError) Unwrap() error {
+    return e.Err
+}
+
+// Temporary 表示错误是临时的
+func (e *TemporaryError) Temporary() bool {
+    return true
+}
+
+// RetryAfter 返回建议的重试时间
+func (e *TemporaryError) RetryAfter() time.Duration {
+    return e.RetryIn
+}
+
+// 使用
+func ProcessWithRetry() error {
+    for {
+        err := doProcess()
+        if err == nil {
+            return nil
+        }
+
+        // 检查是否是临时错误
+        if tmpErr, ok := err.(*TemporaryError); ok && tmpErr.Temporary() {
+            fmt.Printf("Temporary error, retrying in %v\n", tmpErr.RetryAfter)
+            time.Sleep(tmpErr.RetryIn())
+            continue
+        }
+
+        return err
+    }
+}
+```
+
+### HTTP 错误
+
+```go
+package main
+
+import "net/http"
+
+type HTTPError struct {
+    StatusCode int
+    Message    string
+}
+
+func (e *HTTPError) Error() string {
+    return fmt.Sprintf("HTTP %d: %s", e.StatusCode, e.Message)
+}
+
+// HTTPStatus 返回 HTTP 状态码
+func (e *HTTPError) HTTPStatus() int {
+    return e.StatusCode
+}
+
+// Temporary 表示错误是否是临时的
+func (e *HTTPError) Temporary() bool {
+    return e.StatusCode >= 500 ||
+           e.StatusCode == http.StatusTooManyRequests ||
+           e.StatusCode == http.StatusServiceUnavailable
+}
+
+// Timeout 表示错误是否是超时
+func (e *HTTPError) Timeout() bool {
+    return e.StatusCode == http.StatusGatewayTimeout ||
+           e.StatusCode == http.StatusServiceUnavailable
+}
+
+// 使用
+func HandleRequest() error {
+    resp, err := http.Get("https://api.example.com")
+    if err != nil {
+        return err
+    }
+    defer resp.Body.Close()
+
+    if resp.StatusCode != http.StatusOK {
+        return &HTTPError{
+            StatusCode: resp.StatusCode,
+            Message:    fmt.Sprintf("unexpected status: %s", resp.Status),
+        }
+    }
+
+    return nil
+}
+```
+
+## 错误类型组合
+
+<Badge text="高级开发者" type="danger" />
+
+### 嵌入标准错误
+
+```go
+// 基础错误接口
+type error interface {
+    Error() string
+}
+
+// 组合接口
+type Temporary interface {
+    error
+    Temporary() bool
+}
+
+type Timeout interface {
+    error
+    Timeout() bool
+}
+
+// 使用组合
+type NetworkError struct {
+    Op       string
+    Endpoint string
+    Err      error
+}
+
+func (e *NetworkError) Error() string {
+    return fmt.Sprintf("%s %s failed: %v", e.Op, e.Endpoint, e.Err)
+}
+
+func (e *NetworkError) Unwrap() error {
+    return e.Err
+}
+
+func (e *NetworkError) Temporary() bool {
+    return true
+}
+
+func (e *NetworkError) Timeout() bool {
+    return e.Err == context.DeadlineExceeded
+}
+
+// 类型断言组合接口
+func handleError(err error) {
+    var tmpErr Temporary
+    if errors.As(err, &tmpErr) && tmpErr.Temporary() {
+        fmt.Println("Temporary error, will retry")
+    }
+
+    var timeoutErr Timeout
+    if errors.As(err, &timeoutErr) && timeoutErr.Timeout() {
+        fmt.Println("Timeout error")
+    }
+}
+```
+
+## 常见自定义错误模式
+
+<Badge text="中级开发者" type="warning" />
+
+### 模式 1: 带错误码的错误
+
+```go
+type AppError struct {
+    Code    int
+    Message string
+    Err     error
+}
+
+func (e *AppError) Error() string {
+    if e.Err != nil {
+        return fmt.Sprintf("[%d] %s: %v", e.Code, e.Message, e.Err)
+    }
+    return fmt.Sprintf("[%d] %s", e.Code, e.Message)
+}
+
+func (e *AppError) Unwrap() error {
+    return e.Err
+}
+
+// 预定义错误
+var (
+    ErrNotFound = &AppError{Code: 404, Message: "Not Found"}
+    ErrInvalid  = &AppError{Code: 400, Message: "Invalid Request"}
+)
+```
+
+### 模式 2: 带上下文的错误
+
+```go
+type ContextError struct {
+    Context string
+    Err     error
+}
+
+func (e *ContextError) Error() string {
+    return fmt.Sprintf("%s: %v", e.Context, e.Err)
+}
+
+func (e *ContextError) Unwrap() error {
+    return e.Err
+}
+
+// 辅助函数
+func WithContext(err error, context string) error {
+    if err == nil {
+        return nil
+    }
+    return &ContextError{Context: context, Err: err}
+}
+
+// 使用
+if err := saveUser(user); err != nil {
+    return WithContext(err, "failed to save user")
+}
+```
+
+### 模式 3: 带详细信息的验证错误
+
+```go
+type ValidationErrors struct {
+    Errors map[string]string
+}
+
+func (e *ValidationErrors) Error() string {
+    return fmt.Sprintf("validation failed: %d errors", len(e.Errors))
+}
+
+func (e *ValidationErrors) Add(field, message string) {
+    if e.Errors == nil {
+        e.Errors = make(map[string]string)
+    }
+    e.Errors[field] = message
+}
+
+func (e *ValidationErrors) Has(field string) bool {
+    _, ok := e.Errors[field]
+    return ok
+}
+
+func (e *ValidationErrors) Get(field string) string {
+    return e.Errors[field]
+}
+
+// 使用
+func ValidateUser(user *User) error {
+    verrs := &ValidationErrors{}
+
+    if user.Name == "" {
+        verrs.Add("name", "required")
+    }
+    if user.Age < 18 {
+        verrs.Add("age", "must be 18 or older")
+    }
+
+    if len(verrs.Errors) > 0 {
+        return verrs
+    }
+    return nil
+}
+```
+
+## 使用 errors.As 获取错误类型
+
+<Badge text="中级开发者" type="warning" />
+
+```go
+// 定义自定义错误
+type FileError struct {
+    Path string
+    Op   string
+    Err  error
+}
+
+func (e *FileError) Error() string {
+    return fmt.Sprintf("%s %s: %v", e.Op, e.Path, e.Err)
+}
+
+func (e *FileError) Unwrap() error {
+    return e.Err
+}
+
+// 使用 errors.As 获取类型
+func processFile(path string) error {
+    err := doSomething(path)
+    if err != nil {
+        // 尝试转换为 FileError
+        var fErr *FileError
+        if errors.As(err, &fErr) {
+            fmt.Printf("File operation failed: %s on %s\n", fErr.Op, fErr.Path)
+            return fmt.Errorf("process failed: %w", fErr)
+        }
+        return err
+    }
+    return nil
+}
+```
+
+## 练习
+
+<Badge text="实战练习" type="success" />
+
+### 练习：创建完整的业务错误类型
+
+创建一个用户服务错误类型，支持：
+- 错误码
+- HTTP 状态码映射
+- 可重试判断
+- 用户友好消息
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package errors
+
+// UserError 用户服务错误
+type UserError struct {
+    Code       string
+    Message    string
+    HTTPStatus int
+    Retryable  bool
+    Err        error
+}
+
+func (e *UserError) Error() string {
+    if e.Err != nil {
+        return fmt.Sprintf("[%s] %s: %v", e.Code, e.Message, e.Err)
+    }
+    return fmt.Sprintf("[%s] %s", e.Code, e.Message)
+}
+
+func (e *UserError) Unwrap() error {
+    return e.Err
+}
+
+func (e *UserError) Temporary() bool {
+    return e.Retryable
+}
+
+// 预定义错误
+var (
+    ErrUserNotFound = &UserError{
+        Code:       "USER_NOT_FOUND",
+        Message:    "User not found",
+        HTTPStatus: 404,
+        Retryable:  false,
+    }
+
+    ErrUserInvalid = &UserError{
+        Code:       "USER_INVALID",
+        Message:    "Invalid user data",
+        HTTPStatus: 400,
+        Retryable:  false,
+    }
+
+    ErrUserDatabase = &UserError{
+        Code:       "USER_DATABASE_ERROR",
+        Message:    "Database operation failed",
+        HTTPStatus: 500,
+        Retryable:  true,
+    }
+)
+
+// NewUserError 创建新的用户错误
+func NewUserError(code, message string, httpStatus int, retryable bool, err error) *UserError {
+    return &UserError{
+        Code:       code,
+        Message:    message,
+        HTTPStatus: httpStatus,
+        Retryable:  retryable,
+        Err:        err,
+    }
+}
+```
+
+</details>
+
+---
+
+## 总结
+
+### 关键要点
+
+| 读者水平 | 核心要点 |
+|---------|---------|
+| <Badge text="初级开发者" type="tip" /> | 实现 `Error()` 方法创建自定义错误。 |
+| <Badge text="中级开发者" type="warning" /> | 实现 `Unwrap()` 支持错误包装。使用 `errors.As()` 获取类型。 |
+| <Badge text="高级开发者" type="danger" /> | 添加额外方法（如 `Temporary()`）提供更多功能。 |
+
+### 自定义错误决策树
+
+```
+需要自定义错误？
+  │
+  ├─ 只需要预定义错误？
+  │   └─ 使用 errors.New()
+  │
+  ├─ 需要携带信息？
+  │   └─ 创建结构体 + Error() 方法
+  │
+  ├─ 需要支持包装？
+  │   └─ 添加 Unwrap() 方法
+  │
+  └─ 需要额外行为？
+      └─ 添加如 Temporary() 等方法
+```
+
+### 下一步
+
+- [← 错误包装](./error-wrapping.mdx)
+- [Panic vs Error →](./panic-vs-error.mdx)
+- [最佳实践 →](./best-practices.mdx)

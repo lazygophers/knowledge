@@ -1,0 +1,43 @@
+# Go CGO Module
+
+## Overview
+CGO (C Go Interop) enables Go programs to call C code and C code to call Go functions, providing interoperability between Go and C/C++ libraries.
+
+## Files
+
+### basics.mdx
+- **CGO Basics**: Introduction to CGO, basic structure (#include ... import "C"), CGO directives (CFLAGS, LDFLAGS, pkg-config), basic type mapping, calling C functions, calling Go functions (export), string handling (C.CString, C.GoString), and array operations
+
+### type-conversions.mdx
+- **Type Conversions**: Go to C and C to Go type conversions
+- Numeric types: int, int8-64, float32/64 mapping between Go and C
+- Pointer conversions: unsafe.Pointer, function pointers
+- Struct conversions: C struct definitions, Go struct to C, C struct to Go, struct field alignment
+- Enum conversions: C enums to Go, Go constants to C
+- Union types: accessing C unions from Go
+- Function signature conversions: C function pointers, Go function exports
+
+### memory-management.mdx
+- **Memory Management**: Managing memory across Go/C boundary
+- Memory allocation: C-side allocation (malloc/free), Go-side allocation (make/new), reference passing
+- String memory: C string lifecycle, temporary C strings, memory leak detection
+- Reference passing: avoiding C storing Go pointers, correct patterns, memory ownership rules
+- Memory boundary rules: Go pointer to C limitations, C pointer to Go rules
+- Memory pool pattern: reusing C memory, finalizers for cleanup
+
+### best-practices.mdx
+- **Best Practices**: When and how to use CGO properly
+- When to use CGO: existing C libraries, performance-critical low-level operations, legacy system integration, platform-specific features
+- When NOT to use CGO: pure Go implementation possible, non-performance-critical code, existing Go libraries available, high cross-platform compatibility requirements
+- Performance optimization: reducing cross-boundary calls, batch operations, independent thread usage
+- Error handling: C errors to Go, Go errors to C
+- Build tags: platform-specific code (windows, darwin, linux), architecture-specific code (amd64, arm64)
+- Debugging: CGO_DEBUG, runtime checks
+- Alternatives: pure Go implementation, existing Go libraries, syscall package
+- Security: input validation, buffer overflow protection
+- Testing CGO code: unit tests, memory leak tests
+
+## Related Topics
+- Go unsafe (../unsafe/): Low-level memory operations
+- Go data types (../data-types/): Type system overview
+- Go functions and methods (../functions-methods/): Function exports and callbacks

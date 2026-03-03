@@ -1,0 +1,517 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# CI/CD Integration
+
+<Badge text="专业" type="danger" /> <Badge text="DevOps" type="info" />
+
+将测试集成到 CI/CD 流程中，确保代码质量。
+
+## GitHub Actions
+
+### 基础配置
+
+```yaml
+# .github/workflows/test.yml
+name: Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.23'
+
+    - name: Download dependencies
+      run: go mod download
+
+    - name: Run tests
+      run: go test -v -race -coverprofile=coverage.out ./...
+
+    - name: Upload coverage
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./coverage.out
+```
+
+### 多版本测试
+
+```yaml
+name: Test
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        go-version: ['1.21', '1.22', '1.23']
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-go@v4
+      with:
+        go-version: ${{ matrix.go-version }}
+
+    - name: Run tests
+      run: go test -v ./...
+```
+
+### 测试报告
+
+```yaml
+name: Test
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-go@v4
+      with:
+        go-version: '1.23'
+
+    - name: Run tests with report
+      run: |
+        go test -v -json ./... > test-report.json
+
+    - name: Publish test report
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      if: always()
+      with:
+        files: test-report.json
+```
+
+## GitLab CI
+
+### 基础配置
+
+```yaml
+# .gitlab-ci.yml
+stages:
+  - test
+
+test:
+  stage: test
+  image: golang:1.23
+
+  script:
+    - go mod download
+    - go test -v -race -coverprofile=coverage.out ./...
+
+  coverage: '/coverage: \d+\.\d+%/'
+
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+
+    paths:
+      - coverage.out
+```
+
+### 并行测试
+
+```yaml
+test:
+  stage: test
+  image: golang:1.23
+
+  parallel: 4
+
+  script:
+    - go test -v -race ./... -run Test$CI_NODE_INDEX/$CI_NODE_TOTAL
+
+  artifacts:
+    when: always
+    reports:
+      junit: report.xml
+```
+
+## 测试覆盖率门禁
+
+### 配置要求
+
+```yaml
+- name: Check coverage
+  run: |
+    go test -coverprofile=coverage.out ./...
+    coverage=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
+    echo "Coverage: $coverage%"
+
+    if (( $(echo "$coverage < 80" | bc -l) )); then
+      echo "Coverage $coverage% is below 80%"
+      exit 1
+    fi
+```
+
+### 使用 covctl
+
+```yaml
+- name: Install covctl
+  run: |
+    go install github.com/avelino/covctl/cmd/covctl@latest
+
+- name: Check coverage threshold
+  run: |
+    go test -coverprofile=coverage.out ./...
+    covctl coverage coverage.out --threshold 80
+```
+
+## 性能测试
+
+### 基准测试回归检测
+
+```yaml
+- name: Run benchmarks
+  run: |
+    go test -bench=. -benchmem -run=^$ > bench.txt
+
+- name: Store benchmark result
+  uses: benchmark-action/github-action-benchmark@v1
+  with:
+    tool: 'go'
+    output-file-path: bench.txt
+    github-token: ${{ secrets.GITHUB_TOKEN }}
+    auto-push: ${{ github.ref == 'refs/heads/main' }}
+```
+
+### 性能回归检查
+
+```yaml
+- name: Download previous benchmark
+  uses: dawidd6/action-download-artifact@v2
+  with:
+    workflow: test.yml
+    name: benchmark-result
+
+- name: Compare benchmarks
+  run: |
+    go install golang.org/x/perf/cmd/benchstat@latest
+    benchstat old.txt new.txt
+
+- name: Fail on regression
+  run: |
+    if benchstat old.txt new.txt | grep "~"; then
+      echo "Performance regression detected"
+      exit 1
+    fi
+```
+
+## 模糊测试在 CI 中
+
+```yaml
+- name: Run fuzz tests
+  run: |
+    # 限制时间以避免过长的 CI
+    go test -fuzz=FuzzParse -fuzztime=60s
+
+- name: Upload fuzz corpora
+  uses: actions/upload-artifact@v3
+  if: failure()
+  with:
+    name: fuzz-corpus
+    path: testdata/fuzz/
+```
+
+## 竞态检测
+
+```yaml
+- name: Run with race detector
+  run: go test -race ./...
+
+- name: Run race in parallel
+  run: go test -race -parallel=4 ./...
+```
+
+<Callout type="warning" title="CI 中的测试注意事项">
+  <strong>性能考虑</strong>
+
+  <ul>
+    <li>使用 <code>-parallel</code> 加速测试</li>
+    <li>考虑拆分测试套件</li>
+    <li>缓存依赖包</li>
+    <li>使用 <code>-short</code> 标志跳过慢速测试</li>
+  </ul>
+
+  <strong>资源管理</strong>
+
+  <ul>
+    <li>清理测试资源</li>
+    <li>使用超时避免挂起</li>
+    <li>限制并行测试数</li>
+  </ul>
+</Callout>
+
+## 完整示例
+
+```yaml
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+env:
+  GO_VERSION: '1.23'
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-go@v4
+      with:
+        go-version: ${{ env.GO_VERSION }}
+    - name: Run golangci-lint
+      uses: golangci/golangci-lint-action@v3
+      with:
+        version: latest
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-go@v4
+      with:
+        go-version: ${{ env.GO_VERSION }}
+        cache: true
+
+    - name: Download dependencies
+      run: go mod download
+
+    - name: Run tests
+      run: |
+        go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+
+    - name: Check coverage threshold
+      run: |
+        coverage=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
+        echo "Coverage: ${coverage}%"
+        if (( $(echo "$coverage < 80" | bc -l) )); then
+          echo "Coverage ${coverage}% is below 80%"
+          exit 1
+        fi
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./coverage.out
+        flags: unittests
+        name: codecov-umbrella
+
+  benchmark:
+    name: Benchmark
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-go@v4
+      with:
+        go-version: ${{ env.GO_VERSION }}
+    - name: Run benchmarks
+      run: go test -bench=. -benchmem -run=^$ > bench.txt
+    - name: Store benchmark result
+      uses: benchmark-action/github-action-benchmark@v1
+      with:
+        tool: 'go'
+        output-file-path: bench.txt
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        auto-push: true
+
+  fuzz:
+    name: Fuzz
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-go@v4
+      with:
+        go-version: ${{ env.GO_VERSION }}
+    - name: Run fuzz tests
+      run: go test -fuzz=. -fuzztime=120s
+```
+
+## 本地 CI 预检查
+
+### pre-commit hook
+
+```bash
+#!/bin/bash
+# .git/hooks/pre-commit
+
+# 运行测试
+go test ./... || {
+    echo "Tests failed"
+    exit 1
+}
+
+# 运行 lint
+golangci-lint run || {
+    echo "Lint failed"
+    exit 1
+}
+
+# 检查格式
+gofmt -l . | grep -v vendor | grep .go$ && {
+    echo "Code is not formatted. Run 'gofmt -w .'"
+    exit 1
+}
+
+exit 0
+```
+
+### Makefile 目标
+
+```makefile
+# Makefile
+.PHONY: test lint ci
+
+test:
+	go test -v -race ./...
+
+lint:
+	golangci-lint run
+
+fmt:
+	gofmt -s -w .
+
+ci: lint test
+```
+
+## 练习
+
+1. **配置 CI 流程**：为项目配置完整的 CI 流程
+
+<details>
+<summary>查看答案</summary>
+
+```yaml
+# .github/workflows/ci.yml
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  GO_VERSION: '1.23'
+
+jobs:
+  # 快速反馈：lint 和单元测试
+  quick-check:
+    name: Quick Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-go@v4
+      with:
+        go-version: ${{ env.GO_VERSION }}
+        cache: true
+
+    - name: Download dependencies
+      run: go mod download
+
+    - name: Check formatting
+      run: |
+        gofmt -s -w .
+        git diff --exit-code
+
+    - name: Run linter
+      uses: golangci/golangci-lint-action@v3
+      with:
+        version: latest
+
+    - name: Run unit tests
+      run: go test -short -v ./...
+
+  # 完整测试：包括 race 和覆盖率
+  full-test:
+    name: Full Test
+    runs-on: ubuntu-latest
+    needs: quick-check
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-go@v4
+      with:
+        go-version: ${{ env.GO_VERSION }}
+        cache: true
+
+    - name: Run tests with race
+      run: go test -v -race -coverprofile=coverage.out ./...
+
+    - name: Check coverage
+      run: |
+        coverage=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
+        echo "Coverage: $coverage%"
+        if (( $(echo "$coverage < 80" | bc -l) )); then
+          echo "Coverage $coverage% is below 80%"
+          exit 1
+        fi
+
+    - name: Upload coverage
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./coverage.out
+
+  # 集成测试
+  integration:
+    name: Integration Test
+    runs-on: ubuntu-latest
+    needs: quick-check
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: testdb
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-go@v4
+      with:
+        go-version: ${{ env.GO_VERSION }}
+
+    - name: Run integration tests
+      env:
+        TEST_DATABASE_URL: postgres://postgres:test@localhost:5432/testdb?sslmode=disable
+      run: go test -v -tags=integration ./tests/integration/...
+```
+
+**解释**：CI 流程分为三个阶段：快速检查提供即时反馈，完整测试验证代码质量，集成测试验证组件交互。
+
+</details>

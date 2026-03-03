@@ -1,0 +1,302 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# Performance Analysis
+
+<Badge text="高级" type="danger" /> <Badge text="Go 1.0+" type="info" />
+
+pprof 工具可以帮助你深入分析基准测试结果，找出性能瓶颈。
+
+## CPU Profiling
+
+### 生成 Profile
+
+```go
+func BenchmarkCPU(b *testing.B) {
+    // 生成 CPU profile
+    b.ReportAllocs()
+
+    for i := 0; i < b.N; i++ {
+        Process()
+    }
+}
+```
+
+### 命令行分析
+
+```bash
+# 运行基准测试并生成 profile
+go test -bench=. -cpuprofile=cpu.prof
+
+# 分析 profile
+go tool pprof cpu.prof
+
+# 在 pprof 交互模式下
+(pprof) top10      # 显示前 10 个热点
+(pprof) list Process    # 显示函数的汇编代码
+(pprof) web        # 生成可视化图表
+(pprof) pdf        # 生成 PDF 报告
+```
+
+### 常用命令
+
+```bash
+# top 命令：查看热点函数
+(pprof) top
+Showing nodes accounting for 100ms, 100% of 100ms total
+      flat  flat%   sum%        cum   cum%
+      50ms 50.00% 50.00%       50ms 50.00%  runtime.memmove
+      30ms 30.00% 80.00%       80ms 80.00%  main.Process
+      20ms 20.00%   100%      100ms   100%  runtime.mallocgc
+
+# list 命令：查看函数详情
+(pprof) list Process
+Total: 100ms
+ROUTINE ======================== main.Process in ...
+    30ms   80ms (flat, cum)  ????%
+      20ms            20ms  50.00%  ????  runtime.memmove
+      10ms            10ms  50.00%  ????  strings.Clone
+```
+
+## Memory Profiling
+
+### 生成 Memory Profile
+
+```bash
+# 生成内存 profile
+go test -bench=. -memprofile=mem.prof
+
+# 分析内存分配
+go tool pprof mem.prof
+```
+
+### 堆内存分析
+
+```bash
+# 查看内存分配热点
+(pprof) top
+Showing nodes accounting for 1024 B, 100% of 1024B total
+      flat  flat%   sum%        cum   cum%
+    512B 50.00% 50.00%       512B 50.00%  main.makeSlice
+    512B 50.00%   100%      1024B   100%  main.allocateStruct
+
+# 查看分配源
+(pprof) list makeSlice
+Total: 512B
+ROUTINE ======================== main.makeSlice
+    512B    512B (flat, cum)  ????  ????
+         512B            512B  ???  make([]byte, 512)
+```
+
+## HTTP 可视化
+
+```bash
+# 启动 web 服务器
+go tool pprof -http=:8080 cpu.prof
+
+# 浏览器访问
+open http://localhost:8080
+```
+
+### 火焰图
+
+```bash
+# 安装 go-torch
+go install github.com/uber/go-torch/cmd/go-torch@latest
+
+# 生成火焰图
+go-torch -benchmarkmem
+```
+
+## 实战示例
+
+### 分析字符串处理
+
+```go
+// stringops.go
+package stringops
+
+import (
+    "strings"
+)
+
+func ToUpper(s string) string {
+    return strings.ToUpper(s)
+}
+
+func ToUpperManual(s string) string {
+    result := make([]byte, len(s))
+    for i := 0; i < len(s); i++ {
+        c := s[i]
+        if c >= 'a' && c <= 'z' {
+            c -= 32
+        }
+        result[i] = c
+    }
+    return string(result)
+}
+```
+
+```go
+// stringops_test.go
+package stringops_test
+
+import (
+    "testing"
+
+    "yourmodule/stringops"
+)
+
+func BenchmarkToUpper(b *testing.B) {
+    s := "hello world"
+    b.ResetTimer()
+    for i := 0; i < b.N; i++ {
+        stringops.ToUpper(s)
+    }
+}
+
+func BenchmarkToUpperManual(b *testing.B) {
+    s := "hello world"
+    b.ResetTimer()
+    for i := 0; i < b.N; i++ {
+        stringops.ToUpperManual(s)
+    }
+}
+```
+
+```bash
+# 运行基准测试
+$ go test -bench=. -benchmem -cpuprofile=cpu.prof
+BenchmarkToUpper-8         5000000    250 ns/op    64 B/op    1 allocs/op
+BenchmarkToUpperManual-8   3000000    420 ns/op    32 B/op    1 allocs/op
+
+# 分析 CPU profile
+$ go tool pprof cpu.prof
+```
+
+## 基准测试对比
+
+### 使用 benchstat
+
+```bash
+# 安装 benchstat
+go install golang.org/x/perf/cmd/benchstat@latest
+
+# 保存原始版本结果
+go test -bench=. -count=10 > old.txt
+
+# 修改代码后保存新结果
+go test -bench=. -count=10 > new.txt
+
+# 对比结果
+benchstat old.txt new.txt
+```
+
+### 输出示例
+
+```
+name          old time/op  new time/op  delta
+ToUpper        250ns ± 2%   240ns ± 3%  -4.00%  (p=0.000 n=10)
+ToUpperManual  420ns ± 5%   300ns ± 4% -28.57%  (p=0.000 n=10)
+```
+
+## 逃逸分析
+
+```bash
+# 查看逃逸分析
+go test -bench=. -gcflags="-m" -run=^$
+
+# 输出示例
+./stringops.go:10:6: can inline (*StringOps).ToUpper
+./stringops.go:11:9: s escapes to heap
+./stringops.go:11:9: make([]byte, len(s)) escapes to heap
+```
+
+### 减少逃逸
+
+```go
+// ❌ 逃逸到堆
+func Bad() *Data {
+    return &Data{Value: 42}
+}
+
+// ✅ 保持在栈上
+func Good() Data {
+    return Data{Value: 42}
+}
+```
+
+<Callout type="warning" title="优化建议">
+  <strong>优化前先测量</strong>
+
+  <ul>
+    <li>不要过早优化</li>
+    <li>使用 pprof 找到真正的瓶颈</li>
+    <li>优先优化热点路径</li>
+    <li>每次只优化一处，便于验证效果</li>
+  </ul>
+</Callout>
+
+## 练习
+
+1. **优化 JSON 编码**：分析并优化 JSON 编码性能
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package jsonbench
+
+import (
+    "encoding/json"
+    "testing"
+
+    jsoniter "github.com/json-iterator/go"
+)
+
+type User struct {
+    ID    int    `json:"id"`
+    Name  string `json:"name"`
+    Email string `json:"email"`
+}
+
+var testUser = User{
+    ID:    1,
+    Name:  "Alice",
+    Email: "alice@example.com",
+}
+
+func BenchmarkStdJSONMarshal(b *testing.B) {
+    b.ReportAllocs()
+    for i := 0; i < b.N; i++ {
+        _, err := json.Marshal(testUser)
+        if err != nil {
+            b.Fatal(err)
+        }
+    }
+}
+
+func BenchmarkJSONIterMarshal(b *testing.B) {
+    b.ReportAllocs()
+    var jsonFast = jsoniter.ConfigFastest
+    for i := 0; i < b.N; i++ {
+        _, err := jsonFast.Marshal(testUser)
+        if err != nil {
+            b.Fatal(err)
+        }
+    }
+}
+```
+
+运行并分析：
+```bash
+$ go test -bench=. -benchmem -cpuprofile=cpu.prof
+BenchmarkStdJSONMarshal-8      2000000    780 ns/op    544 B/op    8 allocs/op
+BenchmarkJSONIterMarshal-8    3000000    420 ns/op    256 B/op    4 allocs/op
+
+$ go tool pprof cpu.prof
+```
+
+**解释**：jsoniter 的性能明显优于标准库，内存分配也更少。
+
+</details>

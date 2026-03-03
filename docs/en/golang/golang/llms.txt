@@ -1,0 +1,273 @@
+# Golang Module (Chinese Source)
+
+> English llms.txt for files under `docs/zh/golang`.
+
+## Docs
+
+- [Module Overview](./index.mdx): Entry page with RPress Badge components showing target audiences by skill level.
+- [Install Guide](./install/install.mdx): Cross-platform Go installation overview with RPress Tabs and Badge components.
+- [Install on Windows](./install/windows.mdx): Windows installation methods (MSI, Chocolatey, Scoop, ZIP, goup) with interactive Tabs.
+- [Install on macOS](./install/macos.mdx): macOS installation methods (PKG, Homebrew, goup, source) with interactive Tabs.
+- [Install on Linux](./install/linux.mdx): Linux installation methods (binary, apt, yum, snap, goup) with interactive Tabs.
+- [Hello World](./hello.mdx): Interactive first Go program tutorial with RPress Tabs for different skill levels.
+- [Sidebar Metadata](./_meta.json): Navigation metadata used by the Golang module sidebar.
+- [Install Submodule Index](./install/llms.txt): English index for the installation subdirectory.
+- [This LLMs File](./llms.txt): Machine-readable index for this Golang directory.
+
+## Fundamentals
+
+- [Fundamentals Overview](./fundamentals/overview.mdx): Overview of Go language fundamentals and concepts.
+- [Naming Conventions](./fundamentals/naming-conventions.mdx): Go naming conventions including identifiers, package names, constants, and file naming.
+- [Variables](./fundamentals/variables.mdx): Variable declaration methods, zero values, initialization, scope, and shadowing.
+- [Type System](./fundamentals/type-system.mdx): Go type system overview with value types, reference types, and type conversion diagrams.
+- [Functions and Methods](./fundamentals/functions-methods.mdx): Functions and methods in Go including parameters, return values, multiple return values, variadic functions, function types, higher-order functions, anonymous functions, closures, defer mechanism, generic functions (Go 1.18+), value vs pointer receivers, method values and expressions, and best practices.
+- [Package System](./fundamentals/package-system.mdx): Go package system, imports, visibility, init functions, go.mod, go.work, and dependency management.
+- [Variable Lifecycle](./fundamentals/variable-lifecycle.mdx): Variable scope, lexical scoping, closures, and lifetime with stack/heap allocation diagrams.
+- [Fundamentals Sidebar](./fundamentals/_meta.json): Navigation metadata for fundamentals subdirectory.
+
+## Data Types
+
+- [Bool Types](./data-types/bool.mdx): Boolean type basics, logical operators, control flow, best practices, naming conventions, and common pitfalls.
+- [Constants](./data-types/constants.mdx): Go constants including const declarations, iota enumerations, typed vs untyped constants, constant expressions, and common use cases.
+- [Numeric Types](./data-types/numeric.mdx): Integer and floating-point types, type selection guide, literals, and conversions.
+- [String Types](./data-types/string.mdx): String fundamentals, byte/rune conversions, immutability, common operations, and traversal.
+- [Array Types](./data-types/array.mdx): Fixed-length arrays, initialization, value type semantics, multi-dimensional arrays, and comparison.
+- [Slice Types](./data-types/slice.mdx): Dynamic slices, internal structure, append mechanism, common pitfalls, and operations.
+- [Map Types](./data-types/map.mdx): Hash tables, CRUD operations, traversal, concurrency safety, and usage patterns.
+- [Struct Types](./data-types/struct.mdx): Aggregate data types, struct tags, anonymous fields, comparison, memory layout, and common patterns including method chaining.
+- [Pointer Types](./data-types/pointer.mdx): Memory addresses, pointer semantics, function parameters, best practices, and common pitfalls.
+- [Generics](./data-types/generics.mdx): Go 1.18+ generics including type parameters, constraints, type inference, built-in constraints, and practical patterns.
+- [Data Types Sidebar](./data-types/_meta.json): Navigation metadata for data-types subdirectory.
+- [Data Types LLMs Index](./data-types/llms.txt): English index for data-types subdirectory.
+
+## Interface
+
+- [Interface Basics](./interface/interface-basics.mdx): Interface definition, implicit implementation, usage patterns, and compile-time implementation checks.
+- [Interface Values](./interface/interface-values.mdx): Interface value internal structure, nil interfaces, nil pointer in interfaces, interface comparison, and interface vs inheritance.
+- [Empty Interface](./interface/empty-interface.mdx): Empty interface (any), type assertions (safe/unsafe), type switches, and interface type assertions.
+- [Interface Composition](./interface/interface-composition.mdx): Interface embedding, multi-level composition, adding new methods, naming conventions, composition vs inheritance, and composition patterns.
+- [Best Practices](./interface/best-practices.mdx): Interface design principles, naming conventions, standard library interfaces, implementation patterns, anti-patterns, and code review checklist.
+- [Interface Sidebar](./interface/_meta.json): Navigation metadata for interface subdirectory.
+- [Interface LLMs Index](./interface/llms.txt): English index for interface subdirectory.
+
+## Reflection
+
+- [Reflection Basics](./reflection/basics.mdx): Introduction to Go reflection, three laws of reflection, Type vs Value, Kind types, generic functions, deep equality, performance considerations, and Go 1.20+ changes (SliceHeader/StringHeader deprecation).
+- [Generics and Reflection](./reflection/generics.mdx): Combining Go 1.18+ generics with reflection for type-safe dynamic programming, using reflection within generic functions, reflecting instantiated generic types, generic constraints with reflection, performance comparison (100x difference), and real-world patterns (validators, ORM mapping).
+- [Type Reflection](./reflection/type-reflection.mdx): reflect.Type interface, type properties (Name, Kind, PkgPath), struct fields, struct tags, function types, interface methods, and type operations (Implements, AssignableTo, ConvertibleTo).
+- [Value Reflection](./reflection/value-reflection.mdx): reflect.Value for reading/modifying values, basic/composite type operations, CanSet/CanAddr, creating values (MakeSlice, MakeMap, MakeChan, New), and value operations (Compare, DeepEqual, IsZero).
+- [Struct Tags](./reflection/struct-tags.mdx): Struct tag syntax, Tag.Get/Tag.Lookup, parsing tags, JSON/XML serialization, database mapping (GORM), validation, custom tag processing, and best practices.
+- [Dynamic Calls](./reflection/dynamic-calls.mdx): Dynamic method/function invocation, MethodByName, Call/CallSlice, interface method calls, generic frameworks (RPC, event handlers, command dispatchers), and performance optimization.
+- [Best Practices](./reflection/best-practices.mdx): When to use reflection (serialization, DI, ORM), when NOT to use (known types, hot paths), performance optimization (caching, code generation), error handling, common pitfalls (unexported fields, addressability), design patterns (adapter, plugin system), and testing.
+- [Reflection Sidebar](./reflection/_meta.json): Navigation metadata for reflection subdirectory.
+- [Reflection LLMs Index](./reflection/llms.txt): English index for reflection subdirectory.
+
+## Concurrency
+
+- [Goroutine](./concurrency/goroutine.mdx): Lightweight threads, Go scheduler (G-M-P model), goroutine lifecycle, and common pitfalls.
+- [Channel](./concurrency/channel.mdx): Channel creation, buffered vs unbuffered, channel directions, range, select, timeout control, common patterns, and pitfalls.
+- [Channel Patterns](./concurrency/channel-patterns.mdx): Fan-in, fan-out, worker pool, quit channel, timeout, and producer-consumer patterns.
+- [Sync Package](./concurrency/sync.mdx): Mutex, RWMutex, WaitGroup, Once, Cond, Map, and Pool synchronization primitives.
+- [Atomic](./concurrency/atomic.mdx): Atomic operations, atomic types, atomic values, memory ordering, and common use cases.
+- [Best Practices](./concurrency/best-practices.mdx): Concurrency design principles, performance optimization, anti-patterns, debugging, and testing.
+- [Concurrency Sidebar](./concurrency/_meta.json): Navigation metadata for concurrency subdirectory.
+- [Concurrency LLMs Index](./concurrency/llms.txt): English index for concurrency subdirectory.
+
+## Error Handling
+
+- [Error Handling Overview](./error-handling/index.mdx): Overview of Go error handling with learning path and module organization.
+- [Error Basics](./error-handling/error-basics.mdx): error interface, creating errors, basic handling patterns, and performance considerations.
+- [Error Wrapping](./error-handling/error-wrapping.mdx): %w vs %v, errors.Is(), errors.As(), error chains, and wrapping best practices.
+- [Custom Errors](./error-handling/custom-errors.mdx): Implementing custom error types, Unwrap method, errors.As(), and advanced error patterns.
+- [Panic vs Error](./error-handling/panic-vs-error.mdx): Decision tree for panic vs error, defer+recover mechanism, production patterns, and performance.
+- [Best Practices](./error-handling/best-practices.mdx): Enterprise error handling architecture, layered design, anti-patterns, and implementation checklist.
+- [Error Handling Sidebar](./error-handling/_meta.json): Navigation metadata for error-handling subdirectory.
+
+## I/O Operations
+
+- [I/O Overview](./io/index.mdx): Overview of Go I/O with learning path and module organization.
+- [File I/O](./io/file-io.mdx): File reading and writing, os package, bufio.Scanner, file modes, permissions, and common operations.
+- [Buffered I/O](./io/bufio.mdx): bufio package, buffered readers and writers, performance optimization, and usage patterns.
+- [IO Interfaces](./io/io-interfaces.mdx): io.Reader, io.Writer, Closer, Seeker interfaces, composition, and implementation patterns.
+- [Filesystem](./io/filesystem.mdx): File system operations, path handling, directory traversal, file info, and cross-platform considerations.
+- [Serialization](./io/serialization.mdx): JSON encoding/decoding, YAML, custom marshalers, streaming, and best practices.
+- [I/O Sidebar](./io/_meta.json): Navigation metadata for io subdirectory.
+
+## Standard Library
+
+- [Standard Library Overview](./stdlib/index.mdx): Overview of Go standard library utilities with learning path and module organization.
+- [Strings and Strconv](./stdlib/strings-strconv.mdx): strings package operations, strconv type conversions, common patterns, and performance tips.
+- [Time](./stdlib/time.mdx): time package, time formatting, parsing, duration, time zones, and common operations.
+- [Math and Rand](./stdlib/math-rand.mdx): math package functions, rand package, random number generation, and seeding.
+- [Log](./stdlib/log.mdx): log package, structured logging, log levels, rotation, and best practices.
+- [Context](./stdlib/context.mdx): context package, cancellation, timeouts, values, and propagation patterns.
+- [Standard Library Sidebar](./stdlib/_meta.json): Navigation metadata for stdlib subdirectory.
+
+## Functions and Methods
+
+- [Function Basics](./functions-methods/function-basics.mdx): Function declaration syntax, parameter lists, return value mechanisms, function call flow, basic code examples, and common errors for beginners.
+- [Methods System](./functions-methods/methods.mdx): Method declaration syntax, value vs pointer receivers, method values vs expressions, method set rules, interface implementation, and receiver selection decision tree.
+- [Advanced Parameters](./functions-methods/advanced-parameters.mdx): Variadic functions, named return values, multiple return value patterns, parameter passing mechanism, and performance considerations.
+- [Function Types](./functions-methods/function-types.mdx): Function type definitions, functions as variables, functions as parameters, functions as return values, higher-order function patterns, and practical applications.
+- [Closures](./functions-methods/closures.mdx): Anonymous function syntax, closure principles, variable capture mechanism, closure pitfalls, Go 1.22+ changes, memory management, and practical examples.
+- [Defer Mechanism](./functions-methods/defer.mdx): Defer basic syntax, LIFO execution order, parameter evaluation timing, interaction with named return values, resource cleanup patterns, panic recovery, and common pitfalls.
+- [Error Handling](./functions-methods/panic-recover.mdx): Go error handling philosophy, multiple return value error patterns, error wrapping and unwrapping, panic trigger conditions, recover usage timing, custom error types, and best practices.
+- [Best Practices](./functions-methods/best-practices.mdx): Function design principles, naming conventions, error handling patterns, performance optimization techniques, testability design, common anti-patterns, and code review checklist.
+- [Functions and Methods Sidebar](./functions-methods/_meta.json): Navigation metadata for functions-methods subdirectory.
+- [Functions and Methods LLMs Index](./functions-methods/llms.txt): English index for functions-methods subdirectory.
+
+## Testing
+
+- [Testing Module](./testing/): Complete Go testing framework documentation covering unit tests, benchmarks, fuzzing, mocking tools, and best practices.
+
+### Basics
+
+- [Test Files](./testing/basics/test-files.mdx): Test file naming conventions (_test.go suffix), test function signatures (TestXxx, ExampleXxx, BenchmarkXxx, FuzzXxx), go test command usage, package structure (white-box vs black-box testing), and build tags.
+
+- [Assertions](./testing/basics/assertions.mdx): Using *testing.T methods (Error vs Fatal, Log/Skip, Cleanup, TempDir, Setenv, Parallel), helper functions with t.Helper(), and assertion patterns.
+
+- [Table-Driven Tests](./testing/basics/table-driven.mdx): Table-driven tests structure, anonymous vs named structs, t.Run() subtests, test case naming, loop variable capture (Go 1.22+ range-over-func), parallel table tests, and AAA pattern.
+
+- [Coverage](./testing/basics/coverage.mdx): -cover flag, -coverprofile generation, go tool cover (HTML/func reports), coverage modes (set, count, atomic), setting coverage targets, and coverage best practices.
+
+### Advanced
+
+- [Test Doubles](./testing/advanced/test-doubles.mdx): Test double types (Dummy, Stub, Spy, Fake, Mock), when to use each type, interface design for testing, and practical examples with Spy and Fake implementations.
+
+- [Mocking](./testing/advanced/mocking.mdx): testify/mock framework (On, Return, AssertExpectations), gomock code generation and usage (mockgen, Controller, EXPECT, matchers, InOrder), and mock comparison table.
+
+- [TestMain](./testing/advanced/test-main.mdx): TestMain(m *testing.M) signature, global setup/teardown, environment initialization, exit code handling, and lifecycle with t.Cleanup visualization.
+
+- [Parallel Tests](./testing/advanced/parallel.mdx): t.Parallel() for parallel tests, -parallel flag, race detection with -race, synchronization mechanisms, and worker pool patterns.
+
+### Benchmark
+
+- [Benchmark Basics](./testing/benchmark/basics.mdx): BenchmarkXxx(b *testing.B) signature, b.N mechanism, timing control (ResetTimer, StopTimer, StartTimer), ReportAllocs for memory statistics, and parallel benchmarks.
+
+- [Profiling](./testing/benchmark/profiling.mdx): CPU profiling (-cpuprofile), memory profiling (-memprofile), go tool pprof analysis, pprof commands (top, list, web), and optimization workflow.
+
+- [Optimization](./testing/benchmark/optimization.mdx): Reducing memory allocations (StringBuilder, preallocation), avoiding unnecessary conversions, concurrency optimization (worker pools), algorithm optimization, and inline optimization.
+
+### Fuzzing
+
+- [Fuzz Introduction](./testing/fuzzing/introduction.mdx): FuzzXxx(f *testing.F) signature (Go 1.18+), f.Add() seed corpus, f.Fuzz() function, supported types, use cases, and fuzzing limitations.
+
+- [Writing Fuzz](./testing/fuzzing/writing-fuzz.mdx): Fuzz test design principles, invariants, progressive validation, common patterns (input validation, algorithm verification, parser testing), and handling failures.
+
+- [Fuzz Best Practices](./testing/fuzzing/best-practices.mdx): Seed corpus selection (boundary cases, real-world inputs, file-based), assertion design, performance considerations, crasher management, and CI/CD integration.
+
+### Tools
+
+- [testify](./testing/tools/testify.mdx): testify/assert (Equal, NotEqual, True, False, NoError, Contains, HasPrefix), testify/mock framework, testify/suite for test organization (SetupSuite, TearDownSuite, SetupTest, TearDownTest), and HTTP assertions.
+
+- [gomock](./testing/tools/gomock.mdx): mockgen code generation, Controller lifecycle, EXPECT() API, matchers (Eq, Any, Len, Matcher), Times() call count verification, InOrder() verification, and Do/DoAndReturn callbacks.
+
+- [Other Tools](./testing/tools/other-tools.mdx): quicktest, gotestsum, testcontainers-go (PostgreSQL, Redis containers), godog (BDD testing), goleak (goroutine leak detection), httptest (HTTP server testing), and pprof (performance analysis).
+
+### Best Practices
+
+- [Conventions](./testing/best-practices/conventions.mdx): Test naming conventions (Test<Function><Scenario>), AAA pattern (Arrange-Act-Assert), test isolation principles, avoiding logic in tests, clear error messages, and test documentation.
+
+- [Architecture](./testing/best-practices/architecture.mdx): Test pyramid strategy (70% unit, 20% integration, 10% E2E), layered testing (unit vs integration vs E2E), dependency injection for testability, test organization structure, and golden file testing.
+
+- [CI/CD Integration](./testing/best-practices/ci-cd.mdx): GitHub Actions workflows (multi-version, parallel jobs, test reports), GitLab CI configuration, coverage gates, benchmark regression detection, fuzzing in CI, race detection, and pre-commit hooks.
+
+- [Testing Sidebar](./testing/_meta.json): Navigation metadata for testing subdirectory.
+- [Testing LLMs Index](./testing/llms.txt): English index for testing subdirectory.
+
+## Build Tools
+
+- [Build Tools Overview](./build-tools/index.mdx): Overview of Go build tools with learning path and quick reference.
+- [Go Modules](./build-tools/go-mod.mdx): go.mod files, dependency management, version control, module cache, and best practices.
+- [Go Commands](./build-tools/go-commands.mdx): go build, go run, go test, go install, go vet, and common workflows.
+- [Cross Compilation](./build-tools/cross-compile.mdx): Cross-platform compilation, GOOS/GOARCH, CGO constraints, and build automation.
+- [Go Assembly](./build-tools/go-asm.mdx): Go assembly basics, asm syntax, compiler directives, and performance analysis.
+- [Build Tools Sidebar](./build-tools/_meta.json): Navigation metadata for build-tools subdirectory.
+
+## Performance Optimization
+
+- [Optimization Overview](./optimization/index.mdx): Overview of Go performance optimization with learning path and tool introduction.
+- [pprof](./optimization/pprof.mdx): pprof usage, CPU profiling, memory profiling, heap analysis, and interpretation.
+- [Memory Optimization](./optimization/memory-optimization.mdx): Memory allocation, escape analysis, object pooling, GC tuning, and anti-patterns.
+- [CPU Optimization](./optimization/cpu-optimization.mdx): CPU usage, goroutine scheduling, lock optimization, algorithm choice, and benchmarking.
+- [Common Issues](./optimization/common-issues.mdx): Common performance pitfalls, memory leaks, goroutine leaks, and prevention.
+- [Trace](./optimization/trace.mdx): go tool trace, execution tracing, goroutine analysis, and visualization.
+- [Optimization Sidebar](./optimization/_meta.json): Navigation metadata for optimization subdirectory.
+
+## Advanced Topics
+
+### Unsafe
+
+- [Unsafe Basics](./unsafe/basics.mdx): Introduction to unsafe package, unsafe.Pointer and uintptr types, Sizeof/Alignof/Offsetof functions, safety warnings, pointer conversion rules, uintptr dangers, and real-world applications (zero-copy conversions, atomic operations).
+- [Pointer Operations](./unsafe/pointer-operations.mdx): Advanced pointer operations, type conversion (same-size types), array/slice operations, string operations (zero-copy), struct operations (direct field access), and union simulation.
+- [Memory Layout](./unsafe/memory-layout.mdx): Go type memory layout, basic types (bool, integers, floats, string, slice, interface), struct layout (alignment, padding, field reordering), arrays, slices, maps, channels, and interface memory layout.
+- [Best Practices](./unsafe/best-practices.mdx): When to use unsafe (performance-critical, CGO, system programming), when NOT to use (application code, normal optimization), common pitfalls (uintptr storage, object moving, read-only memory), safe patterns, performance optimization, CGO integration, testing unsafe code, debugging, and alternatives.
+- [Unsafe Sidebar](./unsafe/_meta.json): Navigation metadata for unsafe subdirectory.
+- [Unsafe LLMs Index](./unsafe/llms.txt): English index for unsafe subdirectory.
+
+### CGO
+
+- [CGO Basics](./cgo/basics.mdx): Introduction to CGO, basic structure (#include ... import "C"), CGO directives (CFLAGS, LDFLAGS, pkg-config), basic type mapping, calling C functions, calling Go functions (export), string handling (C.CString, C.GoString), and array operations.
+- [Type Conversions](./cgo/type-conversions.mdx): Go to C and C to Go type conversions, numeric types, pointer conversions (unsafe.Pointer), struct conversions, C struct definitions, enum conversions, union types, function signature conversions, and C function pointers.
+- [Memory Management](./cgo/memory-management.mdx): Memory allocation (C-side malloc/free, Go-side make/new), string memory lifecycle, reference passing rules, memory leak detection, finalizers, cross-boundary memory rules, memory ownership, and memory pool patterns.
+- [Best Practices](./cgo/best-practices.mdx): When to use CGO (existing C libraries, performance-critical code), when NOT to use (pure Go possible), performance optimization (reduce cross-boundary calls), error handling (C errors to Go), build tags (platform-specific), debugging, alternatives (pure Go, Go libraries), security (input validation), and testing CGO code.
+- [CGO Sidebar](./cgo/_meta.json): Navigation metadata for cgo subdirectory.
+- [CGO LLMs Index](./cgo/llms.txt): English index for cgo subdirectory.
+
+## Best Practices
+
+- [Best Practices Overview](./best-practices/index.mdx): Overview of Go best practices with learning paths and skill level navigation.
+
+### Code Style
+
+- [Code Style Conventions](./best-practices/code-style.mdx): Go code style conventions including gofmt, goimports, naming conventions, comment standards, code organization, common pitfalls, tools and setup (VS Code, Git hooks, Makefile), and code review checklist.
+
+### Error Patterns
+
+- [Error Handling Patterns](./best-practices/error-patterns.mdx): Go error handling best practices including error wrapping with %w, sentinel errors, error chain operations (errors.Is, errors.As, errors.Unwrap), custom error types, error handling patterns (early return, error groups, error context), layered error handling (Repository-Service-Controller), common pitfalls, and code review checklist.
+
+### Concurrency Patterns
+
+- [Concurrency Patterns](./best-practices/concurrency-patterns.mdx): Go concurrency patterns including worker pool patterns (basic, with Context, dynamic), fan-in/fan-out patterns, pipeline patterns, semaphore patterns, context cancellation patterns, common pitfalls (goroutine leaks, forgotten channel closes, defer in loops), performance optimization (sync.Pool, batching, atomic operations), and code review checklist.
+
+### Testing Strategies
+
+- [Testing Strategies](./best-practices/testing-strategies.mdx): Go testing strategies including basic testing concepts, table-driven tests, mock and test doubles (manual mocks, Testify, gomock), benchmark testing, fuzzing (Go 1.18+), test coverage, test architecture (unit/integration/E2E), tools recommendations, and code review checklist.
+
+### Anti-Patterns
+
+- [Common Anti-Patterns](./best-practices/anti-patterns.mdx): Common Go anti-patterns to avoid including performance anti-patterns (string concatenation in loops, slice pre-allocation, fmt.Sprintf misuse, reflect.DeepEqual overuse), concurrency anti-patterns (goroutine leaks, channel closing issues, time.After in loops, concurrent map access), memory anti-patterns (slice underlying array leaks, closure variable capture, string/byte conversion leaks, sync.Pool overuse), design anti-patterns (excessive interface{}, improper error handling, ignoring context cancellation), detection and prevention methods, and code review checklist.
+
+- [Best Practices Sidebar](./best-practices/_meta.json): Navigation metadata for best-practices subdirectory.
+
+## Ecosystem
+
+- [Ecosystem Overview](./ecosystem/index.mdx): Overview of Go ecosystem with navigation cards and technology stack recommendations.
+
+### Lazygophers Series
+
+- [lazy-log](./ecosystem/lazy-log.mdx): lazygophers/log high-performance logging library based on zap with structured logging, zero-allocation field API, context propagation, log levels, output configuration, rotation, performance benchmarks (3x faster than zap), and best practices.
+
+- [lazy-utils](./ecosystem/lazy-utils.mdx): lazygophers/utils modern utility library with 20+ modules including stringx (zero-allocation string operations), candy (generic collections and utilities), osx (file system operations), HTTP utilities, JSON utilities, time utilities, crypto utilities, and performance comparisons with standard library.
+
+- [lazy-lrpc](./ecosystem/lazy-lrpc.mdx): lazygophers/lrpc lightweight RPC framework based on fasthttp with features including service registration, load balancing, service discovery, middleware ecosystem (authentication, rate limiting, circuit breaking, tracing, logging), performance benchmarks (2x faster than gRPC), and microservices architecture patterns.
+
+### Web Frameworks
+
+- [Web Frameworks Comparison](./ecosystem/web-frameworks.mdx): Comprehensive comparison of Go web frameworks including Gin (high-performance minimalist framework), Echo (minimalist framework with built-in middleware), Fiber (fasthttp-based framework), performance benchmarks, feature comparison, code examples, decision tree, and best practices.
+
+### Data Access
+
+- [ORM Libraries Comparison](./ecosystem/orm.mdx): In-depth comparison of Go ORM libraries including GORM (feature-rich ORM with conventions), Ent (Facebook's type-safe code generator), performance benchmarks, type safety analysis, code examples, and when to use each.
+
+- [Database Drivers](./ecosystem/database.mdx): Go database programming including standard library database/sql usage, driver registration (MySQL, PostgreSQL, SQLite), connection pool management, transaction handling, prepared statements, NULL value handling, and security best practices.
+
+### Infrastructure
+
+- [CLI Tools](./ecosystem/cli.mdx): CLI development with Cobra framework including command system design, subcommands, flags/persistent flags, argument validation, shell completion (bash/zsh/fish), command aliases, configuration file integration, help generation, and advanced patterns (pre/post-run, InterceptExec).
+
+- [Logging Libraries Comparison](./ecosystem/logging.mdx): Comparison of Go logging libraries including zap (uber's high-performance structured logging), logrus (structured logging with hooks), slog (Go 1.21+ standard library structured logging), performance benchmarks (zero-allocation optimization), structured logging best practices, and testing methods.
+
+- [Configuration Management](./ecosystem/config.mdx): Configuration management with Viper including configuration file formats (JSON/YAML/TOML/ENV), environment variable binding, flag binding, remote configuration (etcd/Consul), hot reloading, multi-environment configuration, configuration validation, and best practices.
+
+- [Ecosystem Sidebar](./ecosystem/_meta.json): Navigation metadata for ecosystem subdirectory.

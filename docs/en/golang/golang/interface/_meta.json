@@ -1,0 +1,39 @@
+[
+  {
+    "type": "file",
+    "name": "interface-basics",
+    "label": "接口基础"
+  },
+  {
+    "type": "file",
+    "name": "interface-values",
+    "label": "接口值机制"
+  },
+  {
+    "type": "file",
+    "name": "empty-interface",
+    "label": "空接口与类型断言"
+  },
+  {
+    "type": "file",
+    "name": "interface-composition",
+    "label": "接口组合"
+  },
+  {
+    "type": "file",
+    "name": "best-practices",
+    "label": "最佳实践"
+  },
+  {
+    "type": "dir",
+    "name": "library",
+    "label": "标准库接口",
+    "items": [
+      {
+        "type": "file",
+        "name": "index",
+        "label": "概览"
+      }
+    ]
+  }
+]

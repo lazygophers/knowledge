@@ -1,0 +1,250 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# Cross Compilation
+
+<Badge text="构建工具" type="info" />
+
+交叉编译允许在一个平台上为另一个平台编译程序。
+
+## 基础概念
+
+<Badge text="初级开发者" type="tip" />
+
+### 环境变量
+
+Go 通过环境变量控制目标平台：
+
+```bash
+# GOOS - 目标操作系统
+# GOARCH - 目标架构
+# CGO_ENABLED - 是否启用 CGO (0=禁用, 1=启用)
+```
+
+### 常用平台组合
+
+| GOOS | GOARCH | 说明 |
+|------|--------|------|
+| linux | amd64 | Linux 64位 |
+| linux | arm64 | Linux ARM 64位 |
+| darwin | amd64 | macOS Intel |
+| darwin | arm64 | macOS Apple Silicon |
+| windows | amd64 | Windows 64位 |
+| freebsd | amd64 | FreeBSD 64位 |
+
+## 基础用法
+
+<Badge text="初级开发者" type="tip" />
+
+### 编译不同平台
+
+```bash
+# Linux 可执行文件
+GOOS=linux GOARCH=amd64 go build -o app-linux
+
+# Windows 可执行文件
+GOOS=windows GOARCH=amd64 go build -o app.exe
+
+# macOS 可执行文件
+GOOS=darwin GOARCH=amd64 go build -o app-mac
+
+# 树莓派
+GOOS=linux GOARCH=arm64 go build -o app-pi
+```
+
+### 批量编译
+
+```bash
+#!/bin/bash
+# build.sh
+
+APP_NAME="myapp"
+PLATFORMS="linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64"
+
+for PLATFORM in $PLATFORMS; do
+    GOOS=${PLATFORM%/*}
+    GOARCH=${PLATFORM#*/}
+    OUTPUT="${APP_NAME}-${GOOS}-${GOARCH}"
+    if [ $GOOS = "windows" ]; then
+        OUTPUT="${OUTPUT}.exe"
+    fi
+    echo "Building $OUTPUT..."
+    GOOS=$GOOS GOARCH=$GOARCH go build -o ./dist/$OUTPUT
+done
+```
+
+## CGO 和交叉编译
+
+<Badge text="中级开发者" type="warning" />
+
+### CGO 限制
+
+<Callout type="warning">
+启用 CGO 时，交叉编译需要对应平台的 C 编译器。
+</Callout>
+
+```bash
+# ❌ 纯交叉编译不适用 CGO
+GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build
+
+# ✅ 禁用 CGO 交叉编译
+GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build
+```
+
+### 使用 Zig 进行 CGO 交叉编译
+
+```bash
+# 安装 Zig
+brew install zig  # macOS
+
+# 使用 Zig 作为 C 编译器
+CC=zig CXX=zig CGO_ENABLED=1 \
+    GOOS=linux GOARCH=amd64 \
+    go build -o app-linux
+```
+
+## 高级技巧
+
+<Badge text="高级开发者" type="danger" />
+
+### 交叉编译脚本
+
+```go
+// +build ignore
+
+package main
+
+import (
+    "fmt"
+    "os"
+    "os/exec"
+    "runtime"
+    "strings"
+)
+
+type Platform struct {
+    GOOS   string
+    GOARCH string
+    Ext    string
+}
+
+func main() {
+    platforms := []Platform{
+        {"linux", "amd64", ""},
+        {"linux", "arm64", ""},
+        {"darwin", "amd64", ""},
+        {"darwin", "arm64", ""},
+        {"windows", "amd64", ".exe"},
+    }
+
+    for _, p := range platforms {
+        build(p)
+    }
+}
+
+func build(p Platform) {
+    fmt.Printf("Building %s/%s...\n", p.GOOS, p.GOARCH)
+
+    cmd := exec.Command("go", "build",
+        "-o", fmt.Sprintf("dist/app-%s-%s%s", p.GOOS, p.GOARCH, p.Ext))
+    cmd.Env = append(os.Environ(),
+        fmt.Sprintf("GOOS=%s", p.GOOS),
+        fmt.Sprintf("GOARCH=%s", p.GOARCH),
+        "CGO_ENABLED=0",
+    )
+
+    output, err := cmd.CombinedOutput()
+    if err != nil {
+        fmt.Printf("Error: %v\n%s\n", err, output)
+        return
+    }
+}
+```
+
+### 条件编译
+
+```go
+// +build linux
+
+package main
+
+func platformSpecific() {
+    // Linux 特定代码
+}
+```
+
+```go
+// +build darwin
+
+package main
+
+func platformSpecific() {
+    // macOS 特定代码
+}
+```
+
+## 最佳实践
+
+<Badge text="高级开发者" type="danger" />
+
+### 构建标签
+
+```go
+//go:build !windows
+
+package main
+
+func getHomeDir() string {
+    // 非 Windows 平台
+}
+```
+
+### 版本信息
+
+```go
+package main
+
+import (
+    "fmt"
+)
+
+var (
+    Version   = "dev"
+    BuildTime = "unknown"
+    GitCommit = "unknown"
+)
+
+func main() {
+    fmt.Printf("Version: %s\n", Version)
+    fmt.Printf("Build: %s\n", BuildTime)
+    fmt.Printf("Commit: %s\n", GitCommit)
+}
+```
+
+### 构建时注入
+
+```bash
+go build \
+    -ldflags \
+    "-X main.Version=1.0.0 \
+     -X main.BuildTime=$(date -u +%Y-%m-%dT%H:%M:%SZ) \
+     -X main.GitCommit=$(git rev-parse HEAD)"
+```
+
+---
+
+## 总结
+
+### 速查表
+
+```bash
+# 禁用 CGO 交叉编译
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build
+
+# 查看所有支持的平台
+go tool dist list
+
+# 设置默认编译目标
+go env -w GOOS=linux
+go env -w GOARCH=amd64
+```

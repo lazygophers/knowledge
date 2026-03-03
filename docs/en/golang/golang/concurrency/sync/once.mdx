@@ -1,0 +1,152 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# sync.Once - 只执行一次
+
+<Badge text="中级" type="warning" /> <Badge text="Go 1.0+" type="info" />
+
+Once 确保某个操作只执行一次，常用于初始化场景。
+
+## 定义
+
+```go
+type Once struct {
+    // 包含非导出字段
+}
+```
+
+## 主要方法
+
+```go
+func (o *Once) Do(f func())  // 执行函数 f，保证只执行一次
+```
+
+## 使用场景
+
+- 单例模式
+- 延迟初始化
+- 配置加载
+- 资源初始化
+
+## 基础示例
+
+```go
+package main
+
+import (
+    "fmt"
+    "sync"
+)
+
+type Database struct {
+    connection string
+}
+
+var (
+    instance *Database
+    once     sync.Once
+)
+
+func GetDatabase() *Database {
+    once.Do(func() {
+        fmt.Println("初始化数据库连接")
+        instance = &Database{connection: "localhost:5432"}
+    })
+    return instance
+}
+
+func main() {
+    var wg sync.WaitGroup
+
+    // 多个 goroutine 同时调用 GetDatabase
+    for i := 0; i < 5; i++ {
+        wg.Add(1)
+        go func(id int) {
+            defer wg.Done()
+            db := GetDatabase()
+            fmt.Printf("Goroutine %d: %v\n", id, db)
+        }(i)
+    }
+
+    wg.Wait()
+    // 输出：只打印一次 "初始化数据库连接"
+}
+```
+
+## 单例模式实现
+
+```go
+package main
+
+import (
+    "fmt"
+    "sync"
+)
+
+type Singleton struct {
+    value int
+}
+
+var (
+    singleton *Singleton
+    once      sync.Once
+)
+
+func GetSingleton() *Singleton {
+    once.Do(func() {
+        singleton = &Singleton{value: 42}
+    })
+    return singleton
+}
+
+func main() {
+    s1 := GetSingleton()
+    s2 := GetSingleton()
+
+    fmt.Printf("s1 == s2: %v\n", s1 == s2)  // true
+    fmt.Printf("s1.value: %d\n", s1.value)  // 42
+    fmt.Printf("s2.value: %d\n", s2.value)  // 42
+}
+```
+
+## 与 Mutex 的对比
+
+```go
+// 使用 Mutex 实现（代码更复杂）
+var mu sync.Mutex
+var initialized bool
+var value int
+
+func getValue() int {
+    mu.Lock()
+    if !initialized {
+        value = initialize()
+        initialized = true
+    }
+    mu.Unlock()
+    return value
+}
+
+// 使用 Once 实现（简洁清晰）
+var once sync.Once
+var value int
+
+func getValue() int {
+    once.Do(func() {
+        value = initialize()
+    })
+    return value
+}
+```
+
+<Callout type="tip" title="最佳实践">
+  <strong>Once 的典型用途</strong>：
+  - 单例模式的线程安全实现
+  - 延迟初始化昂贵的资源
+  - 确保配置只加载一次
+  - 一次性注册函数
+</Callout>
+
+---
+
+[← WaitGroup](./waitgroup.mdx) | [Cond →](./cond.mdx)

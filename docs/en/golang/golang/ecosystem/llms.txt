@@ -1,0 +1,33 @@
+# Go Ecosystem (Chinese Source)
+
+> English llms.txt for ecosystem directory.
+
+## Module Index
+
+- [Ecosystem Overview](./index.mdx): Overview of Go ecosystem with navigation cards and technology stack recommendations.
+
+## Lazygophers Series
+
+- [lazy-log](./lazy-log.mdx): lazygophers/log high-performance logging library based on zap.
+
+- [lazy-utils](./lazy-utils.mdx): lazygophers/utils modern utility library with 20+ modules.
+
+- [lazy-lrpc](./lazy-lrpc.mdx): lazygophers/lrpc lightweight RPC framework based on fasthttp.
+
+## Web Frameworks
+
+- [Web Frameworks Comparison](./web-frameworks.mdx): Comprehensive comparison of Gin, Echo, and Fiber frameworks.
+
+## Data Access
+
+- [ORM Libraries Comparison](./orm.mdx): In-depth comparison of GORM and Ent.
+
+- [Database Drivers](./database.mdx): Go database programming with database/sql and drivers.
+
+## Infrastructure
+
+- [CLI Tools](./cli.mdx): CLI development with Cobra framework.
+
+- [Logging Libraries Comparison](./logging.mdx): Comparison of zap, logrus, and slog.
+
+- [Configuration Management](./config.mdx): Configuration management with Viper.

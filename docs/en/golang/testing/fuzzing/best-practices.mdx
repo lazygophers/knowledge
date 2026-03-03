@@ -1,0 +1,406 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# Fuzzing Best Practices
+
+<Badge text="高级" type="danger" /> <Badge text="Go 1.18+" type="info" />
+
+模糊测试可以有效地发现边界情况和潜在的 bug，但需要遵循最佳实践才能发挥最大效果。
+
+## 种子语料选择
+
+### 覆盖边界情况
+
+```go
+func FuzzWithGoodSeeds(f *testing.F) {
+    // 常见值
+    f.Add(0)
+    f.Add(1)
+    f.Add(-1)
+
+    // 边界值
+    f.Add(int64(1)<<63 - 1) // int64 max
+    f.Add(-(int64(1) << 63)) // int64 min
+
+    // 特殊值
+    f.Add(math.MaxFloat64)
+    f.Add(math.SmallestNonzeroFloat64)
+}
+```
+
+### 真实世界输入
+
+```go
+func FuzzRealWorld(f *testing.F) {
+    // 使用真实世界的输入作为种子
+    testCases := []string{
+        "user@example.com",
+        "admin@localhost",
+        "test.user+tag@domain.co.uk",
+        "invalid-email",
+        "",
+        "@",
+        "a@b@c.com",
+    }
+
+    for _, tc := range testCases {
+        f.Add(tc)
+    }
+
+    f.Fuzz(func(t *testing.T, email string) {
+        ValidateEmail(email)
+    })
+}
+```
+
+### 从文件加载种子
+
+```go
+func FuzzLoadSeedsFromFile(f *testing.F) {
+    // 从测试数据文件加载种子
+    data, err := os.ReadFile("testdata/inputs.txt")
+    if err != nil {
+        f.Fatal(err)
+    }
+
+    // 按行分割
+    lines := strings.Split(string(data), "\n")
+    for _, line := range lines {
+        if line != "" {
+            f.Add(line)
+        }
+    }
+
+    f.Fuzz(func(t *testing.T, input string) {
+        Process(input)
+    })
+}
+```
+
+## 断言设计
+
+### 使用不变量
+
+```go
+func FuzzInvariant(f *testing.F) {
+    f.Add([]int{1, 2, 3, 4, 5})
+
+    f.Fuzz(func(t *testing.T, input []int) {
+        sorted := Sort(input)
+
+        // 不变量 1：结果是升序的
+        for i := 1; i < len(sorted); i++ {
+            if sorted[i-1] > sorted[i] {
+                t.Errorf("not sorted at index %d: %v > %v",
+                    i-1, sorted[i-1], sorted[i])
+            }
+        }
+
+        // 不变量 2：长度不变
+        if len(sorted) != len(input) {
+            t.Errorf("length changed: got %d, want %d",
+                len(sorted), len(input))
+        }
+
+        // 不变量 3：元素多集相等
+        if !multisetsEqual(input, sorted) {
+            t.Errorf("elements changed")
+        }
+    })
+}
+```
+
+### 渐进式验证
+
+```go
+func FuzzProgressive(f *testing.F) {
+    f.Add("test input")
+
+    f.Fuzz(func(t *testing.T, input string) {
+        // 第一层：不应该 panic
+        defer func() {
+            if r := recover(); r != nil {
+                t.Errorf("panic: %v", r)
+            }
+        }()
+
+        // 第二层：返回值应该有效
+        result := Process(input)
+        if result == nil {
+            return // nil 是允许的
+        }
+
+        // 第三层：结果应该满足某些条件
+        if !isValid(result) {
+            t.Errorf("invalid result: %v", result)
+        }
+
+        // 第四层：更详细的检查
+        if meetsExpectations(input, result) {
+            t.Errorf("unexpected result for %q", input)
+        }
+    })
+}
+```
+
+## 性能考虑
+
+### 避免昂贵操作
+
+```go
+// ❌ 不好：每次都做昂贵操作
+func FuzzSlow(f *testing.F) {
+    f.Fuzz(func(t *testing.T, input string) {
+        // 连接数据库 - 不好！
+        db := connectToDatabase()
+        defer db.Close()
+
+        result := db.Query(input)
+        // ...
+    })
+}
+
+// ✅ 好：使用内存操作
+func FuzzFast(f *testing.F) {
+    f.Fuzz(func(t *testing.T, input string) {
+        // 纯内存操作
+        result := parse(input)
+        // ...
+    })
+}
+```
+
+### 缓存和复用
+
+```go
+func FuzzWithCache(f *testing.F) {
+    // 预计算可复用的数据
+    cache := initializeCache()
+
+    f.Fuzz(func(t *testing.T, input string) {
+        // 使用缓存
+        result := processWithCache(input, cache)
+        // ...
+    })
+}
+```
+
+## 故障语料管理
+
+### 保存失败输入
+
+```bash
+# 运行模糊测试，失败时自动保存
+go test -fuzz=FuzzName -fuzztime=30s
+
+# 失败输入保存在
+testdata/fuzz/FuzzName/xxxxx
+```
+
+### 重放失败
+
+```bash
+# 使用特定输入重放
+go test -run=FuzzName/xxxxx
+
+# 或使用完整路径
+go test -fuzz=FuzzName -fuzztime=30s -fuzzminimizetime=30s
+```
+
+### 最小化失败输入
+
+```bash
+# 增加最小化时间
+go test -fuzz=FuzzName -fuzzminimizetime=60s
+
+# 模糊测试会自动尝试最小化导致失败的输入
+```
+
+## CI/CD 集成
+
+### 限制模糊测试时间
+
+```yaml
+# .github/workflows/test.yml
+jobs:
+  fuzz:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+      - name: Run fuzz tests
+        run: |
+          # 在 CI 中限制模糊测试时间
+          go test -fuzz=FuzzParse -fuzztime=60s
+```
+
+### 使用覆盖率
+
+```yaml
+- name: Fuzz with coverage
+  run: |
+    # 确保模糊测试达到一定覆盖率
+    go test -fuzz=. -fuzztime=120s -coverprofile=fuzz.out
+    go tool cover -func=fuzz.out | grep total
+```
+
+<Callout type="warning" title="CI 中的模糊测试">
+  <strong>注意事项</strong>
+
+  <ul>
+    <li>限制模糊测试时间（通常 30-120 秒）</li>
+    <li>不要在每次 PR 都运行完整的模糊测试</li>
+    <li>考虑定期运行而不是每次提交都运行</li>
+    <li>保存和重用语料库</li>
+  </ul>
+</Callout>
+
+## 常见陷阱
+
+### 可变状态
+
+```go
+// ❌ 不好：使用全局可变状态
+var counter int
+
+func FuzzWithState(f *testing.F) {
+    f.Fuzz(func(t *testing.T, input int) {
+        counter += input  // 并发问题！
+    })
+}
+
+// ✅ 好：使用局部状态
+func FuzzWithoutState(f *testing.F) {
+    f.Fuzz(func(t *testing.T, input int) {
+        localCounter := 0
+        localCounter += input  // 安全
+    })
+}
+```
+
+### 忽略错误
+
+```go
+// ❌ 不好：忽略所有错误
+func FuzzIgnoreErrors(f *testing.F) {
+    f.Fuzz(func(t *testing.T, input []byte) {
+        data, _ := parse(input)  // 忽略错误
+        _ = process(data)
+    })
+}
+
+// ✅ 好：正确处理错误
+func FuzzHandleErrors(f *testing.F) {
+    f.Fuzz(func(t *testing.T, input []byte) {
+        data, err := parse(input)
+        if err != nil {
+            return  // 无效输入是允许的
+        }
+        // 只处理有效输入
+        if !isValid(data) {
+            t.Errorf("invalid data: %v", data)
+        }
+    })
+}
+```
+
+## 监控和调试
+
+### 启用详细输出
+
+```bash
+# 查看模糊测试的详细输出
+go test -fuzz=FuzzName -fuzztime=10s -v
+
+# 查看覆盖率信息
+go test -fuzz=FuzzName -fuzztime=10s -coverprofile=fuzz.out
+go tool cover -html=fuzz.out -o coverage.html
+```
+
+### 使用 Fuzzing 优化器
+
+```go
+func FuzzOptimized(f *testing.F) {
+    // 添加大量种子以加快发现问题的速度
+    for i := 0; i < 100; i++ {
+        f.Add(generateInput(i))
+    }
+
+    f.Fuzz(func(t *testing.T, input []byte) {
+        // 测试逻辑
+        Process(input)
+    })
+}
+```
+
+## 练习
+
+1. **优化模糊测试**：改进一个模糊测试，使其更快发现 bug
+
+<details>
+<summary>查看答案</summary>
+
+```go
+// 初始版本：简单的模糊测试
+func FuzzParseV1(f *testing.F) {
+    f.Fuzz(func(t *testing.T, input string) {
+        Parse(input)
+    })
+}
+
+// 优化版本：更好的种子和断言
+func FuzzParseV2(f *testing.F) {
+    // 添加有意义的种子
+    validInputs := []string{
+        `{"name":"Alice","age":30}`,
+        `[]`,
+        `null`,
+        `{"nested":{"value":123}}`,
+        `["array","of","strings"]`,
+    }
+
+    for _, input := range validInputs {
+        f.Add(input)
+    }
+
+    // 添加边界情况
+    f.Add("")
+    f.Add("{")
+    f.Add("}")
+
+    f.Fuzz(func(t *testing.T, input string) {
+        // 不应该 panic
+        defer func() {
+            if r := recover(); r != nil {
+                t.Errorf("panic for input %q: %v", input, r)
+            }
+        }()
+
+        result, err := Parse(input)
+
+        // 验证：如果解析成功，结果应该有效
+        if err == nil && result == nil {
+            t.Errorf("nil result without error for %q", input)
+        }
+
+        // 验证：往返转换应该保持不变（对于有效 JSON）
+        if err == nil {
+            // 尝试重新序列化
+            out, err2 := json.Marshal(result)
+            if err2 != nil {
+                t.Errorf("marshal failed: %v", err2)
+            }
+
+            // 验证序列化后的 JSON 是有效的
+            var check interface{}
+            if err := json.Unmarshal(out, &check); err != nil {
+                t.Errorf("unmarshal failed: %v", err)
+            }
+        }
+    })
+}
+```
+
+**解释**：优化版本添加了更多种子语料，包含了 panic 检测和往返验证，能更快发现问题。
+
+</details>

@@ -1,0 +1,68 @@
+# Go Reflection Module
+
+## Overview
+Go reflection (reflect package) provides runtime type inspection and manipulation capabilities.
+
+## Files
+
+### basics.mdx
+- **Reflection Basics**: Introduction to Go reflection, three laws of reflection, Type vs Value, Kind types
+- Key concepts: reflect.TypeOf, reflect.ValueOf, CanSet, CanAddr
+- Use cases: generic functions, deep equality, dynamic slice creation
+- Performance considerations: reflection is 10-100x slower than direct calls
+- Go 1.20+ changes: SliceHeader/StringHeader deprecation, unsafe package alternatives
+
+### generics.mdx
+- **Generics and Reflection**: Combining Go 1.18+ generics with reflection for type-safe dynamic programming
+- Using reflection within generic functions: PrintTypeInfo, IsNil, type checking with generics
+- Reflecting instantiated generic types: Container[T], type parameter inference
+- Generic constraints with reflection: Ordered interface, Stringer interface, custom constraints
+- Performance comparison: generics (~5 ns/op) vs reflection (~500 ns/op), 100x difference
+- Real-world patterns: generic validators with reflection, ORM mapping, struct tag processing
+- Best practices: use generics for type safety and performance, use reflection for runtime details, cache reflection results
+
+### type-reflection.mdx
+- **Type Reflection**: reflect.Type interface and type information queries
+- Type properties: Name, Kind, PkgPath, Size, Elem, Key, Len
+- Struct type: field iteration, struct tags, embedded fields
+- Function type: input/output parameters, variadic functions
+- Interface type: method information, Implements check
+- Type operations: AssignableTo, ConvertibleTo, type equality
+
+### value-reflection.mdx
+- **Value Reflection**: reflect.Value for reading and modifying values
+- Reading values: basic types (Int, Uint, Float, Bool, String), composite types (arrays, slices, maps, channels, structs)
+- Modifying values: CanSet check, modifying basic types, composite types, struct fields
+- Creating values: MakeSlice, MakeMap, MakeChan, New for structs
+- Value operations: Compare, DeepEqual, IsZero
+
+### struct-tags.mdx
+- **Struct Tags**: Metadata mechanism for struct fields
+- Tag syntax: `key:"value"`, multiple tags, options
+- Reading tags: Tag.Get(), Tag.Lookup()
+- Parsing tags: parsing options, complex tag formats
+- Common applications: JSON/XML serialization, database mapping (GORM), validation
+- Custom tag processing and best practices
+
+### dynamic-calls.mdx
+- **Dynamic Method/Function Calls**: Runtime invocation
+- Method calls: MethodByName, Call, CallSlice for variadic methods
+- Function calls: calling functions dynamically, CallSlice
+- Interface method calls: dynamic interface method invocation
+- Generic frameworks: RPC framework, event handlers, command dispatchers
+- Performance optimization: caching method information
+
+### best-practices.mdx
+- **Best Practices**: When and how to use reflection properly
+- When to use: serialization, dependency injection, ORM, deep comparison, generic functions
+- When NOT to use: known types, hot paths, simple cases (use type assertions)
+- Performance optimization: cache reflection info, code generation
+- Error handling: proper error checking, panic recovery
+- Common pitfalls: unexported fields, addressability, circular references
+- Design patterns: adapter pattern, plugin system
+- Testing: unit tests, benchmarks
+
+## Related Topics
+- Go interfaces (../interface/): Interface design and type assertions
+- Go functions and methods (../functions-methods/): Method receivers, function types
+- Go data types (../data-types/): Type system, composite types

@@ -1,0 +1,393 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# 命名与规范
+
+<Badge text="初级" type="info" /> <Badge text="Go 1.0+" type="info" />
+
+良好的命名和规范是编写可维护测试的基础。
+
+## 测试文件命名
+
+### 基本规则
+
+```go
+// ✅ 正确：_test.go 后缀
+calculator_test.go
+user_service_test.go
+
+// ❌ 错误：没有 _test.go 后缀
+test_calculator.go
+test_user_service.go
+```
+
+### 测试函数命名
+
+```go
+// ✅ 好的命名：描述被测试的函数和场景
+func TestUserService_GetUser_Success(t *testing.T) { }
+func TestUserService_GetUser_NotFound(t *testing.T) { }
+func TestUserService_GetUser_InvalidID(t *testing.T) { }
+
+// ❌ 不好的命名：不描述场景
+func TestUserService1(t *testing.T) { }
+func TestUserService2(t *testing.T) { }
+func TestGetUser(t *testing.T) { }
+```
+
+### 子测试命名
+
+```go
+func TestAdd(t *testing.T) {
+    tests := []struct {
+        name string
+        a, b int
+        want int
+    }{
+        {"positive numbers", 2, 3, 5},
+        {"negative numbers", -2, -3, -5},
+        {"zero value", 0, 5, 5},
+        {"mixed signs", -2, 3, 1},
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            // 测试逻辑
+        })
+    }
+}
+```
+
+## AAA 模式
+
+Arrange-Act-Assert 模式是编写清晰测试的标准方法。
+
+```go
+func TestAAA(t *testing.T) {
+    // Arrange: 准备测试数据和环境
+    input := 42
+    expected := 84
+
+    // Act: 执行被测试的函数
+    result := Double(input)
+
+    // Assert: 验证结果
+    if result != expected {
+        t.Errorf("Double(%d) = %d; want %d", input, result, expected)
+    }
+}
+```
+
+### 表驱动测试中的 AAA
+
+```go
+func TestAAATableDriven(t *testing.T) {
+    tests := []struct {
+        name string
+        // Arrange 部分
+        input int
+        // 预期结果
+        want int
+    }{
+        {"double 10", 10, 20},
+        {"double 0", 0, 0},
+        {"double negative", -5, -10},
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            // Act 部分
+            result := Double(tt.input)
+
+            // Assert 部分
+            if result != tt.want {
+                t.Errorf("Double(%d) = %d; want %d",
+                    tt.input, result, tt.want)
+            }
+        })
+    }
+}
+```
+
+## 测试隔离
+
+### 独立性原则
+
+```go
+// ✅ 好：每个测试独立
+func TestCreateUser(t *testing.T) {
+    db := setupTestDB(t)
+    defer db.Close()
+
+    // 测试逻辑...
+}
+
+func TestUpdateUser(t *testing.T) {
+    db := setupTestDB(t)
+    defer db.Close()
+
+    // 测试逻辑...
+}
+
+// ❌ 不好：共享状态
+var globalDB *sql.DB
+
+func TestCreateUserBad(t *testing.T) {
+    // 使用全局 db，测试之间会相互影响
+    globalDB.Exec("INSERT INTO users ...")
+}
+```
+
+### 随机数据
+
+```go
+// 使用随机数据避免测试间的依赖
+import (
+    "math/rand"
+    "time"
+)
+
+func TestWithRandomData(t *testing.T) {
+    rand.Seed(time.Now().UnixNano())
+
+    randomID := rand.Intn(1000)
+    randomName := fmt.Sprintf("user-%d", randomID)
+
+    user, err := CreateUser(randomName)
+    if err != nil {
+        t.Fatal(err)
+    }
+
+    assert.Equal(t, randomName, user.Name)
+}
+```
+
+## 错误消息
+
+### 清晰的错误消息
+
+```go
+// ✅ 好：清晰的错误消息
+if got != want {
+    t.Errorf("Add(%d, %d) = %d; want %d", a, b, got, want)
+}
+
+// ✅ 好：包含上下文
+if user.ID == 0 {
+    t.Errorf("CreateUser(%q, %q) should set ID, got 0", name, email)
+}
+
+// ❌ 不好：模糊的错误消息
+if got != want {
+    t.Error("wrong result")
+}
+
+// ❌ 不好：无信息
+if user.ID == 0 {
+    t.Error("ID not set")
+}
+```
+
+### 使用辅助函数
+
+```go
+// 自定义断言函数
+func assertUser(t *testing.T, got, want *User) {
+    t.Helper()
+
+    if got.ID != want.ID {
+        t.Errorf("ID: got %d, want %d", got.ID, want.ID)
+    }
+
+    if got.Name != want.Name {
+        t.Errorf("Name: got %s, want %s", got.Name, want.Name)
+    }
+}
+
+func TestWithHelper(t *testing.T) {
+    got := CreateUser("Alice")
+    want := &User{ID: 1, Name: "Alice"}
+
+    assertUser(t, got, want)
+}
+```
+
+## 测试文档
+
+### 测试注释
+
+```go
+// TestUserRegistration 测试完整的用户注册流程
+// 包括：
+//   - 验证邮箱格式
+//   - 检查邮箱是否已存在
+//   - 创建用户记录
+//   - 发送欢迎邮件
+func TestUserRegistration(t *testing.T) {
+    // 测试正常注册流程
+    t.Run("success", func(t *testing.T) {
+        // ...
+    })
+
+    // 测试邮箱已存在的情况
+    t.Run("email exists", func(t *testing.T) {
+        // ...
+    })
+
+    // 测试无效邮箱格式
+    t.Run("invalid email", func(t *testing.T) {
+        // ...
+    })
+}
+```
+
+## 避免反模式
+
+### 避免测试中的逻辑
+
+```go
+// ❌ 不好：测试中有复杂逻辑
+func TestWithLogic(t *testing.T) {
+    results := []int{}
+    for i := 0; i < 10; i++ {
+        if i%2 == 0 {
+            results = append(results, Process(i))
+        }
+    }
+    if len(results) > 5 && results[0] > 0 {
+        t.Fail()
+    }
+}
+
+// ✅ 好：简单直接的测试
+func TestSimple(t *testing.T) {
+    got := Process(2)
+    want := 4
+    if got != want {
+        t.Errorf("Process(2) = %d; want %d", got, want)
+    }
+}
+```
+
+### 避免硬编码路径
+
+```go
+// ❌ 不好：硬编码路径
+func TestHardcoded(t *testing.T) {
+    file, err := os.Open("/absolute/path/to/file.txt")
+    // ...
+}
+
+// ✅ 好：使用相对路径或临时目录
+func TestFlexible(t *testing.T) {
+    tmpDir := t.TempDir()
+    filePath := filepath.Join(tmpDir, "file.txt")
+    os.WriteFile(filePath, []byte("test"), 0644)
+    // ...
+}
+```
+
+<Callout type="warning" title="命名约定总结">
+  <strong>测试文件</strong>: <code>xxx_test.go</code>
+
+  <strong>测试函数</strong>: <code>Test&lt;Function&gt;&lt;Scenario&gt;</code>
+
+  <strong>示例函数</strong>: <code>Example&lt;Function&gt;_&lt;scenario&gt;</code>
+
+  <strong>基准函数</strong>: <code>Benchmark&lt;Function&gt;</code>
+
+  <strong>模糊函数</strong>: <code>Fuzz&lt;Function&gt;</code>
+</Callout>
+
+## 练习
+
+1. **重构测试命名**：将不规范的测试命名改为规范格式
+
+<details>
+<summary>查看答案</summary>
+
+```go
+// 原始版本：不规范的命名
+func Test1(t *testing.T) {
+    user := CreateUser("Alice")
+    if user.ID == 0 {
+        t.Error("failed")
+    }
+}
+
+func Test2(t *testing.T) {
+    user := CreateUser("")
+    if user.ID != 0 {
+        t.Error("should fail")
+    }
+}
+
+func Test3(t *testing.T) {
+    users := ListUsers()
+    if len(users) == 0 {
+        t.Error("no users")
+    }
+}
+
+// 重构后：规范的命名
+func TestUserService_CreateUser_Success(t *testing.T) {
+    // Arrange
+    name := "Alice"
+
+    // Act
+    user, err := CreateUser(name)
+
+    // Assert
+    if err != nil {
+        t.Fatalf("CreateUser(%q) error = %v", name, err)
+    }
+
+    if user.ID == 0 {
+        t.Errorf("CreateUser(%q) should set ID, got 0", name)
+    }
+
+    if user.Name != name {
+        t.Errorf("Name: got %s, want %s", user.Name, name)
+    }
+}
+
+func TestUserService_CreateUser_EmptyName(t *testing.T) {
+    // Arrange
+    name := ""
+
+    // Act
+    user, err := CreateUser(name)
+
+    // Assert
+    if err == nil {
+        t.Error("CreateUser(%q) should return error for empty name", name)
+    }
+
+    if user != nil {
+        t.Errorf("CreateUser(%q) should return nil user on error", name)
+    }
+}
+
+func TestUserService_ListUsers_ReturnsUsers(t *testing.T) {
+    // Arrange
+    // 创建测试用户
+    CreateUser("Alice")
+    CreateUser("Bob")
+
+    // Act
+    users, err := ListUsers()
+
+    // Assert
+    if err != nil {
+        t.Fatalf("ListUsers() error = %v", err)
+    }
+
+    if len(users) < 2 {
+        t.Errorf("ListUsers() returned %d users, want at least 2", len(users))
+    }
+}
+```
+
+**解释**：重构后的测试使用了更清晰的命名，描述了被测试的场景，并遵循了 AAA 模式。
+
+</details>

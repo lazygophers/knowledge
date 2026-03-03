@@ -1,0 +1,569 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# Filesystem Operations
+
+<Badge text="实用操作" type="success" />
+
+Go 的 `os` 和 `path/filepath` 包提供了跨平台的文件系统操作。
+
+## 路径处理
+
+<Badge text="初级开发者" type="tip" />
+
+### path/filepath vs path
+
+```go
+import (
+    "path"
+    "path/filepath"
+)
+
+// path 包 - 处理斜杠分隔的路径（URL 路径）
+p := path.Join("a", "b", "c")  // "a/b/c"
+
+// filepath 包 - 处理操作系统本地路径
+p = filepath.Join("a", "b", "c")  // Windows: "a\\b\\c", Unix: "a/b/c"
+```
+
+<Callout type="warning">
+**重要**：总是使用 `filepath` 包处理文件系统路径，使用 `path` 包处理 URL 或 API 路径。
+</Callout>
+
+### 常用路径函数
+
+```go
+package main
+
+import (
+    "fmt"
+    "path/filepath"
+)
+
+func main() {
+    // Join - 连接路径元素
+    p := filepath.Join("dir", "subdir", "file.txt")
+    fmt.Println(p)  // dir/subdir/file.txt (Unix)
+
+    // Base - 获取文件名
+    fmt.Println(filepath.Base("dir/file.txt"))  // file.txt
+
+    // Dir - 获取目录
+    fmt.Println(filepath.Dir("dir/file.txt"))  // dir
+
+    // Ext - 获取扩展名
+    fmt.Println(filepath.Ext("file.txt"))  // .txt
+
+    // Rel - 计算相对路径
+    rel, _ := filepath.Rel("/a/b/c", "/a/b/c/d/e")
+    fmt.Println(rel)  // d/e
+
+    // Abs - 获取绝对路径
+    abs, _ := filepath.Abs("file.txt")
+    fmt.Println(abs)  // /full/path/to/file.txt
+
+    // Clean - 清理路径
+    clean := filepath.Clean("dir/./subdir/../file.txt")
+    fmt.Println(clean)  // dir/file.txt
+}
+```
+
+### 路径分割
+
+```go
+// Split - 分割目录和文件
+dir, file := filepath.Split("dir/file.txt")
+fmt.Println(dir)   // dir/
+fmt.Println(file)  // file.txt
+
+// SplitList - 分割路径中的所有元素
+elements := filepath.SplitList("a/b/c")
+// ["a", "b", "c"]
+```
+
+## 文件信息
+
+<Badge text="初级开发者" type="tip" />
+
+### 获取文件信息
+
+```go
+package main
+
+import (
+    "fmt"
+    "os"
+)
+
+func main() {
+    info, err := os.Stat("file.txt")
+    if err != nil {
+        fmt.Printf("错误: %v\n", err)
+        return
+    }
+
+    // 基本信息
+    fmt.Println("文件名:", info.Name())
+    fmt.Println("大小:", info.Size())
+    fmt.Println("修改时间:", info.ModTime())
+
+    // 判断文件类型
+    fmt.Println("是否为目录:", info.IsDir())
+
+    // 文件模式
+    fmt.Println("权限:", info.Mode())
+
+    // 判断文件是否存在
+    if _, err := os.Stat("file.txt"); os.IsNotExist(err) {
+        fmt.Println("文件不存在")
+    }
+}
+```
+
+### 文件权限
+
+```go
+// 检查权限
+info, _ := os.Stat("file.txt")
+
+// 是否为普通文件
+mode := info.Mode()
+fmt.Println("普通文件:", mode.IsRegular())
+
+// 权限位
+fmt.Println("可读:", mode.Perm()&0400 != 0)
+fmt.Println("可写:", mode.Perm()&0200 != 0)
+fmt.Println("可执行:", mode.Perm()&0100 != 0)
+```
+
+## 目录操作
+
+<Badge text="中级开发者" type="warning" />
+
+### 创建目录
+
+```go
+// 创建单个目录
+err := os.Mkdir("newdir", 0755)
+
+// 创建多级目录
+err = os.MkdirAll("path/to/nested/dir", 0755)
+
+// 创建临时目录
+tmpDir, err := os.MkdirTemp("", "prefix")
+fmt.Println("临时目录:", tmpDir)
+```
+
+### 读取目录
+
+```go
+// 方法 1: ReadDir - 推荐（Go 1.16+）
+entries, err := os.ReadDir(".")
+if err != nil {
+    panic(err)
+}
+
+for _, entry := range entries {
+    info, _ := entry.Info()
+    fmt.Printf("%s (%d bytes)\n", entry.Name(), info.Size())
+}
+
+// 方法 2: Readdir - 读取目录内容
+file, _ := os.Open(".")
+defer file.Close()
+
+entries, _ = file.Readdir(0)  // 0 表示读取所有
+for _, entry := range entries {
+    fmt.Println(entry.Name())
+}
+```
+
+### 遍历目录树
+
+```go
+package main
+
+import (
+    "fmt"
+    "os"
+    "path/filepath"
+)
+
+func walkDir(root string) error {
+    return filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+        if err != nil {
+            return err
+        }
+
+        // 跳过隐藏文件
+        if strings.HasPrefix(filepath.Base(path), ".") {
+            return filepath.SkipDir
+        }
+
+        fmt.Println(path)
+        return nil
+    })
+}
+
+// 使用 walkDir 只遍历 .go 文件
+func walkGoFiles(root string) error {
+    return filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+        if err != nil {
+            return err
+        }
+
+        // 只处理 .go 文件
+        if !info.IsDir() && filepath.Ext(path) == ".go" {
+            fmt.Println(path)
+        }
+
+        return nil
+    })
+}
+```
+
+### 删除目录
+
+```go
+// 删除空目录
+err := os.Remove("emptydir")
+
+// 删除目录及其内容
+err = os.RemoveAll("dir_with_content")
+```
+
+## 文件操作
+
+<Badge text="初级开发者" type="tip" />
+
+### 重命名和移动
+
+```go
+// 重命名文件
+err := os.Rename("old.txt", "new.txt")
+
+// 移动文件（在同一文件系统）
+err = os.Rename("dir1/file.txt", "dir2/file.txt")
+```
+
+<Callout type="warning">
+**注意**：跨文件系统移动需要复制后删除原文件。
+</Callout>
+
+### 复制文件
+
+```go
+package main
+
+import (
+    "fmt"
+    "io"
+    "os"
+)
+
+func CopyFile(src, dst string) error {
+    // 打开源文件
+    source, err := os.Open(src)
+    if err != nil {
+        return err
+    }
+    defer source.Close()
+
+    // 创建目标文件
+    destination, err := os.Create(dst)
+    if err != nil {
+        return err
+    }
+    defer destination.Close()
+
+    // 复制内容
+    _, err = io.Copy(destination, source)
+    return err
+}
+
+// 保留权限的复制
+func CopyFilePreserve(src, dst string) error {
+    // 获取源文件信息
+    info, err := os.Stat(src)
+    if err != nil {
+        return err
+    }
+
+    // 复制文件
+    if err := CopyFile(src, dst); err != nil {
+        return err
+    }
+
+    // 保留权限
+    return os.Chmod(dst, info.Mode())
+}
+```
+
+### 符号链接
+
+```go
+// 创建符号链接
+err := os.Symlink("target.txt", "link.txt")
+
+// 读取链接目标
+target, err := os.Readlink("link.txt")
+fmt.Println("链接目标:", target)
+
+// 获取链接文件本身的信息（不跟随链接）
+info, err := os.Lstat("link.txt")
+fmt.Println("是否为链接:", info.Mode()&os.ModeSymlink != 0)
+```
+
+## 临时文件
+
+<Badge text="中级开发者" type="warning" />
+
+### 创建临时文件
+
+```go
+package main
+
+import (
+    "fmt"
+    "io"
+    "os"
+)
+
+func main() {
+    // 创建临时文件
+    tmpFile, err := os.CreateTemp("", "example")
+    if err != nil {
+        panic(err)
+    }
+    defer os.Remove(tmpFile.Name())  // 清理
+
+    fmt.Println("临时文件:", tmpFile.Name())
+
+    // 写入数据
+    tmpFile.WriteString("临时内容")
+
+    // 重置文件指针
+    tmpFile.Seek(0, 0)
+
+    // 读取数据
+    data, _ := io.ReadAll(tmpFile)
+    fmt.Println("内容:", string(data))
+}
+```
+
+## 跨平台注意事项
+
+<Badge text="高级开发者" type="danger" />
+
+### 平台差异
+
+```go
+import (
+    "runtime"
+    "path/filepath"
+)
+
+func main() {
+    fmt.Println("操作系统:", runtime.GOOS)
+
+    // 路径分隔符
+    sep := string(filepath.Separator)
+    fmt.Println("路径分隔符:", sep)  // Unix: /, Windows: \
+
+    // 列表分隔符
+    listSep := string(filepath.ListSeparator)
+    fmt.Println("列表分隔符:", listSep)  // Unix: :, Windows: ;
+
+    // 卷名（Windows）
+    if runtime.GOOS == "windows" {
+        vol := filepath.VolumeName("C:\\Users")
+        fmt.Println("卷名:", vol)  // C:
+    }
+}
+```
+
+### 条件编译
+
+```go
+// 根据平台执行不同代码
+func getCacheDir() string {
+    switch runtime.GOOS {
+    case "windows":
+        return filepath.Join(os.Getenv("APPDATA"), "cache")
+    case "darwin":
+        return filepath.Join(os.Getenv("HOME"), "Library", "Caches")
+    default: // linux, etc.
+        return filepath.Join(os.Getenv("HOME"), ".cache")
+    }
+}
+
+// 使用 build tag
+//go:build !windows
+
+func_unix() {
+    // Unix 特定代码
+}
+```
+
+## 实战案例
+
+<Badge text="高级开发者" type="danger" />
+
+### 案例 1: 监控目录变化
+
+```go
+package main
+
+import (
+    "fmt"
+    "log"
+    "os"
+    "path/filepath"
+    "time"
+
+    "github.com/fsnotify/fsnotify"
+)
+
+func WatchDir(dir string) error {
+    watcher, err := fsnotify.NewWatcher()
+    if err != nil {
+        return err
+    }
+    defer watcher.Close()
+
+    // 添加监控
+    err = watcher.Add(dir)
+    if err != nil {
+        return err
+    }
+
+    fmt.Printf("监控目录: %s\n", dir)
+
+    for {
+        select {
+        case event, ok := <-watcher.Events:
+            if !ok {
+                return nil
+            }
+            fmt.Printf("事件: %s %s\n", event.Op, event.Name)
+
+        case err, ok := <-watcher.Errors:
+            if !ok {
+                return nil
+            }
+            log.Println("错误:", err)
+        }
+    }
+}
+```
+
+### 案例 2: 查找重复文件
+
+```go
+package main
+
+import (
+    "crypto/md5"
+    "encoding/hex"
+    "fmt"
+    "io"
+    "os"
+    "path/filepath"
+)
+
+func FindDuplicates(root string) (map[string][]string, error) {
+    hashes := make(map[string][]string)
+
+    err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+        if err != nil {
+            return err
+        }
+
+        // 跳过目录
+        if info.IsDir() {
+            return nil
+        }
+
+        // 计算文件哈希
+        file, err := os.Open(path)
+        if err != nil {
+            return err
+        }
+        defer file.Close()
+
+        hash := md5.New()
+        if _, err := io.Copy(hash, file); err != nil {
+            return err
+        }
+
+        hashStr := hex.EncodeToString(hash.Sum(nil))
+        hashes[hashStr] = append(hashes[hashStr], path)
+
+        return nil
+    })
+
+    // 返回有重复的文件
+    duplicates := make(map[string][]string)
+    for hash, files := range hashes {
+        if len(files) > 1 {
+            duplicates[hash] = files
+        }
+    }
+
+    return duplicates, err
+}
+```
+
+## 练习
+
+<Badge text="实战练习" type="success" />
+
+### 练习：实现目录同步工具
+
+创建一个目录同步工具，将源目录的变更同步到目标目录：
+
+```go
+// TODO: 实现
+func SyncDirs(src, dst string) error {
+    // 比较两个目录
+    // 复制新文件
+    // 删除目标中多余的文件
+    // 更新修改的文件
+}
+```
+
+---
+
+## 总结
+
+### 关键要点
+
+| 读者水平 | 核心要点 |
+|---------|---------|
+| <Badge text="初级开发者" type="tip" /> | 使用 filepath 处理路径。os.Stat 获取文件信息。 |
+| <Badge text="中级开发者" type="warning" /> | filepath.Walk 遍历目录。跨平台注意事项。 |
+| <Badge text="高级开发者" type="danger" /> | 文件系统监控。性能优化。 |
+
+### 速查表
+
+```go
+// 路径
+filepath.Join("a", "b")
+filepath.Abs("file")
+
+// 文件信息
+os.Stat("file")
+
+// 目录操作
+os.MkdirAll("path", 0755)
+os.ReadDir(".")
+
+// 文件操作
+os.Rename("old", "new")
+os.Remove("file")
+```
+
+### 下一步
+
+- [← 缓冲 I/O](./bufio.mdx)
+- [序列化 →](./serialization.mdx)

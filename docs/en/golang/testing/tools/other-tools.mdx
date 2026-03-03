@@ -1,0 +1,424 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# Other Tools
+
+<Badge text="中级" type="warning" /> <Badge text="第三方库" type="info" />
+
+除了 testify 和 gomock，Go 生态中还有许多其他有用的测试工具。
+
+## quicktest
+
+quicktest 提供了更简洁的断言语法。
+
+```bash
+go get github.com/frankban/quicktest
+```
+
+```go
+package test_test
+
+import (
+    "testing"
+    "github.com/frankban/quicktest"
+)
+
+func TestQuicktest(t *testing.T) {
+    c := quicktest.New(t)
+
+    // 相等断言
+    c.Assert(2+2, quicktest.Equals, 4)
+
+    // 深度相等
+    c.Assert(map[string]int{"a": 1}, quicktest.DeepEquals, map[string]int{"a": 1})
+
+    // 检查（不停止测试）
+    c.Check(2+2, quicktest.Equals, 5) // 只记录，不停止
+
+    // 自定义比较器
+    c.Assert(3.14, quicktest.CmpEquals(), 3.14)
+}
+```
+
+## gotestsum
+
+gotestsum 提供更友好的测试输出格式。
+
+```bash
+go install gotest.tools/gotestsum@latest
+```
+
+```bash
+# 使用 gotestsum 运行测试
+gotestsum --format="./testname" ./...
+
+# 输出更清晰的测试结果
+gotestsum --format=testname --hide-summary=skipped -- -v ./...
+```
+
+```bash
+# 示例输出
+▶ TestAdd 0.05s
+▶ TestSubtract 0.02s
+▶ TestMultiply 0.03s
+
+✓ 3 passed (0.10s)
+```
+
+## testcontainers-go
+
+testcontainers-go 提供真实的容器环境进行测试。
+
+```bash
+go get github.com/testcontainers/testcontainers-go
+```
+
+```go
+package test_test
+
+import (
+    "context"
+    "testing"
+    "github.com/testcontainers/testcontainers-go"
+    "github.com/testcontainers/testcontainers-go/wait"
+)
+
+func TestWithPostgres(t *testing.T) {
+    ctx := context.Background()
+
+    // 启动 PostgreSQL 容器
+    container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+        ContainerRequest: testcontainers.ContainerRequest{
+            Image:        "postgres:16",
+            ExposedPorts: []string{"5432/tcp"},
+            Env: map[string]string{
+                "POSTGRES_PASSWORD": "test",
+                "POSTGRES_DB":       "testdb",
+            },
+            WaitingFor: wait.ForLog("database system is ready to accept connections"),
+        },
+        Started: true,
+    })
+    if err != nil {
+        t.Fatal(err)
+    }
+    defer container.Terminate(ctx)
+
+    // 获取连接信息
+    host, err := container.Host(ctx)
+    if err != nil {
+        t.Fatal(err)
+    }
+
+    port, err := container.MappedPort(ctx, "5432")
+    if err != nil {
+        t.Fatal(err)
+    }
+
+    // 使用真实的 PostgreSQL 进行测试
+    dsn := fmt.Sprintf("postgres://postgres:test@%s:%s/testdb?sslmode=disable",
+        host, port.Port())
+
+    db, err := sql.Open("postgres", dsn)
+    if err != nil {
+        t.Fatal(err)
+    }
+    defer db.Close()
+
+    // 测试代码...
+}
+```
+
+## godog
+
+godog 用于 BDD（行为驱动开发）测试。
+
+```bash
+go get github.com/cucumber/godog/cmd/godog@latest
+```
+
+```gherkin
+# features/user.feature
+Feature: User Management
+
+  Scenario: Create a new user
+    Given I am on the user creation page
+    When I enter "Alice" as the name
+    And I enter "alice@example.com" as the email
+    And I click the submit button
+    Then I should see a success message
+    And the user should be created
+```
+
+```go
+# godog/user_test.go
+package godog_test
+
+import (
+    "github.com/cucumber/godog"
+    "github.com/cucumber/godog/gherkin"
+)
+
+func InitializeScenario(ctx *godog.ScenarioContext) {
+    scenario := &Scenario{}
+
+    ctx.Step(`^I am on the user creation page$`, scenario.iAmOnUserCreationPage)
+    ctx.Step(`^I enter "([^"]*)" as the name$`, scenario.iEnterName)
+    ctx.Step(`^I enter "([^"]*)" as the email$`, scenario.iEnterEmail)
+    ctx.Step(`^I click the submit button$`, scenario.iClickSubmit)
+    ctx.Step(`^I should see a success message$`, scenario.iShouldSeeSuccess)
+    ctx.Step(`^the user should be created$`, scenario.userShouldBeCreated)
+}
+```
+
+## t.Parallel() 工具
+
+### goleak
+
+goleak 检测 goroutine 泄漏。
+
+```bash
+go get go.uber.org/goleak@latest
+```
+
+```go
+func TestNoGoroutineLeak(t *testing.T) {
+    defer goleak.VerifyNone(t)
+
+    // 测试代码
+    go func() {
+        // 如果这个 goroutine 没有正确退出
+        // 测试会失败
+    }()
+}
+```
+
+### race detector
+
+内置的竞态检测器。
+
+```bash
+go test -race ./...
+```
+
+```go
+func TestRace(t *testing.T) {
+    var counter int
+
+    // 多个 goroutine 并发写入
+    for i := 0; i < 100; i++ {
+        go func() {
+            counter++ // 竞态条件
+        }()
+    }
+
+    // -race 会检测到这个竞态
+}
+```
+
+## 测试覆盖率工具
+
+### gocov
+
+```bash
+go install github.com/axw/gocov/gocov@latest
+```
+
+```bash
+# 生成覆盖率
+go test -coverprofile=coverage.out ./...
+
+# 转换为 JSON
+gocov convert coverage.out > coverage.json
+
+# 生成 HTML 报告
+gocov report coverage.json
+```
+
+### gocov-html
+
+```bash
+go install github.com/matm/gocov-html@latest
+
+gocov convert coverage.out | gocov-html > coverage.html
+open coverage.html
+```
+
+## Mock 服务器
+
+### httptest
+
+标准库中的 HTTP 测试工具。
+
+```go
+func TestHTTPClient(t *testing.T) {
+    server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        if r.URL.Path == "/users/1" {
+            w.WriteHeader(http.StatusOK)
+            w.Write([]byte(`{"id":1,"name":"Alice"}`))
+        } else {
+            w.WriteHeader(http.StatusNotFound)
+        }
+    }))
+    defer server.Close()
+
+    client := NewClient(server.URL)
+
+    user, err := client.GetUser(1)
+    if err != nil {
+        t.Fatal(err)
+    }
+
+    if user.Name != "Alice" {
+        t.Errorf("got %s, want Alice", user.Name)
+    }
+}
+```
+
+## 表格驱动测试工具
+
+### t.Comb()
+
+comb 组合多个输入参数。
+
+```go
+func TestCombinations(t *testing.T) {
+    sizes := []int{1, 10, 100}
+    formats := []string{"json", "xml", "yaml"}
+
+    for _, size := range sizes {
+        for _, format := range formats {
+            t.Run(fmt.Sprintf("%s_%d", format, size), func(t *testing.T) {
+                // 测试逻辑
+            })
+        }
+    }
+}
+```
+
+## 性能分析工具
+
+### pprof
+
+内置的性能分析工具。
+
+```bash
+# CPU profile
+go test -cpuprofile=cpu.prof -bench=.
+go tool pprof -http=:8080 cpu.prof
+
+# Memory profile
+go test -memprofile=mem.prof -bench=.
+go tool pprof -http=:8080 mem.prof
+
+# HTTP profile
+import _ "net/http/pprof"
+```
+
+<Callout type="info" title="工具选择建议">
+  <strong>根据需求选择</strong>
+
+  <ul>
+    <li><strong>简单断言</strong>: quicktest 或 testify</li>
+    <li><strong>Mock</strong>: gomock 或 testify/mock</li>
+    <li><strong>真实环境</strong>: testcontainers-go</li>
+    <li><strong>BDD</strong>: godog</li>
+    <li><strong>输出美化</strong>: gotestsum</li>
+  </ul>
+</Callout>
+
+## 练习
+
+1. **使用 testcontainers**：编写使用真实 PostgreSQL 的集成测试
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package integration_test
+
+import (
+    "context"
+    "database/sql"
+    "testing"
+    "github.com/testcontainers/testcontainers-go"
+    "github.com/testcontainers/testcontainers-go/wait"
+    _ "github.com/lib/pq"
+)
+
+func TestUserRepository(t *testing.T) {
+    ctx := context.Background()
+
+    // 启动 PostgreSQL 容器
+    req := testcontainers.ContainerRequest{
+        Image:        "postgres:16",
+        ExposedPorts: []string{"5432/tcp"},
+        Env: map[string]string{
+            "POSTGRES_PASSWORD": "test",
+            "POSTGRES_DB":       "testdb",
+        },
+        WaitingFor: wait.ForLog("database system is ready to accept connections"),
+    }
+
+    container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+        ContainerRequest: req,
+        Started:          true,
+    })
+    if err != nil {
+        t.Fatal(err)
+    }
+    defer container.Terminate(ctx)
+
+    // 获取连接信息
+    host, _ := container.Host(ctx)
+    port, _ := container.MappedPort(ctx, "5432")
+
+    // 连接数据库
+    dsn := fmt.Sprintf("postgres://postgres:test@%s:%s/testdb?sslmode=disable",
+        host, port.Port())
+    db, err := sql.Open("postgres", dsn)
+    if err != nil {
+        t.Fatal(err)
+    }
+    defer db.Close()
+
+    // 创建表
+    _, err = db.Exec(`
+        CREATE TABLE users (
+            id SERIAL PRIMARY KEY,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL
+        )
+    `)
+    if err != nil {
+        t.Fatal(err)
+    }
+
+    // 测试 Repository
+    repo := NewUserRepository(db)
+
+    // 测试创建用户
+    user, err := repo.Create(&User{Name: "Alice", Email: "alice@example.com"})
+    if err != nil {
+        t.Fatalf("Create() error = %v", err)
+    }
+
+    if user.ID == 0 {
+        t.Error("ID should be set")
+    }
+
+    // 测试查询用户
+    found, err := repo.GetByID(user.ID)
+    if err != nil {
+        t.Fatalf("GetByID() error = %v", err)
+    }
+
+    if found.Name != "Alice" {
+        t.Errorf("got %s, want Alice", found.Name)
+    }
+}
+```
+
+**解释**：使用 testcontainers-go 启动真实的 PostgreSQL 容器进行集成测试，验证了数据库操作的完整流程。
+
+</details>

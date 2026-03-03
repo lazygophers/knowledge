@@ -1,0 +1,297 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# sync.Map - 并发安全 Map
+
+<Badge text="中级" type="warning" /> <Badge text="Go 1.9+" type="info" />
+
+sync.Map 是专门为并发场景设计的 Map，内置了并发安全机制。
+
+## 定义
+
+```go
+type Map struct {
+    // 包含非导出字段
+}
+```
+
+## 主要方法
+
+```go
+func (m *Map) Load(key any) (value any, ok bool)
+func (m *Map) Store(key, value any)
+func (m *Map) LoadOrStore(key, value any) (actual any, loaded bool)
+func (m *Map) LoadAndDelete(key any) (value any, loaded bool)
+func (m *Map) Delete(key any)
+func (m *Map) Range(f func(key, value any) bool)
+```
+
+## 使用场景
+
+- 读多写少的缓存
+- 注册表场景
+- key 生命周期分离的场景
+- 多个 goroutine 并发访问 Map
+
+## 基础示例
+
+```go
+package main
+
+import (
+    "fmt"
+    "sync"
+)
+
+func main() {
+    var m sync.Map
+
+    // 存储
+    m.Store("name", "Alice")
+    m.Store("age", 30)
+    m.Store(1, "one")
+
+    // 读取
+    if value, ok := m.Load("name"); ok {
+        fmt.Println("name:", value)  // name: Alice
+    }
+
+    // LoadOrStore：不存在则存储
+    actual, loaded := m.LoadOrStore("city", "Beijing")
+    fmt.Printf("city: %v, existed: %v\n", actual, loaded)
+
+    actual, loaded = m.LoadOrStore("name", "Bob")
+    fmt.Printf("name: %v, existed: %v\n", actual, loaded)
+
+    // Range 遍历
+    fmt.Println("\n所有键值对:")
+    m.Range(func(key, value any) bool {
+        fmt.Printf("  %v: %v\n", key, value)
+        return true  // 返回 false 停止遍历
+    })
+
+    // 删除
+    m.Delete("age")
+    fmt.Println("\n删除 age 后:")
+    m.Range(func(key, value any) bool {
+        fmt.Printf("  %v: %v\n", key, value)
+        return true
+    })
+}
+```
+
+## 与普通 Map + Mutex 的对比
+
+```go
+// 使用 sync.Map
+func useSyncMap() {
+    var m sync.Map
+    m.Store("key", "value")
+    val, _ := m.Load("key")
+    fmt.Println(val)
+}
+
+// 使用普通 Map + Mutex
+func useMapWithMutex() {
+    var (
+        mu   sync.Mutex
+        data = make(map[string]string)
+    )
+
+    mu.Lock()
+    data["key"] = "value"
+    mu.Unlock()
+
+    mu.Lock()
+    val := data["key"]
+    mu.Unlock()
+
+    fmt.Println(val)
+}
+```
+
+<Callout type="info" title="选择建议">
+  <strong>sync.Map vs map + Mutex/RWMutex</strong>：
+
+  **使用 sync.Map**：
+  - 读多写少的场景
+  - key 集合稳定，主要是更新值
+  - 分散的、不协调的访问
+
+  **使用 map + Mutex/RWMutex**：
+  - 写操作频繁
+  - 需要复杂的原子操作
+  - 性能是关键考虑
+</Callout>
+
+## 缓存示例
+
+```go
+package main
+
+import (
+    "fmt"
+    "sync"
+)
+
+type Cache struct {
+    data sync.Map
+}
+
+func (c *Cache) Get(key string) (string, bool) {
+    val, ok := c.data.Load(key)
+    if !ok {
+        return "", false
+    }
+    return val.(string), true
+}
+
+func (c *Cache) Set(key, value string) {
+    c.data.Store(key, value)
+}
+
+func (c *Cache) GetOrCreate(key string, create func() string) string {
+    // 原子操作：存在则返回，不存在则创建并存储
+    actual, _ := c.data.LoadOrStore(key, create())
+    return actual.(string)
+}
+
+func main() {
+    cache := &Cache{}
+
+    // 设置值
+    cache.Set("user:1", "Alice")
+
+    // 获取值
+    if val, ok := cache.Get("user:1"); ok {
+        fmt.Println("Found:", val)
+    }
+
+    // 原子获取或创建
+    val := cache.GetOrCreate("user:2", func() string {
+        fmt.Println("Creating user:2")
+        return "Bob"
+    })
+    fmt.Println("Value:", val)
+
+    // 再次获取（不会创建）
+    val = cache.GetOrCreate("user:2", func() string {
+        fmt.Println("This won't print")
+        return "Charlie"
+    })
+    fmt.Println("Value:", val)
+}
+```
+
+## 练习
+
+1. **实现多级缓存**：使用 sync.Map 实现本地缓存 + 缓存淘汰
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import (
+    "fmt"
+    "sync"
+    "time"
+)
+
+type CacheItem struct {
+    Value      string
+    Expiration time.Time
+}
+
+func (item *CacheItem) IsExpired() bool {
+    return time.Now().After(item.Expiration)
+}
+
+type Cache struct {
+    data sync.Map
+}
+
+func NewCache() *Cache {
+    cache := &Cache{}
+    go cache.cleanupExpired()
+    return cache
+}
+
+func (c *Cache) Set(key, value string, ttl time.Duration) {
+    item := &CacheItem{
+        Value:      value,
+        Expiration: time.Now().Add(ttl),
+    }
+    c.data.Store(key, item)
+}
+
+func (c *Cache) Get(key string) (string, bool) {
+    val, ok := c.data.Load(key)
+    if !ok {
+        return "", false
+    }
+
+    item := val.(*CacheItem)
+    if item.IsExpired() {
+        c.data.Delete(key)
+        return "", false
+    }
+
+    return item.Value, true
+}
+
+func (c *Cache) Delete(key string) {
+    c.data.Delete(key)
+}
+
+func (c *Cache) cleanupExpired() {
+    ticker := time.NewTicker(time.Minute)
+    defer ticker.Stop()
+
+    for range ticker.C {
+        c.data.Range(func(key, value any) bool {
+            item := value.(*CacheItem)
+            if item.IsExpired() {
+                c.data.Delete(key)
+                fmt.Printf("清理过期键: %v\n", key)
+            }
+            return true
+        })
+    }
+}
+
+func main() {
+    cache := NewCache()
+
+    // 设置缓存（1秒过期）
+    cache.Set("user:1", "Alice", time.Second)
+    cache.Set("user:2", "Bob", 2*time.Second)
+
+    // 获取缓存
+    if val, ok := cache.Get("user:1"); ok {
+        fmt.Println("user:1 =", val)
+    }
+
+    // 等待过期
+    time.Sleep(time.Second + 100*time.Millisecond)
+
+    // 已过期
+    if _, ok := cache.Get("user:1"); !ok {
+        fmt.Println("user:1 已过期")
+    }
+
+    // user:2 还在
+    if val, ok := cache.Get("user:2"); ok {
+        fmt.Println("user:2 =", val)
+    }
+}
+```
+
+**解释**：使用 sync.Map 实现并发安全的缓存，支持 TTL 过期机制和后台清理。
+
+</details>
+
+---
+
+[← Cond](./cond.mdx) | [Pool →](./pool.mdx)

@@ -1,0 +1,473 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# CGO Basics
+
+<Badge text="专业" type="danger" /> <Badge text="Go 1.0+" type="info" />
+
+CGO 是 Go 语言与 C 语言互操作的机制，允许 Go 程序调用 C 代码，也让 C 代码调用 Go 函数。
+
+## 什么是 CGO
+
+CGO 提供了 Go 和 C 之间的桥梁：
+
+```go
+/*
+#include <stdio.h>
+*/
+import "C"
+
+func main() {
+    C.puts(C.CString("Hello from C!"))
+}
+```
+
+<Callout type="warning" title="CGO 使用警告">
+  使用 CGO 会带来：
+  <ul>
+    <li>性能开销（Go/C 调用边界）</li>
+    <li>失去 Go 的类型安全</li>
+    <li>增加编译复杂度</li>
+    <li>跨平台兼容性问题</li>
+    <li>内存管理复杂性</li>
+  </ul>
+  <strong>优先考虑纯 Go 实现或使用库</strong>。
+</Callout>
+
+## CGO 的基本结构
+
+### 导入 C 代码
+
+```go
+/*
+// C 代码放在 import "C" 之前的注释中
+#include <stdio.h>
+#include <stdlib.h>
+
+// 可以定义 C 函数
+static int add(int a, int b) {
+    return a + b;
+}
+
+// 可以定义 C 宏
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+
+// 可以定义 C 类型
+typedef struct {
+    int x;
+    int y;
+} Point;
+*/
+import "C"
+
+func main() {
+    // 调用 C 函数
+    C.add(10, 20)
+}
+```
+
+### CGO 指令
+
+```go
+/*
+#cgo CFLAGS: -I/usr/local/include
+#cgo LDFLAGS: -L/usr/local/lib -lmylib
+
+#include "mylib.h"
+*/
+import "C"
+```
+
+| 指令 | 说明 | 示例 |
+|------|------|------|
+| `CFLAGS` | C 编译器标志 | `-I/usr/include` |
+| `LDFLAGS` | 链接器标志 | `-L/usr/lib -lfoo` |
+| `pkg-config` | 使用 pkg-config | `pkg-config: --cflags --libs foo` |
+| `darwin` | 平台特定 (macOS) | `darwin: -framework CoreFoundation` |
+| `linux` | 平台特定 (Linux) | `linux: -lrt` |
+
+## 基础类型映射
+
+### Go 到 C 类型
+
+```go
+package main
+
+/*
+#include <stdio.h>
+*/
+import "C"
+import (
+    "fmt"
+)
+
+func main() {
+    // 整数类型
+    var i int = 42
+    C.putInt(C.int(i))
+
+    var i8 int8 = 8
+    C.setInt8(C.int8_t(i8))
+
+    // 浮点类型
+    var f32 float32 = 3.14
+    C.setFloat(C.float(f32))
+
+    var f64 float64 = 3.14159
+    C.setDouble(C.double(f64))
+}
+```
+
+### C 到 Go 类型
+
+| Go 类型 | C 类型 | 说明 |
+|---------|--------|------|
+| `byte` | `char` | 1 字节 |
+| `int8` | `int8_t` | 8 位整数 |
+| `int16` | `int16_t` | 16 位整数 |
+| `int32` | `int32_t` | 32 位整数 |
+| `int64` | `int64_t` | 64 位整数 |
+| `uint8` | `uint8_t` | 8 位无符号 |
+| `uint16` | `uint16_t` | 16 位无符号 |
+| `uint32` | `uint32_t` | 32 位无符号 |
+| `uint64` | `uint64_t` | 64 位无符号 |
+| `float32` | `float` | 32 位浮点 |
+| `float64` | `double` | 64 位浮点 |
+
+## 调用 C 函数
+
+### 基础函数调用
+
+```go
+package main
+
+/*
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+int add(int a, int b) {
+    return a + b;
+}
+
+double square(double x) {
+    return x * x;
+}
+*/
+import "C"
+import (
+    "fmt"
+)
+
+func main() {
+    // 调用 C 函数
+    result := C.add(10, 20)
+    fmt.Println("10 + 20 =", result)  // 30
+
+    // 使用 C 库函数
+    x := 5.0
+    squared := C.square(x)
+    fmt.Println("square(5) =", squared)  // 25
+
+    // 使用标准 C 库
+    cs := C.CString("Hello, C!")
+    C.puts(cs)
+    C.free(unsafe.Pointer(cs))
+}
+```
+
+### C 标准库函数
+
+```go
+package main
+
+/*
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+*/
+import "C"
+import (
+    "fmt"
+    "unsafe"
+)
+
+func main() {
+    // 字符串操作
+    s := "hello"
+    cs := C.CString(s)
+    defer C.free(unsafe.Pointer(cs))
+
+    C.printf(C.CString("%s\n"), cs)
+    fmt.Println("strlen:", C.strlen(cs))
+
+    // 内存分配
+    ptr := C.malloc(1024)
+    defer C.free(ptr)
+    C.memset(ptr, 0, 1024)
+}
+```
+
+## 调用 Go 函数
+
+### export 导出 Go 函数
+
+```go
+package main
+
+/*
+#include <stdio.h>
+
+// 声明 Go 函数（将在 Go 中实现）
+extern int AddInGo(int a, int b);
+extern void PrintInGo(const char* s);
+
+void callGo() {
+    int result = AddInGo(10, 20);
+    printf("AddInGo(10, 20) = %d\n", result);
+
+    PrintInGo("Hello from C!");
+}
+*/
+import "C"
+import (
+    "fmt"
+)
+
+//export AddInGo
+func AddInGo(a, b C.int) C.int {
+    return a + b
+}
+
+//export PrintInGo
+func PrintInGo(s *C.char) {
+    fmt.Println("Go received:", C.GoString(s))
+}
+
+func main() {
+    C.callGo()
+}
+```
+
+<Callout type="info" title="export 规则">
+  <strong>//export</strong> 指示将 Go 函数导出给 C：
+  <ul>
+    <li>函数名必须大写开头（公开）</li>
+    <li>函数必须使用 C 类型参数</li>
+    <li>函数不能有 Go 类型参数</li>
+    <li>导出的函数会在主 goroutine 运行</li>
+  </ul>
+</Callout>
+
+### Go 回调
+
+```go
+package main
+
+/*
+#include <stdio.h>
+
+typedef void (*Callback)(int);
+
+extern void GoCallback(int);
+
+void registerAndCall(Callback cb, int value) {
+    printf("Calling callback with %d\n", value);
+    cb(value);
+}
+*/
+import "C"
+
+//export GoCallback
+func GoCallback(value C.int) {
+    fmt.Println("GoCallback called with:", value)
+}
+
+func main() {
+    C.registerAndCall((C.Callback)(C.GoCallback), 42)
+}
+```
+
+## 字符串处理
+
+### Go 字符串转 C 字符串
+
+```go
+package main
+
+/*
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+*/
+import "C"
+import (
+    "fmt"
+    "unsafe"
+)
+
+func main() {
+    goStr := "Hello, CGO!"
+
+    // 方法1: C.CString（需要手动释放）
+    cStr := C.CString(goStr)
+    defer C.free(unsafe.Pointer(cStr))
+
+    C.printf(C.CString("%s\n"), cStr)
+
+    // 方法2: C.GoString
+    back := C.GoString(cStr)
+    fmt.Println("Back to Go:", back)
+}
+```
+
+### C 字符串转 Go 字符串
+
+```go
+package main
+
+/*
+#include <stdio.h>
+*/
+import "C"
+import (
+    "fmt"
+    "unsafe"
+)
+
+func main() {
+    // C 字符串
+    cStr := C.CString("Hello from C")
+    defer C.free(unsafe.Pointer(cStr))
+
+    // 转换为 Go 字符串（会复制）
+    goStr := C.GoString(cStr)
+    fmt.Println(goStr)
+
+    // 转换为 Go 字节切片（带长度）
+    n := C.strlen(cStr)
+    goBytes := C.GoBytes(unsafe.Pointer(cStr), C.int(n))
+    fmt.Printf("Bytes: %v\n", goBytes)
+}
+```
+
+```mermaid
+graph TD
+    A[Go string] -->|C.CString| B[C char*]
+    B -->|C.GoString| A
+    B -->|C.GoBytes| C[[]byte]
+    C -->|unsafe.Pointer| B
+```
+
+## 数组操作
+
+### Go 数组传给 C
+
+```go
+package main
+
+/*
+#include <stdio.h>
+#include <stdlib.h>
+
+void processArray(int* arr, int len) {
+    for (int i = 0; i < len; i++) {
+        printf("arr[%d] = %d\n", i, arr[i]);
+    }
+}
+*/
+import "C"
+import (
+    "unsafe"
+)
+
+func main() {
+    arr := []int{1, 2, 3, 4, 5}
+
+    // 传递数组指针
+    C.processArray(
+        (*C.int)(unsafe.Pointer(&arr[0])),
+        C.int(len(arr)),
+    )
+}
+```
+
+### C 数组传给 Go
+
+```go
+package main
+
+/*
+#include <stdlib.h>
+
+int* createArray(int size) {
+    return (int*)malloc(size * sizeof(int));
+}
+
+void freeArray(int* arr) {
+    free(arr);
+}
+*/
+import "C"
+import (
+    "fmt"
+    "unsafe"
+)
+
+func main() {
+    size := 5
+
+    // C 分配数组
+    cArr := C.createArray(C.int(size))
+    defer C.freeArray(cArr)
+
+    // 转换为 Go 切片
+    goSlice := (*[1 << 28]int)(unsafe.Pointer(cArr))[:size:size]
+
+    // 使用切片
+    for i := range goSlice {
+        goSlice[i] = (i + 1) * 10
+    }
+
+    fmt.Println("Go slice:", goSlice)  // [10 20 30 40 50]
+}
+```
+
+## 练习
+
+1. **调用 C 数学库**：使用 C 标准库的数学函数
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+/*
+#include <math.h>
+*/
+import "C"
+import (
+    "fmt"
+)
+
+func main() {
+    // 使用 C 数学库
+    values := []float64{0, 1.57, 3.14}
+
+    for _, v := range values {
+        sin := C.sin(C.double(v))
+        cos := C.cos(C.double(v))
+        fmt.Printf("sin(%.2f) = %.4f\n", v, sin)
+        fmt.Printf("cos(%.2f) = %.4f\n", v, cos)
+    }
+}
+```
+
+**解释**：直接调用 C 标准库的数学函数，展示 CGO 的基础用法。
+
+</details>
+
+---
+
+[← Unsafe](../unsafe/best-practices.mdx) | [类型转换 →](./type-conversions.mdx)

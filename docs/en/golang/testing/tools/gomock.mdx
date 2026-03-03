@@ -1,0 +1,433 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# GoMock
+
+<Badge text="高级" type="danger" /> <Badge text="第三方库" type="info" />
+
+gomock 是官方推荐的 mock 框架，通过代码生成提供类型安全的 mock 实现。
+
+## 安装
+
+```bash
+# 安装 mockgen
+go install go.uber.org/mock/mockgen@latest
+
+# 安装 gomock 包
+go get go.uber.org/mock/gomock
+```
+
+## 基本用法
+
+### 定义接口
+
+```go
+// repository.go
+package user
+
+type Repository interface {
+    GetUser(ctx context.Context, id int) (*User, error)
+    SaveUser(ctx context.Context, user *User) error
+    DeleteUser(ctx context.Context, id int) error
+}
+```
+
+### 生成 Mock
+
+```bash
+# 从源文件生成
+mockgen -source=repository.go -destination=mock_repository.go
+
+# 或使用导入路径
+mockgen -source=repository.go -destination=mocks/mock_repository.go -package=mocks
+```
+
+### 使用 go:generate
+
+```go
+//go:generate mockgen -source=repository.go -destination=mock_repository.go -package=user
+
+package user
+
+type Repository interface {
+    GetUser(ctx context.Context, id int) (*User, error)
+}
+```
+
+```bash
+# 生成 mock
+go generate ./...
+```
+
+### 使用 Mock
+
+```go
+package user_test
+
+import (
+    "context"
+    "testing"
+    "go.uber.org/mock/gomock"
+
+    "yourmodule/user"
+)
+
+func TestService_GetUser(t *testing.T) {
+    ctrl := gomock.NewController(t)
+    defer ctrl.Finish()
+
+    mockRepo := user.NewMockRepository(ctrl)
+
+    // 设置期望
+    mockRepo.EXPECT().
+        GetUser(gomock.Any(), gomock.Eq(1)).
+        Return(&user.User{ID: 1, Name: "Alice"}, nil).
+        Times(1)
+
+    service := user.NewService(mockRepo)
+
+    // 测试
+    u, err := service.GetUser(context.Background(), 1)
+    if err != nil {
+        t.Fatalf("GetUser() error = %v", err)
+    }
+
+    if u.Name != "Alice" {
+        t.Errorf("got %s, want Alice", u.Name)
+    }
+}
+```
+
+## 匹配器
+
+### 基础匹配器
+
+```go
+func TestMatchers(t *testing.T) {
+    ctrl := gomock.NewController(t)
+    defer ctrl.Finish()
+
+    mockRepo := user.NewMockRepository(ctrl)
+
+    // 精确匹配
+    mockRepo.EXPECT().
+        GetUser(gomock.Any(), gomock.Eq(1)).
+        Return(&user.User{ID: 1}, nil)
+
+    // 任意值
+    mockRepo.EXPECT().
+        SaveUser(gomock.Any(), gomock.Any()).
+        Return(nil)
+
+    // nil
+    mockRepo.EXPECT().
+        GetUser(gomock.Any(), gomock.Nil()).
+        Return(nil, errors.New("not found"))
+
+    service := user.NewService(mockRepo)
+    // 测试代码...
+}
+```
+
+### 高级匹配器
+
+```go
+func TestAdvancedMatchers(t *testing.T) {
+    ctrl := gomock.NewController(t)
+    defer ctrl.Finish()
+
+    mockRepo := user.NewMockRepository(ctrl)
+
+    // 类型匹配
+    mockRepo.EXPECT().
+        ProcessUser(gomock.Any(), gomock.AssignableToTypeOf(&user.User{})).
+        Return(nil)
+
+    // 长度匹配
+    mockRepo.EXPECT().
+        GetUsers(gomock.Any(), gomock.Len(5)).
+        Return([]*user.User{}, nil)
+
+    // 自定义匹配器
+    mockRepo.EXPECT().
+        FindUser(gomock.Any(), gomock.Matcher(func(id int) bool {
+        return id > 0 && id < 100
+    })).
+        Return(&user.User{ID: 1}, nil)
+
+    // 正则匹配
+    mockRepo.EXPECT().
+        SearchByEmail(gomock.Any(), gomock.MatchesRegex(`^.+@.+\..+$`)).
+        Return([]*user.User{}, nil)
+}
+```
+
+## 调用次数
+
+```go
+func TestCallTimes(t *testing.T) {
+    ctrl := gomock.NewController(t)
+    defer ctrl.Finish()
+
+    mockRepo := user.NewMockRepository(ctrl)
+
+    // 调用一次
+    mockRepo.EXPECT().
+        GetUser(gomock.Any(), 1).
+        Return(&user.User{ID: 1}, nil).
+        Times(1)
+
+    // 调用 n 次
+    mockRepo.EXPECT().
+        GetUser(gomock.Any(), 2).
+        Return(&user.User{ID: 2}, nil).
+        Times(3)
+
+    // 调用 0 次或多次
+    mockRepo.EXPECT().
+        GetUser(gomock.Any(), 3).
+        Return(&user.User{ID: 3}, nil).
+        AnyTimes()
+
+    // 最少/最多次数
+    mockRepo.EXPECT().
+        GetUser(gomock.Any(), 4).
+        Return(&user.User{ID: 4}, nil).
+        MinTimes(1).
+        MaxTimes(5)
+}
+```
+
+## 顺序验证
+
+```go
+func TestOrder(t *testing.T) {
+    ctrl := gomock.NewController(t)
+    defer ctrl.Finish()
+
+    mockRepo := user.NewMockRepository(ctrl)
+    mockCache := user.NewMockCache(ctrl)
+
+    // 设置有序调用
+    gomock.InOrder(
+        mockRepo.EXPECT().
+            GetUser(gomock.Any(), 1).
+            Return(&user.User{ID: 1}, nil),
+        mockCache.EXPECT().
+            Set(gomock.Any(), "user:1", gomock.Any()).
+            Return(nil),
+    )
+
+    service := user.NewServiceWithCache(mockRepo, mockCache)
+    service.GetUserWithCache(context.Background(), 1)
+}
+```
+
+## 返回值序列
+
+```go
+func TestReturnSequence(t *testing.T) {
+    ctrl := gomock.NewController(t)
+    defer ctrl.Finish()
+
+    mockRepo := user.NewMockRepository(ctrl)
+
+    // 第一次调用返回用户，第二次返回错误
+    mockRepo.EXPECT().
+        GetUser(gomock.Any(), 1).
+        Return(&user.User{ID: 1}, nil).
+        Times(1)
+
+    mockRepo.EXPECT().
+        GetUser(gomock.Any(), 1).
+        Return(nil, errors.New("not found")).
+        Times(1)
+
+    service := user.NewService(mockRepo)
+
+    // 第一次成功
+    user1, _ := service.GetUser(context.Background(), 1)
+    assert.NotNil(t, user1)
+
+    // 第二次失败
+    _, err := service.GetUser(context.Background(), 1)
+    assert.Error(t, err)
+}
+```
+
+## Do 回调
+
+```go
+func TestDoCallback(t *testing.T) {
+    ctrl := gomock.NewController(t)
+    defer ctrl.Finish()
+
+    mockRepo := user.NewMockRepository(ctrl)
+
+    // 使用 Do 自定义返回值逻辑
+    callCount := 0
+    mockRepo.EXPECT().
+        GetUser(gomock.Any(), gomock.Any()).
+        Do(func(ctx context.Context, id int) {
+            callCount++
+        }).
+        Return(&user.User{ID: 1}, nil).
+        Times(2)
+
+    service := user.NewService(mockRepo)
+
+    service.GetUser(context.Background(), 1)
+    service.GetUser(context.Background(), 2)
+
+    if callCount != 2 {
+        t.Errorf("got %d calls, want 2", callCount)
+    }
+}
+
+func TestDoAndReturn(t *testing.T) {
+    ctrl := gomock.NewController(t)
+    defer ctrl.Finish()
+
+    mockRepo := user.NewMockRepository(ctrl)
+
+    // 动态计算返回值
+    mockRepo.EXPECT().
+        GetUser(gomock.Any(), gomock.Any()).
+        DoAndReturn(func(ctx context.Context, id int) (*user.User, error) {
+        return &user.User{ID: id, Name: "User"}, nil
+        }).
+        AnyTimes()
+
+    service := user.NewService(mockRepo)
+
+    u1, _ := service.GetUser(context.Background(), 1)
+    assert.Equal(t, 1, u1.ID)
+
+    u2, _ := service.GetUser(context.Background(), 2)
+    assert.Equal(t, 2, u2.ID)
+}
+```
+
+<Callout type="warning" title="gomock 注意事项">
+  <strong>Controller 生命周期</strong>
+
+  <ul>
+    <li>总是调用 <code>ctrl.Finish()</code>（通常在 defer 中）</li>
+    <li>Controller 会验证所有期望都被满足</li>
+    <li>不满足期望时测试会失败</li>
+  </ul>
+
+  <strong>类型安全</strong>
+  <ul>
+    <li>gomock 在编译时检查类型</li>
+    <li>参数和返回值类型必须匹配</li>
+    <li>比 testify/mock 更安全但更繁琐</li>
+  </ul>
+</Callout>
+
+## 实战示例
+
+### HTTP 服务测试
+
+```go
+func TestHTTPService(t *testing.T) {
+    ctrl := gomock.NewController(t)
+    defer ctrl.Finish()
+
+    mockClient := NewMockHTTPClient(ctrl)
+
+    // 设置 HTTP 响应
+    mockClient.EXPECT().
+        Do(gomock.Any()).
+        Return(&http.Response{
+            StatusCode: 200,
+            Body:       io.NopCloser(strings.NewReader(`{"id":1,"name":"Alice"}`)),
+        }, nil)
+
+    service := NewAPIService(mockClient)
+
+    user, err := service.GetUser(1)
+    if err != nil {
+        t.Fatal(err)
+    }
+
+    assert.Equal(t, "Alice", user.Name)
+}
+```
+
+## 练习
+
+1. **使用 gomock 测试服务**：为使用依赖的服务编写 gomock 测试
+
+<details>
+<summary>查看答案</summary>
+
+```go
+// service.go
+package email
+
+type Sender interface {
+    Send(msg Message) error
+}
+
+type Service struct {
+    sender Sender
+}
+
+func NewService(sender Sender) *Service {
+    return &Service{sender: sender}
+}
+
+func (s *Service) SendWelcome(userID int) error {
+    msg := Message{
+        To:      fmt.Sprintf("user%d@example.com", userID),
+        Subject: "Welcome!",
+        Body:    "Welcome to our service!",
+    }
+    return s.sender.Send(msg)
+}
+```
+
+```go
+//go:generate mockgen -source=service.go -destination=mock_service.go -package=email
+
+// service_test.go
+package email_test
+
+import (
+    "testing"
+    "go.uber.org/mock/gomock"
+
+    email "yourmodule/email"
+)
+
+func TestService_SendWelcome(t *testing.T) {
+    ctrl := gomock.NewController(t)
+    defer ctrl.Finish()
+
+    mockSender := email.NewMockSender(ctrl)
+
+    // 设置期望
+    expectedMsg := email.Message{
+        To:      "user1@example.com",
+        Subject: "Welcome!",
+        Body:    "Welcome to our service!",
+    }
+
+    mockSender.EXPECT().
+        Send(gomock.Eq(expectedMsg)).
+        Return(nil).
+        Times(1)
+
+    service := email.NewService(mockSender)
+
+    err := service.SendWelcome(1)
+    if err != nil {
+        t.Errorf("SendWelcome() error = %v", err)
+    }
+}
+```
+
+**解释**：使用 gomock 创建了 Sender 接口的 mock，验证了邮件发送逻辑。
+
+</details>

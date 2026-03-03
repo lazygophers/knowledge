@@ -1,0 +1,357 @@
+import { Badge } from "@rspress/core/theme";
+
+# sort.Interface
+
+<Badge text="标准库" type="info" />
+<Badge text="排序接口" type="success" />
+
+`sort.Interface` 是 Go 语言标准库中用于排序的接口，通过实现该接口可以对任意自定义类型进行排序。
+
+## sort.Interface 定义
+
+```go
+type Interface interface {
+    Len() int
+    Less(i, j int) bool
+    Swap(i, j int)
+}
+```
+
+三个方法的作用：
+
+| 方法 | 作用 | 返回值 |
+|------|------|--------|
+| `Len()` | 返回集合长度 | 集合元素数量 |
+| `Less(i, j int)` | 判断 i 位置的元素是否小于 j 位置的元素 | bool |
+| `Swap(i, j int)` | 交换 i 和 j 位置的元素 | 无 |
+
+## 实现自定义排序
+
+### 基础示例
+
+```go
+package main
+
+import (
+    "fmt"
+    "sort"
+)
+
+// Person 自定义类型
+type Person struct {
+    Name string
+    Age  int
+}
+
+// ByAge 实现 sort.Interface
+type ByAge []Person
+
+func (a ByAge) Len() int           { return len(a) }
+func (a ByAge) Less(i, j int) bool { return a[i].Age < a[j].Age }
+func (a ByAge) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+
+func main() {
+    people := []Person{
+        {"Alice", 25},
+        {"Bob", 30},
+        {"Charlie", 20},
+    }
+
+    sort.Sort(ByAge(people))
+    fmt.Println(people)
+    // Output: [{Charlie 20} {Alice 25} {Bob 30}]
+}
+```
+
+### 升序和降序排序
+
+```go
+// 升序：Less 返回 a[i].Age < a[j].Age
+type ByAgeAsc []Person
+func (a ByAgeAsc) Len() int           { return len(a) }
+func (a ByAgeAsc) Less(i, j int) bool { return a[i].Age < a[j].Age }
+func (a ByAgeAsc) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+
+// 降序：Less 返回 a[i].Age > a[j].Age
+type ByAgeDesc []Person
+func (a ByAgeDesc) Len() int           { return len(a) }
+func (a ByAgeDesc) Less(i, j int) bool { return a[i].Age > a[j].Age }
+func (a ByAgeDesc) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+
+func main() {
+    people := []Person{
+        {"Alice", 25},
+        {"Bob", 30},
+        {"Charlie", 20},
+    }
+
+    // 升序
+    sort.Sort(ByAgeAsc(people))
+    fmt.Println("升序:", people)
+    // Output: 升序: [{Charlie 20} {Alice 25} {Bob 30}]
+
+    // 降序
+    sort.Sort(ByAgeDesc(people))
+    fmt.Println("降序:", people)
+    // Output: 降序: [{Bob 30} {Alice 25} {Charlie 20}]
+}
+```
+
+### 多字段排序
+
+```go
+// 多字段排序：先按年龄排序，年龄相同按名字排序
+type ByAgeThenName []Person
+
+func (a ByAgeThenName) Len() int { return len(a) }
+
+func (a ByAgeThenName) Less(i, j int) bool {
+    if a[i].Age != a[j].Age {
+        return a[i].Age < a[j].Age
+    }
+    return a[i].Name < a[j].Name
+}
+
+func (a ByAgeThenName) Swap(i, j int) {
+    a[i], a[j] = a[j], a[i]
+}
+
+func main() {
+    people := []Person{
+        {"Alice", 25},
+        {"Bob", 20},
+        {"Charlie", 25},
+        {"David", 20},
+    }
+
+    sort.Sort(ByAgeThenName(people))
+    fmt.Println(people)
+    // Output: [{Bob 20} {David 20} {Alice 25} {Charlie 25}]
+}
+```
+
+## sort.Slice 简化用法
+
+从 Go 1.8 开始，提供了 `sort.Slice` 函数，可以简化排序操作：
+
+```go
+package main
+
+import (
+    "fmt"
+    "sort"
+)
+
+type Person struct {
+    Name string
+    Age  int
+}
+
+func main() {
+    people := []Person{
+        {"Alice", 25},
+        {"Bob", 30},
+        {"Charlie", 20},
+    }
+
+    // 按年龄升序
+    sort.Slice(people, func(i, j int) bool {
+        return people[i].Age < people[j].Age
+    })
+    fmt.Println("按年龄升序:", people)
+
+    // 按年龄降序
+    sort.Slice(people, func(i, j int) bool {
+        return people[i].Age > people[j].Age
+    })
+    fmt.Println("按年龄降序:", people)
+
+    // 多字段排序
+    sort.Slice(people, func(i, j int) bool {
+        if people[i].Age != people[j].Age {
+            return people[i].Age < people[j].Age
+        }
+        return people[i].Name < people[j].Name
+    })
+    fmt.Println("多字段排序:", people)
+}
+```
+
+### sort.SliceStable 稳定排序
+
+```go
+people := []Person{
+    {"Alice", 25},
+    {"Bob", 25},
+    {"Charlie", 25},
+}
+
+// 稳定排序：保持相等元素的原始相对顺序
+sort.SliceStable(people, func(i, j int) bool {
+    return people[i].Age < people[j].Age
+})
+fmt.Println(people)
+// 输出保持原始顺序: [Alice, Bob, Charlie]
+```
+
+## 排序算法示意图
+
+```
+原始数组: [30, 10, 20, 50, 40]
+
+步骤1: [30, 10, 20, 50, 40]
+        比较 30 和 10 -> 交换
+       ↓
+步骤2: [10, 30, 20, 50, 40]
+        比较 30 和 20 -> 交换
+       ↓
+步骤3: [10, 20, 30, 50, 40]
+        比较 50 和 40 -> 交换
+       ↓
+步骤4: [10, 20, 30, 40, 50]
+        排序完成
+```
+
+## 常用排序函数
+
+| 函数 | 说明 |
+|------|------|
+| `sort.Sort(data)` | 对数据进行排序 |
+| `sort.Slice(slice, less)` | 使用匿名函数排序 |
+| `sort.SliceStable(slice, less)` | 稳定排序 |
+| `sort.Reverse(data)` | 反向排序 |
+| `sort.IsSorted(data)` | 检查是否已排序 |
+| `sort.Search(n, f)` | 二分查找 |
+
+## 练习
+
+### 练习 1：基础排序
+
+创建一个 `Product` 结构体，包含 `Name` 和 `Price` 字段，实现按价格从低到高排序。
+
+```go
+type Product struct {
+    Name  string
+    Price float64
+}
+
+// TODO: 实现 sort.Interface
+type ByPrice []Product
+
+func main() {
+    products := []Product{
+        {"Apple", 5.99},
+        {"Banana", 2.49},
+        {"Orange", 3.99},
+    }
+
+    // TODO: 对 products 进行排序
+    fmt.Println(products)
+}
+```
+
+### 练习 2：多字段排序
+
+对 `Product` 实现：
+1. 先按价格升序排序
+2. 价格相同时，按名称降序排序
+
+### 练习 3：使用 sort.Slice
+
+使用 `sort.Slice` 重写练习 1 和练习 2。
+
+## 答案
+
+### 答案 1
+
+```go
+type ByPrice []Product
+
+func (p ByPrice) Len() int           { return len(p) }
+func (p ByPrice) Less(i, j int) bool { return p[i].Price < p[j].Price }
+func (p ByPrice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+
+func main() {
+    products := []Product{
+        {"Apple", 5.99},
+        {"Banana", 2.49},
+        {"Orange", 3.99},
+    }
+
+    sort.Sort(ByPrice(products))
+    fmt.Println(products)
+    // Output: [{Banana 2.49} {Orange 3.99} {Apple 5.99}]
+}
+```
+
+### 答案 2
+
+```go
+type ByPriceAndName []Product
+
+func (p ByPriceAndName) Len() int { return len(p) }
+
+func (p ByPriceAndName) Less(i, j int) bool {
+    if p[i].Price != p[j].Price {
+        return p[i].Price < p[j].Price
+    }
+    return p[i].Name > p[j].Name // 名称降序
+}
+
+func (p ByPriceAndName) Swap(i, j int) {
+    p[i], p[j] = p[j], p[i]
+}
+
+func main() {
+    products := []Product{
+        {"Apple", 5.99},
+        {"Banana", 2.49},
+        {"Orange", 3.99},
+        {"Grape", 3.99}, // 价格相同
+    }
+
+    sort.Sort(ByPriceAndName(products))
+    fmt.Println(products)
+    // Output: [{Banana 2.49} {Orange 3.99} {Grape 3.99} {Apple 5.99}]
+}
+```
+
+### 答案 3
+
+```go
+// 练习 1：使用 sort.Slice
+func main() {
+    products := []Product{
+        {"Apple", 5.99},
+        {"Banana", 2.49},
+        {"Orange", 3.99},
+    }
+
+    sort.Slice(products, func(i, j int) bool {
+        return products[i].Price < products[j].Price
+    })
+    fmt.Println(products)
+}
+
+// 练习 2：使用 sort.Slice
+func main() {
+    products := []Product{
+        {"Apple", 5.99},
+        {"Banana", 2.49},
+        {"Orange", 3.99},
+        {"Grape", 3.99},
+    }
+
+    sort.Slice(products, func(i, j int) bool {
+        if products[i].Price != products[j].Price {
+            return products[i].Price < products[j].Price
+        }
+        return products[i].Name > products[j].Name
+    })
+    fmt.Println(products)
+}
+```
+
+## 导航
+
+[← error 接口](./error.mdx) | [继续：fmt 接口 →](./fmt.mdx)

@@ -1,0 +1,369 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# testify
+
+<Badge text="中级" type="warning" /> <Badge text="第三方库" type="info" />
+
+testify 是 Go 中最受欢迎的测试工具包，提供了丰富的断言、mock 和测试套件功能。
+
+## 安装
+
+```bash
+go get github.com/stretchr/testify
+```
+
+## assert 包
+
+### 基础断言
+
+```go
+package test_test
+
+import (
+    "testing"
+    "github.com/stretchr/testify/assert"
+)
+
+func TestAssertions(t *testing.T) {
+    // 相等断言
+    assert.Equal(t, 42, calculate())
+    assert.NotEqual(t, 0, calculate())
+
+    // 布尔断言
+    assert.True(t, isValid())
+    assert.False(t, isInvalid())
+
+    // 空值断言
+    assert.Nil(t, nilValue)
+    assert.NotNil(t, nonNilValue)
+
+    // 错误断言
+    assert.NoError(t, validOperation())
+    assert.Error(t, invalidOperation())
+}
+```
+
+### 字符串断言
+
+```go
+func TestStringAssertions(t *testing.T) {
+    s := "Hello, World!"
+
+    // 包含
+    assert.Contains(t, s, "World")
+    assert.NotContains(t, s, "world")  // 大小写敏感
+
+    // 前缀/后缀
+    assert.HasPrefix(t, s, "Hello")
+    assert.HasSuffix(t, s, "!")
+
+    // 空字符串
+    assert.NotEmpty(t, s)
+
+    // 正则匹配
+    assert.Regexp(t, `^Hello,`, s)
+}
+```
+
+### 数值断言
+
+```go
+func TestNumericAssertions(t *testing.T) {
+    value := 42.5
+
+    // 范围断言
+    assert.InDelta(t, 42.5, value, 0.01)
+    assert.InEpsilon(t, 42.5, value, 0.001)
+
+    // 大小比较
+    assert.Greater(t, value, 42.0)
+    assert.Less(t, value, 43.0)
+    assert.GreaterOrEqual(t, value, 42.5)
+    assert.LessOrEqual(t, value, 42.5)
+
+    // 正/负/零
+    assert.Positive(t, value)
+    assert.NotZero(t, value)
+}
+```
+
+### 集合断言
+
+```go
+func TestCollectionAssertions(t *testing.T) {
+    list := []int{1, 2, 3, 4, 5}
+
+    // 元素存在
+    assert.Contains(t, list, 3)
+    assert.NotContains(t, list, 6)
+
+    // 长度
+    assert.Len(t, list, 5)
+
+    // 元素相等（顺序无关）
+    assert.ElementsMatch(t, []int{5, 4, 3, 2, 1}, list)
+
+    // 子集
+    assert.Subset(t, []int{2, 4}, list)
+    assert.NotSubset(t, []int{6, 7}, list)
+}
+```
+
+### 对象断言
+
+```go
+func TestObjectAssertions(t *testing.T) {
+    user := &User{ID: 1, Name: "Alice"}
+
+    // 类型断言
+    assert.Implements(t, (*UserInterface)(nil), user)
+    assert.IsType(t, &User{}, user)
+
+    // 对象相等
+    assert.Equal(t, &User{ID: 1, Name: "Alice"}, user)
+
+    // 深度相等
+    assert.DeepEqual(t, map[string]int{"a": 1}, map[string]int{"a": 1})
+}
+```
+
+### HTTP 断言
+
+```go
+func TestHTTPAssertions(t *testing.T) {
+    resp, err := http.Get("https://api.example.com/users")
+    assert.NoError(t, err)
+    defer resp.Body.Close()
+
+    // 状态码
+    assert.Equal(t, 200, resp.StatusCode)
+
+    // 读取 body 并断言
+    body, _ := io.ReadAll(resp.Body)
+    assert.NotEmpty(t, body)
+}
+```
+
+## require 包
+
+require 与 assert 类似，但失败时立即停止测试。
+
+```go
+import "github.com/stretchr/testify/require"
+
+func TestRequire(t *testing.T) {
+    // Setup 必须成功，否则继续测试没有意义
+    db, err := sql.Open("postgres", dsn)
+    require.NoError(t, err, "数据库连接失败")
+    defer db.Close()
+
+    // 后续测试只在 setup 成功后运行
+    user := GetUser(db, 1)
+    require.NotNil(t, user, "用户不应该为 nil")
+    assert.Equal(t, "Alice", user.Name)
+}
+```
+
+<Callout type="info" title="assert vs require">
+  <strong>assert</strong>: 记录错误但继续执行，适合收集多个错误
+
+  <strong>require</strong>: 失败时立即停止，适合前置条件检查
+</Callout>
+
+## suite 包
+
+测试套件提供 setup/teardown 机制。
+
+```go
+package test_test
+
+import (
+    "testing"
+    "github.com/stretchr/testify/suite"
+}
+
+// 定义测试套件
+type ExampleTestSuite struct {
+    suite.Suite
+    db *Database
+    api *APIClient
+}
+
+// 在所有测试前执行
+func (s *ExampleTestSuite) SetupSuite() {
+    s.db = setupTestDatabase()
+}
+
+// 在所有测试后执行
+func (s *ExampleTestSuite) TearDownSuite() {
+    s.db.Close()
+}
+
+// 在每个测试前执行
+func (s *ExampleTestSuite) SetupTest() {
+    // 清理测试数据
+    s.db.Cleanup()
+}
+
+// 在每个测试后执行
+func (s *ExampleTestSuite) TearDownTest() {
+    // 清理资源
+}
+
+// 测试方法
+func (s *ExampleTestSuite) TestExample() {
+    result := s.api.GetData()
+    s.NotNil(result)
+}
+
+// 运行测试套件
+func TestExampleTestSuite(t *testing.T) {
+    suite.Run(t, new(ExampleTestSuite))
+}
+```
+
+## mock 包
+
+mock 包用于创建 mock 对象。
+
+```go
+package test_test
+
+import (
+    "testing"
+    "github.com/stretchr/testify/mock"
+)
+
+// 定义 Mock
+type MockDatabase struct {
+    mock.Mock
+}
+
+func (m *MockDatabase) GetUser(id int) (*User, error) {
+    args := m.Called(id)
+    if args.Get(0) == nil {
+        return nil, args.Error(1)
+    }
+    return args.Get(0).(*User), args.Error(1)
+}
+
+func TestWithMock(t *testing.T) {
+    mockDB := new(MockDatabase)
+
+    // 设置期望
+    mockDB.On("GetUser", 1).Return(&User{ID: 1, Name: "Alice"}, nil)
+    mockDB.On("GetUser", 999).Return(nil, errors.New("not found"))
+
+    // 使用 mock
+    user, err := mockDB.GetUser(1)
+    assert.NoError(t, err)
+    assert.Equal(t, "Alice", user.Name)
+
+    // 验证期望
+    mockDB.AssertExpectations(t)
+}
+```
+
+## 实战示例
+
+### HTTP API 测试
+
+```go
+func TestAPIClient(t *testing.T) {
+    server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        assert.Equal(t, "GET", r.Method)
+        assert.Equal(t, "/users/1", r.URL.Path)
+        w.WriteHeader(http.StatusOK)
+        w.Write([]byte(`{"id":1,"name":"Alice"}`))
+    }))
+    defer server.Close()
+
+    client := NewAPIClient(server.URL)
+
+    user, err := client.GetUser(1)
+    assert.NoError(t, err)
+    assert.Equal(t, 1, user.ID)
+    assert.Equal(t, "Alice", user.Name)
+}
+```
+
+### 数据库测试
+
+```go
+type DatabaseTestSuite struct {
+    suite.Suite
+    db *sql.DB
+}
+
+func (s *DatabaseTestSuite) SetupTest() {
+    s.db = setupTestDB()
+}
+
+func (s *DatabaseTestSuite) TearDownTest() {
+    _, err := s.db.Exec("DELETE FROM users")
+    s.Require().NoError(err)
+    s.db.Close()
+}
+
+func (s *DatabaseTestSuite) TestCreateUser() {
+    repo := NewUserRepository(s.db)
+
+    user, err := repo.Create(&User{Name: "Alice", Email: "alice@example.com"})
+    s.NoError(err)
+    s.NotZero(user.ID)
+
+    // 验证数据库中的数据
+    var count int
+    err = s.db.QueryRow("SELECT COUNT(*) FROM users WHERE id = ?", user.ID).Scan(&count)
+    s.NoError(err)
+    s.Equal(1, count)
+}
+
+func TestDatabaseTestSuite(t *testing.T) {
+    suite.Run(t, new(DatabaseTestSuite))
+}
+```
+
+## 练习
+
+1. **使用 assert 重构测试**：将标准库测试改为使用 testify
+
+<details>
+<summary>查看答案</summary>
+
+```go
+// 原始版本
+func TestCalculator(t *testing.T) {
+    result := Add(2, 3)
+    if result != 5 {
+        t.Errorf("Add(2, 3) = %d; want 5", result)
+    }
+
+    err := ValidateEmail("invalid")
+    if err == nil {
+        t.Error("expected error for invalid email")
+    }
+
+    if len([]int{1, 2, 3}) != 3 {
+        t.Error("slice should have 3 elements")
+    }
+}
+
+// 使用 assert 重构
+func TestCalculatorWithAssert(t *testing.T) {
+    result := Add(2, 3)
+    assert.Equal(t, 5, result, "Add(2, 3) should equal 5")
+
+    err := ValidateEmail("invalid")
+    assert.Error(t, err, "invalid email should return error")
+
+    slice := []int{1, 2, 3}
+    assert.Len(t, slice, 3, "slice should have 3 elements")
+    assert.ElementsMatch(t, []int{3, 2, 1}, slice)
+}
+```
+
+**解释**：使用 assert 后代码更简洁，错误消息更清晰。
+
+</details>

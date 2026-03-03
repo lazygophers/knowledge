@@ -1,12 +1,13 @@
 # Redis Data Structures
 
-## Scenario Mapping
+## Use Case Mapping
 
-- String: counters and simple states
-- Hash: object field cache
-- List: lightweight queue patterns
-- ZSet: ranking and priority queues
+- String：计数器、状态位、短文本缓存
+- Hash：对象字段缓存
+- List：消息队列（轻量场景）
+- ZSet：排行榜与优先级队列
 
-## Selection Rule
+## 选择原则
 
-Pick by access pattern first, not by familiarity.
+- 先看访问模式，再看结构能力。
+- 避免“一把梭”都用 String。

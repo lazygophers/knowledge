@@ -1,0 +1,53 @@
+# Go Testing Module
+
+This module covers the Go testing framework and testing best practices.
+
+## Basics (基础测试)
+
+- `test-files.mdx` - Test file naming conventions, test function signatures (TestXxx, ExampleXxx), go test command usage, package structure (white-box vs black-box testing)
+- `assertions.mdx` - Using *testing.T, t.Error vs t.Fatal, t.Logf, t.Skip, t.Cleanup, t.TempDir, basic assertion patterns
+- `table-driven.mdx` - Table-driven tests structure, anonymous vs named structs, t.Run() subtests, test case naming, loop variable capture
+- `coverage.mdx` - -cover flag, -coverprofile, go tool cover, coverage modes (set, count, atomic), setting coverage targets
+
+## Advanced (进阶测试)
+
+- `test-doubles.mdx` - Test doubles types (Dummy, Stub, Spy, Fake, Mock), when to use each type, interface design for testing
+- `mocking.mdx` - testify/mock framework, gomock code generation and usage, controller management, matchers and expectations
+- `test-main.mdx` - TestMain(m *testing.M) signature, global setup/teardown, environment initialization, exit code handling
+- `parallel.mdx` - t.Parallel() for parallel tests, -parallel flag, race detection with -race, synchronization mechanisms
+
+## Benchmark (基准测试)
+
+- `basics.mdx` - BenchmarkXxx(b *testing.B) signature, b.N mechanism, timing control, basic benchmark patterns
+- `profiling.mdx` - CPU profiling, memory profiling, pprof tool usage, reading benchmark results (ns/op, B/op, allocs/op)
+- `optimization.mdx` - Memory allocation optimization, b.ReportAllocs(), escape analysis, benchmark-driven optimization
+
+## Fuzzing (模糊测试)
+
+- `introduction.mdx` - FuzzXxx(f *testing.F) signature, f.Add() for seed corpus, random input generation, type support limitations (Go 1.18+)
+- `writing-fuzz.mdx` - Fuzz test patterns, input parser testing, codec testing, string processing, boundary case discovery
+- `best-practices.mdx` - Seed corpus selection, fuzz assertion design, crasher management, CI/CD integration for fuzzing
+
+## Tools (测试工具)
+
+- `testify.mdx` - testify/assert (Equal, NotEqual, True, False, NoError, etc.), testify/mock framework, testify/suite for test organization
+- `gomock.mdx` - mockgen code generation, controller lifecycle, EXPECT() API, matchers (Eq, Any, Not, Len), InOrder() verification
+- `other-tools.mdx` - quicktest, testcontainers-go, godog for BDD, gotestsum output formatter
+
+## Best Practices (最佳实践)
+
+- `conventions.mdx` - Test naming conventions (Test<Function><Scenario>), AAA pattern (Arrange-Act-Assert), test isolation principles, avoiding logic in tests
+- `architecture.mdx` - Test pyramid strategy (70% unit, 20% integration, 10% E2E), testing layers, test organization structure
+- `ci-cd.mdx` - GitHub Actions for testing, GitLab CI integration, test reporting, coverage gates, flaky test detection
+
+## Key Concepts
+
+- Test file naming: `_test.go` suffix, build tags, same-package vs separate-package testing
+- Test function types: TestXxx (unit tests), BenchmarkXxx (benchmarks), ExampleXxx (examples), FuzzXxx (fuzzing, Go 1.18+)
+- Package structure: White-box testing (same package, access internals) vs Black-box testing (separate package, test public API only)
+- Table-driven tests: Use anonymous struct slices with descriptive names, combine with t.Run() for subtests
+- Coverage: Use -cover for basic coverage, -coverprofile for detailed reports, aim for 80%+ as a general target
+- Mock vs Stub: Mocks verify behavior (expectations), Stubs provide canned responses
+- Benchmark timing: Use b.ResetTimer() to exclude setup, b.ReportAllocs() for memory statistics
+- Parallel tests: Mark with t.Parallel(), control with -parallel flag, always use -race to detect data races
+- Fuzzing: Best for input parsing, serialization/deserialization, codecs; not suitable for tests requiring external dependencies

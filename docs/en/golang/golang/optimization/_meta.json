@@ -1,0 +1,32 @@
+[
+  {
+    "type": "file",
+    "name": "index",
+    "label": "性能优化概览"
+  },
+  {
+    "type": "file",
+    "name": "pprof",
+    "label": "pprof 使用"
+  },
+  {
+    "type": "file",
+    "name": "memory-optimization",
+    "label": "内存优化"
+  },
+  {
+    "type": "file",
+    "name": "cpu-optimization",
+    "label": "CPU 优化"
+  },
+  {
+    "type": "file",
+    "name": "common-issues",
+    "label": "常见性能问题"
+  },
+  {
+    "type": "file",
+    "name": "trace",
+    "label": "Trace 工具"
+  }
+]

@@ -1,0 +1,404 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# 断言与验证
+
+<Badge text="初级" type="info" /> <Badge text="Go 1.0+" type="info" />
+
+testing.T 提供了丰富的断言方法用于验证测试结果。
+
+## 主要方法
+
+```go
+// 记录错误，继续执行
+func (t *T) Error(args ...any)
+func (t *T) Errorf(format string, args ...any)
+
+// 记录错误，停止执行
+func (t *T) Fatal(args ...any)
+func (t *T) Fatalf(format string, args ...any)
+
+// 记录日志
+func (t *T) Log(args ...any)
+func (t *T) Logf(format string, args ...any)
+
+// 跳过测试
+func (t *T) Skip(args ...any)
+func (t *T) Skipf(format string, args ...any)
+func (t *T) SkipNow()
+```
+
+## Error vs Fatal
+
+```go
+// Error：记录错误但继续执行
+func TestAllErrors(t *testing.T) {
+    items := []int{1, 2, 3}
+
+    for _, item := range items {
+        if item < 0 {
+            t.Errorf("item %d is negative", item)
+        }
+    }
+    // 所有错误都会被报告
+}
+```
+
+```go
+// Fatal：记录错误并立即停止
+func TestFatal(t *testing.T) {
+    file, err := os.Open("config.txt")
+    if err != nil {
+        t.Fatalf("Failed to open config: %v", err)
+        // 测试在此停止
+    }
+    defer file.Close()
+    // 后续代码不会执行
+}
+```
+
+<Callout type="warning" title="选择建议">
+  使用 <strong>Error</strong> 当你想收集所有失败信息
+
+  使用 <strong>Fatal</strong> 当失败后继续执行没有意义或会导致 panic
+</Callout>
+
+## 格式化输出
+
+```go
+func TestFormat(t *testing.T) {
+    got := Add(2, 3)
+    want := 6
+
+    // 简单错误
+    if got != want {
+        t.Error("wrong result")
+    }
+
+    // 格式化错误
+    if got != want {
+        t.Errorf("Add(2, 3) = %d; want %d", got, want)
+    }
+
+    // 带上下文的错误
+    input := struct{ a, b int }{2, 3}
+    if got != want {
+        t.Errorf("Add(%+v) = %d; want %d", input, got, want)
+    }
+}
+```
+
+## 日志输出
+
+```go
+func TestLogging(t *testing.T) {
+    t.Log("Starting test...")
+
+    result := Process()
+
+    t.Logf("Result: %v", result)
+
+    if result == nil {
+        t.Error("Process() returned nil")
+    }
+}
+```
+
+<Callout type="info" title="日志输出时机">
+  <code>t.Log()</code> 的输出只在以下情况显示：
+  <ul>
+    <li>使用 <code>-v</code> 参数</li>
+    <li>测试失败时</li>
+  </ul>
+</Callout>
+
+## 跳过测试
+
+```go
+func TestSkip(t *testing.T) {
+    if testing.Short() {
+        t.Skip("跳过耗时测试")
+    }
+
+    // 耗时操作
+    time.Sleep(10 * time.Second)
+}
+```
+
+```go
+func TestConditionalSkip(t *testing.T) {
+    if runtime.GOOS == "windows" {
+        t.Skip("此测试在 Windows 上不可用")
+    }
+
+    // Unix 特定测试
+}
+```
+
+```go
+func SkipLongTests(t *testing.T) {
+    if testing.Short() {
+        t.Skipf("跳过长时间运行的测试")
+    }
+
+    // 长时间测试
+}
+```
+
+## Cleanup 清理
+
+```go
+func TestCleanup(t *testing.T) {
+    // 创建临时文件
+    tmpFile, err := os.CreateTemp("", "test")
+    if err != nil {
+        t.Fatal(err)
+    }
+
+    // 注册清理函数
+    t.Cleanup(func() {
+        os.Remove(tmpFile.Name())
+    })
+
+    // 测试逻辑
+    // ...
+
+    // Cleanup 会自动在测试结束时调用
+}
+```
+
+```go
+func TestMultipleCleanup(t *testing.T) {
+    // 清理函数按 LIFO 顺序执行
+    t.Cleanup(func() {
+        t.Log("清理 3")
+    })
+    t.Cleanup(func() {
+        t.Log("清理 2")
+    })
+    t.Cleanup(func() {
+        t.Log("清理 1")
+    })
+}
+```
+
+## TempDir 临时目录
+
+```go
+func TestTempDir(t *testing.T) {
+    // 创建临时目录，测试结束后自动删除
+    tmpDir := t.TempDir()
+
+    // 创建测试文件
+    filePath := filepath.Join(tmpDir, "test.txt")
+    err := os.WriteFile(filePath, []byte("test data"), 0644)
+    if err != nil {
+        t.Fatal(err)
+    }
+
+    // 读取并验证
+    data, err := os.ReadFile(filePath)
+    if err != nil {
+        t.Fatal(err)
+    }
+
+    if string(data) != "test data" {
+        t.Errorf("got %q, want %q", string(data), "test data")
+    }
+    // tmpDir 会在测试结束后自动删除
+}
+```
+
+## Setenv 环境变量
+
+```go
+func TestSetenv(t *testing.T) {
+    // 设置环境变量（测试结束后恢复原值）
+    t.Setenv("API_KEY", "test-key")
+    t.Setenv("DEBUG", "true")
+
+    // 测试逻辑
+    apiKey := os.Getenv("API_KEY")
+    if apiKey != "test-key" {
+        t.Errorf("API_KEY = %s, want test-key", apiKey)
+    }
+    // 环境变量会在测试结束后自动恢复
+}
+```
+
+## 辅助函数模式
+
+```go
+// 辅助函数接受 *testing.T
+func assertEqual[T comparable](t *testing.T, got, want T, msg string) {
+    t.Helper() // 标记为辅助函数
+    if got != want {
+        t.Errorf("%s: got %v, want %v", msg, got, want)
+    }
+}
+
+func TestWithHelper(t *testing.T) {
+    result := Add(2, 3)
+    assertEqual(t, result, 5, "Add result")
+}
+```
+
+<Callout type="info" title="t.Helper() 的作用">
+  使用 <code>t.Helper()</code> 标记辅助函数后，<br />
+  错误报告会指向调用者而非辅助函数本身，<br />
+  让测试失败的定位更准确。
+</Callout>
+
+## 并行测试
+
+```go
+func TestParallel(t *testing.T) {
+    tests := []struct {
+        name string
+        data string
+    }{
+        {"test1", "data1"},
+        {"test2", "data2"},
+        {"test3", "data3"},
+    }
+
+    for _, tt := range tests {
+        tt := tt
+        t.Run(tt.name, func(t *testing.T) {
+            t.Parallel() // 标记为并行测试
+
+            result := Process(tt.data)
+            if result != expected {
+                t.Errorf("Process(%q) = %v", tt.data, result)
+            }
+        })
+    }
+}
+```
+
+## 完整示例
+
+```go
+package user_test
+
+import (
+    "os"
+    "testing"
+    "time"
+)
+
+func TestUserCreation(t *testing.T) {
+    // 设置测试环境
+    t.Setenv("USER_DB", ":memory:")
+
+    // 创建临时目录
+    tmpDir := t.TempDir()
+
+    // 注册清理函数
+    cleanupCalled := false
+    t.Cleanup(func() {
+        cleanupCalled = true
+    })
+
+    // 测试逻辑
+    user, err := CreateUser(tmpDir)
+    if err != nil {
+        t.Fatalf("CreateUser() failed: %v", err)
+    }
+
+    t.Logf("Created user: %v", user)
+
+    // 验证
+    if user.Name == "" {
+        t.Error("User name is empty")
+    }
+
+    if user.ID == "" {
+        t.Error("User ID is empty")
+    }
+
+    // cleanupCalled 会被设为 true
+}
+
+func TestUserCreation_Skip(t *testing.T) {
+    if testing.Short() {
+        t.Skip("跳过耗时测试")
+    }
+
+    // 需要数据库连接的测试
+    db := SetupTestDB(t)
+    defer db.Close()
+
+    user, err := CreateUserInDB(db)
+    if err != nil {
+        t.Fatalf("CreateUserInDB() failed: %v", err)
+    }
+
+    if user.ID == "" {
+        t.Error("User ID is empty")
+    }
+}
+```
+
+## 练习
+
+1. **编写完整测试**：为一个除法函数编写测试，处理除零错误
+
+<details>
+<summary>查看答案</summary>
+
+```go
+// calc.go
+package calc
+
+import "errors"
+
+var ErrDivideByZero = errors.New("division by zero")
+
+func Divide(a, b float64) (float64, error) {
+    if b == 0 {
+        return 0, ErrDivideByZero
+    }
+    return a / b, nil
+}
+
+// calc_test.go
+package calc
+
+import "testing"
+
+func TestDivide(t *testing.T) {
+    tests := []struct {
+        name        string
+        a, b        float64
+        want        float64
+        wantErr     error
+    }{
+        {"normal", 10, 2, 5, nil},
+        {"negative", -10, 2, -5, nil},
+        {"decimal", 1, 2, 0.5, nil},
+        {"divide by zero", 10, 0, 0, ErrDivideByZero},
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            got, err := Divide(tt.a, tt.b)
+            if (err != nil) != (tt.wantErr != nil) {
+                t.Errorf("Divide() error = %v, wantErr %v", err, tt.wantErr)
+                return
+            }
+            if got != tt.want {
+                t.Errorf("Divide() = %v, want %v", got, tt.want)
+            }
+        })
+    }
+}
+```
+
+**解释**：使用表驱动测试覆盖正常情况和错误情况，使用 Error 类型断言验证错误。
+
+</details>
+
+---
+
+[← 测试文件](./test-files.mdx) | [表驱动测试 →](./table-driven.mdx)

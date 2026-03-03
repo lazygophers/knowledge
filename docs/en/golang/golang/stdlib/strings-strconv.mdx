@@ -1,0 +1,622 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# 字符串处理 - Strings and Strconv
+
+<Badge text="常用操作" type="success" />
+
+Go 的 `strings` 和 `strconv` 包提供了丰富的字符串处理和类型转换功能。
+
+## strings 包
+
+<Badge text="初级开发者" type="tip" />
+
+### 查找操作
+
+```go
+package main
+
+import (
+    "fmt"
+    "strings"
+)
+
+func main() {
+    s := "Hello, World!"
+
+    // Contains - 是否包含子串
+    fmt.Println(strings.Contains(s, "World"))  // true
+    fmt.Println(strings.Contains(s, "world"))  // false (区分大小写)
+
+    // HasPrefix - 是否以指定前缀开始
+    fmt.Println(strings.HasPrefix(s, "Hello"))  // true
+    fmt.Println(strings.HasPrefix(s, "World"))  // false
+
+    // HasSuffix - 是否以指定后缀结束
+    fmt.Println(strings.HasSuffix(s, "!"))      // true
+
+    // Index - 查找子串位置
+    fmt.Println(strings.Index(s, "World"))      // 7
+    fmt.Println(strings.Index(s, "xyz"))        // -1 (未找到)
+
+    // LastIndex - 最后出现位置
+    fmt.Println(strings.LastIndex(s, "l"))      // 10
+}
+```
+
+### 大小写转换
+
+```go
+s := "Hello, World!"
+
+// ToLower - 转小写
+fmt.Println(strings.ToLower(s))  // "hello, world!"
+
+// ToUpper - 转大写
+fmt.Println(strings.ToUpper(s))  // "HELLO, WORLD!"
+
+// Title - 标题格式（每个单词首字母大写）
+fmt.Println(strings.Title("hello world"))  // "Hello World"
+
+// ToLower / ToUpper - 特殊处理
+fmt.Println(strings.ToLower("İstanbul"))  // 正确处理 Unicode
+```
+
+### 修剪操作
+
+```go
+s := "  Hello, World!  "
+
+// TrimSpace - 去除首尾空白
+fmt.Println(strings.TrimSpace(s))  // "Hello, World!"
+
+// Trim - 去除指定字符
+s = "###Hello###"
+fmt.Println(strings.Trim(s, "#"))  // "Hello"
+
+// TrimPrefix / TrimSuffix
+fmt.Println(strings.TrimPrefix(s, "###"))  // "Hello###"
+fmt.Println(strings.TrimSuffix(s, "###"))  // "###Hello"
+```
+
+### 替换操作
+
+```go
+s := "Hello, World!"
+
+// Replace - 替换所有匹配项
+fmt.Println(strings.Replace(s, "l", "L", -1))  // "HeLLo, WorLd!"
+
+// ReplaceAll - 简写形式
+fmt.Println(strings.ReplaceAll(s, "l", "L"))    // "HeLLo, WorLd!"
+
+// Replace - 替换指定次数
+fmt.Println(strings.Replace(s, "l", "L", 1))    // "HeLlo, World!"
+
+// Replace - 替换所有（旧 API，使用 -1）
+fmt.Println(strings.Replace(s, "l", "L", 0))    // 不替换
+```
+
+### 分割和连接
+
+```go
+// Split - 分割字符串
+s := "a,b,c"
+parts := strings.Split(s, ",")
+fmt.Println(parts)  // [a b c]
+
+// SplitN - 分割指定次数
+parts = strings.SplitN(s, ",", 2)
+fmt.Println(parts)  // [a b,c]
+
+// Fields - 按空白分割
+s = "  a   b  c  "
+fields := strings.Fields(s)
+fmt.Println(fields)  // [a b c]
+
+// Join - 连接字符串
+fmt.Println(strings.Join([]string{"a", "b", "c"}, ","))  // "a,b,c"
+
+// Repeat - 重复字符串
+fmt.Println(strings.Repeat("a", 5))  // "aaaaa"
+```
+
+### Builder - 高效字符串构建
+
+<Badge text="中级开发者" type="warning" />
+
+```go
+package main
+
+import (
+    "fmt"
+    "strings"
+)
+
+func main() {
+    // ❌ 低效：字符串拼接
+    var s string
+    for i := 0; i < 1000; i++ {
+        s += "a"  // 每次都创建新字符串
+    }
+
+    // ✅ 高效：使用 strings.Builder
+    var builder strings.Builder
+    for i := 0; i < 1000; i++ {
+        builder.WriteString("a")
+    }
+    s = builder.String()
+
+    // 预分配容量（性能更好）
+    builder = strings.Builder{}
+    builder.Grow(1000)  // 预分配
+    for i := 0; i < 1000; i++ {
+        builder.WriteString("a")
+    }
+}
+```
+
+<Callout type="info">
+**性能对比**：strings.Builder 比字符串拼接快 10-100 倍。
+</Callout>
+
+### 字符串比较
+
+```go
+// Equal - 比较字符串（推荐）
+strings.Equal("hello", "hello")  // true
+
+// == 运算符
+"hello" == "hello"  // true
+
+// Compare - 用于排序
+strings.Compare("a", "b")  // -1 (a < b)
+strings.Compare("b", "a")  // 1  (b > a)
+strings.Compare("a", "a")  // 0  (a == b)
+```
+
+## strconv 包
+
+<Badge text="初级开发者" type="tip" />
+
+### 字符串转数值
+
+```go
+package main
+
+import (
+    "fmt"
+    "strconv"
+)
+
+func main() {
+    // Atoi - 字符串转 int
+    i, err := strconv.Atoi("42")
+    if err != nil {
+        fmt.Println("转换错误:", err)
+    }
+    fmt.Println(i)  // 42
+
+    // ParseInt - 更灵活的转换
+    i64, err := strconv.ParseInt("123", 10, 64)
+    fmt.Println(i64)  // 123
+
+    // ParseFloat - 字符串转 float
+    f, err := strconv.ParseFloat("3.14", 64)
+    fmt.Println(f)  // 3.14
+
+    // ParseBool - 字符串转 bool
+    b, err := strconv.ParseBool("true")
+    fmt.Println(b)  // true
+
+    // ParseUint - 无符号整数
+    u, err := strconv.ParseUint("255", 10, 64)
+    fmt.Println(u)  // 255
+}
+```
+
+<Callout type="warning">
+**错误处理**：总是检查转换错误，避免程序崩溃。
+</Callout>
+
+### 数值转字符串
+
+```go
+// Itoa - int 转字符串
+s := strconv.Itoa(42)
+fmt.Println(s)  // "42"
+
+// FormatInt - 更灵活的格式化
+s = strconv.FormatInt(123, 10)  // 10 进制
+fmt.Println(s)  // "123"
+
+s = strconv.FormatInt(123, 16)  // 16 进制
+fmt.Println(s)  // "7b"
+
+// FormatFloat - 浮点数格式化
+s = strconv.FormatFloat(3.14159, 'f', 2, 64)
+fmt.Println(s)  // "3.14"
+
+s = strconv.FormatFloat(3.14159, 'e', 2, 64)
+fmt.Println(s)  // "3.14e+00"
+
+// FormatBool - bool 转字符串
+s = strconv.FormatBool(true)
+fmt.Println(s)  // "true"
+```
+
+### 进制转换
+
+```go
+// ParseInt - 不同进制
+i, _ := strconv.ParseInt("101", 2, 64)   // 二进制
+fmt.Println(i)  // 5
+
+i, _ = strconv.ParseInt("ff", 16, 64)     // 十六进制
+fmt.Println(i)  // 255
+
+// FormatInt - 输出不同进制
+s := strconv.FormatInt(255, 2)   // 二进制
+fmt.Println(s)  // "11111111"
+
+s = strconv.FormatInt(255, 16)  // 十六进制
+fmt.Println(s)  // "ff"
+
+// Append 系列函数 - 高效追加
+buf := []byte("Value: ")
+buf = strconv.AppendInt(buf, 42, 10)
+fmt.Println(string(buf))  // "Value: 42"
+```
+
+### 引用字符串
+
+```go
+// Quote - 添加引号和转义
+s := strconv.Quote("Hello\nWorld")
+fmt.Println(s)  // "\"Hello\\nWorld\""
+
+// Unquote - 移除引号和反转义
+unquoted, err := strconv.Unquote(`"Hello\\nWorld"`)
+fmt.Println(unquoted)  // "Hello\nWorld"
+
+// QuoteToASCII - 只使用 ASCII
+s = strconv.QuoteToASCII("你好")
+fmt.Println(s)  // "\"\u4f60\u597d\""
+```
+
+## 性能优化
+
+<Badge text="高级开发者" type="danger" />
+
+### 避免不必要的分配
+
+```go
+// ❌ 每次都分配新字符串
+if strings.Contains(s, "pattern") {
+    // ...
+}
+if strings.HasPrefix(s, "prefix") {
+    // ...
+}
+
+// ✅ 一次遍历完成多个检查
+func checkString(s string) (hasPattern, hasPrefix bool) {
+    hasPattern = strings.Contains(s, "pattern")
+    hasPrefix = strings.HasPrefix(s, "prefix")
+    return
+}
+```
+
+### 使用 Builder
+
+```go
+// ✅ 预分配容量
+var builder strings.Builder
+builder.Grow(1000)  // 预分配 1000 字节
+
+for i := 0; i < 100; i++ {
+    builder.WriteString("item ")
+}
+```
+
+### 字节 vs 字符串
+
+```go
+// ❌ 转换开销
+data := []byte("hello")
+s := string(data)
+
+// ✅ 直接使用字节操作
+bytes.Equal([]byte("hello"), data)
+```
+
+## 实战案例
+
+<Badge text="高级开发者" type="danger" />
+
+### 案例 1: 模板引擎
+
+```go
+package main
+
+import (
+    "strings"
+)
+
+// SimpleTemplate 简单的字符串模板
+type SimpleTemplate struct {
+    template string
+}
+
+func NewTemplate(template string) *SimpleTemplate {
+    return &SimpleTemplate{template: template}
+}
+
+func (t *SimpleTemplate) Render(data map[string]string) string {
+    result := t.template
+    for key, value := range data {
+        placeholder := "{{" + key + "}}"
+        result = strings.ReplaceAll(result, placeholder, value)
+    }
+    return result
+}
+
+func main() {
+    template := "Hello, {{name}}! Welcome to {{place}}."
+    tmpl := NewTemplate(template)
+
+    data := map[string]string{
+        "name":  "Alice",
+        "place": "Go World",
+    }
+
+    result := tmpl.Render(data)
+    fmt.Println(result)  // Hello, Alice! Welcome to Go World.
+}
+```
+
+### 案例 2: 命令行解析
+
+```go
+package main
+
+import (
+    "fmt"
+    "strconv"
+    "strings"
+)
+
+func ParseCommandLine(cmd string) (name string, args []string, err error) {
+    parts := strings.Fields(cmd)  // 按空白分割
+    if len(parts) == 0 {
+        return "", nil, fmt.Errorf("empty command")
+    }
+
+    name = parts[0]
+    args = parts[1:]
+    return name, args, nil
+}
+
+func ParseArgs(input string) (map[string]string, error) {
+    result := make(map[string]string)
+
+    parts := strings.Split(input, ",")
+    for _, part := range parts {
+        kv := strings.SplitN(part, "=", 2)
+        if len(kv) != 2 {
+            return nil, fmt.Errorf("invalid argument: %s", part)
+        }
+        result[strings.TrimSpace(kv[0])] = strings.TrimSpace(kv[1])
+    }
+
+    return result, nil
+}
+
+func main() {
+    // 解析命令行
+    cmd := "git commit -m 'message'"
+    name, args, _ := ParseCommandLine(cmd)
+    fmt.Printf("命令: %s\n参数: %v\n", name, args)
+
+    // 解析参数
+    input := "name=John, age=30, city=NYC"
+    args, _ = ParseArgs(input)
+    fmt.Printf("参数: %v\n", args)
+}
+```
+
+## 练习
+
+<Badge text="实战练习" type="success" />
+
+### 练习：实现字符串验证器
+
+创建一个字符串验证器，支持多种验证规则：
+
+```go
+// TODO: 实现
+type StringValidator struct {
+    // ...
+}
+
+func (v *StringValidator) Validate(s string) error {
+    // 验证长度
+    // 验证格式
+    // 验证字符集
+}
+
+func main() {
+    validator := NewStringValidator().
+        MinLength(8).
+        MaxLength(32).
+        RequireUpper().
+        RequireLower().
+        RequireDigit()
+
+    err := validator.Validate("MyPass123")
+}
+```
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import (
+    "errors"
+    "fmt"
+    "strings"
+    "unicode"
+)
+
+type StringValidator struct {
+    minLength int
+    maxLength int
+    requireUpper bool
+    requireLower bool
+    requireDigit bool
+    requireSpecial bool
+}
+
+func NewStringValidator() *StringValidator {
+    return &StringValidator{
+        minLength:   0,
+        maxLength:   1000,
+        requireUpper: false,
+        requireLower: false,
+        requireDigit: false,
+    }
+}
+
+func (v *StringValidator) MinLength(n int) *StringValidator {
+    v.minLength = n
+    return v
+}
+
+func (v *StringValidator) MaxLength(n int) *StringValidator {
+    v.maxLength = n
+    return v
+}
+
+func (v *StringValidator) RequireUpper() *StringValidator {
+    v.requireUpper = true
+    return v
+}
+
+func (v *StringValidator) RequireLower() *StringValidator {
+    v.requireLower = true
+    return v
+}
+
+func (v *StringValidator) RequireDigit() *StringValidator {
+    v.requireDigit = true
+    return v
+}
+
+func (v *StringValidator) RequireSpecial() *StringValidator {
+    v.requireSpecial = true
+    return v
+}
+
+func (v *StringValidator) Validate(s string) error {
+    // 检查长度
+    if len(s) < v.minLength {
+        return fmt.Errorf("too short: min %d", v.minLength)
+    }
+    if len(s) > v.maxLength {
+        return fmt.Errorf("too long: max %d", v.maxLength)
+    }
+
+    var hasUpper, hasLower, hasDigit, hasSpecial bool
+
+    for _, r := range s {
+        switch {
+        case unicode.IsUpper(r):
+            hasUpper = true
+        case unicode.IsLower(r):
+            hasLower = true
+        case unicode.IsDigit(r):
+            hasDigit = true
+        case unicode.IsPunct(r) || unicode.IsSymbol(r):
+            hasSpecial = true
+        }
+    }
+
+    if v.requireUpper && !hasUpper {
+        return errors.New("must contain uppercase letter")
+    }
+    if v.requireLower && !hasLower {
+        return errors.New("must contain lowercase letter")
+    }
+    if v.requireDigit && !hasDigit {
+        return errors.New("must contain digit")
+    }
+    if v.requireSpecial && !hasSpecial {
+        return errors.New("must contain special character")
+    }
+
+    return nil
+}
+
+func main() {
+    validator := NewStringValidator().
+        MinLength(8).
+        MaxLength(32).
+        RequireUpper().
+        RequireLower().
+        RequireDigit()
+
+    tests := []string{
+        "short",
+        "nocaps123",
+        "NOLOWER123",
+        "Valid123!",
+    }
+
+    for _, test := range tests {
+        err := validator.Validate(test)
+        if err != nil {
+            fmt.Printf("%s: ❌ %v\n", test, err)
+        } else {
+            fmt.Printf("%s: ✅ Valid\n", test)
+        }
+    }
+}
+```
+
+</details>
+
+---
+
+## 总结
+
+### 关键要点
+
+| 读者水平 | 核心要点 |
+|---------|---------|
+| <Badge text="初级开发者" type="tip" /> | 掌握 strings 常用函数。使用 strconv 进行类型转换。 |
+| <Badge text="中级开发者" type="warning" /> | 使用 strings.Builder 提高性能。理解字符串不可变。 |
+| <Badge text="高级开发者" type="danger" /> | 避免不必要的字符串分配。高效处理 Unicode。 |
+
+### 速查表
+
+```go
+// strings
+strings.Contains(s, substr)
+strings.HasPrefix(s, prefix)
+strings.Split(s, sep)
+strings.Join(elems, sep)
+strings.Builder{}
+
+// strconv
+strconv.Atoi(s)
+strconv.Itoa(i)
+strconv.ParseFloat(s, 64)
+strconv.FormatFloat(f, 'f', -1, 64)
+```
+
+### 下一步
+
+- [← 标准库概览](./index.mdx)
+- [时间处理 →](./time.mdx)

@@ -1,10 +1,11 @@
 # Redis Persistence
 
-## Trade-off
+## Mechanism Comparison
 
-- RDB: faster restore with possible data loss window.
-- AOF: better durability with larger storage overhead.
+- RDB：恢复快，可能丢失最后一段数据。
+- AOF：数据更完整，体积更大。
 
-## Recommended Practice
+## 建议策略
 
-Enable AOF for critical workloads and run restore drills regularly.
+- 核心业务开启 AOF + 定期重写。
+- 关键集群定期做恢复演练。

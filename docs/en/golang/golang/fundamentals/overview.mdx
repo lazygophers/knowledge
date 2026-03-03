@@ -1,0 +1,91 @@
+import { Badge } from "@rspress/core/theme";
+
+# Go 语言基础概念
+
+本模块系统介绍 Go 语言的核心基础概念，帮助你建立扎实的编程基础。
+
+[← 返回模块概览](../)
+
+
+## 为什么要学习基础概念？
+
+<Badge text="无技术背景" type="tip" /> 理解编程的基本思维方式，掌握与计算机沟通的规则
+
+<Badge text="有编程经验" type="info" /> 理解 Go 与其他语言的区别，掌握 Go 的惯用法
+
+<Badge text="深入掌握" type="warning" outline /> 理解设计决策背后的原因，优化代码性能
+
+
+## 学习路径
+
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': { 'lineColor':'#3b82f6', 'primaryColor':'#e3f2fd', 'primaryTextColor':'#0d47a1'}}}%%
+flowchart LR
+    A[命名规则] --> B[声明与初始化]
+    B --> C[类型系统]
+    C --> D[函数与方法]
+    D --> E[包系统]
+    E --> F[作用域]
+
+    classDef step1 fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#0d47a1
+    classDef step2 fill:#bbdefb,stroke:#1976d2,stroke-width:2px,color:#0d47a1
+    classDef step3 fill:#90caf9,stroke:#1976d2,stroke-width:2px,color:#0d47a1
+
+    class A,B step1
+    class C,D step2
+    class E,F step3
+```
+
+
+## 主题概览
+
+<div class="kb-card-grid">
+  <a class="kb-card" href="naming-conventions">
+    <span class="kb-card-title">命名规则</span>
+    <span class="kb-card-desc">理解 Go 的命名约定和可见性规则</span>
+  </a>
+  <a class="kb-card" href="variables">
+    <span class="kb-card-title">声明与初始化</span>
+    <span class="kb-card-desc">掌握变量、常量的声明方式和零值机制</span>
+  </a>
+  <a class="kb-card" href="type-system">
+    <span class="kb-card-title">类型系统</span>
+    <span class="kb-card-desc">深入理解 Go 的静态类型系统</span>
+  </a>
+  <a class="kb-card" href="functions-methods">
+    <span class="kb-card-title">函数与方法</span>
+    <span class="kb-card-desc">学习函数、闭包、方法和 defer 机制</span>
+  </a>
+  <a class="kb-card" href="package-system">
+    <span class="kb-card-title">包系统</span>
+    <span class="kb-card-desc">掌握包的组织和依赖管理</span>
+  </a>
+  <a class="kb-card" href="variable-lifecycle">
+    <span class="kb-card-title">作用域</span>
+    <span class="kb-card-desc">理解变量的生命周期和可见范围</span>
+  </a>
+</div>
+
+
+## 快速导航
+
+| 主题 | 核心概念 | 预计时间 | 难度 |
+|-----|---------|---------|------|
+| 命名规则 | 驼峰命名、可见性 | 30分钟 | <Badge text="简单" type="tip" /> |
+| 声明与初始化 | var、const、:= | 45分钟 | <Badge text="简单" type="tip" /> |
+| 类型系统 | 基础类型、复合类型 | 2小时 | <Badge text="中等" type="info" /> |
+| 函数与方法 | 函数、方法、闭包 | 1.5小时 | <Badge text="中等" type="info" /> |
+| 包系统 | import、go.mod | 1小时 | <Badge text="中等" type="info" /> |
+| 作用域 | 作用域链、生命周期 | 1小时 | <Badge text="较难" type="warning" /> |
+
+
+## 配套内容
+
+每个主题都包含：
+- ✅ 概念解释
+- ✅ 代码示例
+- ✅ 常见错误分析
+- ✅ 最佳实践
+
+
+[返回模块概览](../) | [继续：命名规则 →](naming-conventions/)

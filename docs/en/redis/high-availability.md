@@ -1,12 +1,12 @@
-# Redis High Availability
+# Redis High Availability Architecture
 
-## Architecture Options
+## Solution Options
 
-- Replication + Sentinel: simpler for medium scale.
-- Redis Cluster: sharding for large write throughput.
+- 主从 + 哨兵：简单可靠，适合中等规模。
+- Redis Cluster：分片扩展，适合大规模写入。
 
-## Key Metrics
+## 关键指标
 
-- failover time
-- replication lag
-- shard hotspot distribution
+- 故障切换时间
+- 主从复制延迟
+- 热点分片负载
