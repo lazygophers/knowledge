@@ -57,6 +57,25 @@
         "label": "并发"
     },
     {
+        "type": "dir",
+        "name": "error-handling",
+        "label": "错误处理"
+    },
+    {
+        "type": "dir",
+        "name": "io",
+        "label": "I/O 操作"
+    },
+    {
+        "type": "section-header",
+        "label": "标准库"
+    },
+    {
+        "type": "dir",
+        "name": "stdlib",
+        "label": "常用标准库"
+    },
+    {
         "type": "section-header",
         "label": "测试"
     },
@@ -64,6 +83,20 @@
         "type": "dir",
         "name": "testing",
         "label": "测试"
+    },
+    {
+        "type": "section-header",
+        "label": "工具与优化"
+    },
+    {
+        "type": "dir",
+        "name": "build-tools",
+        "label": "构建工具"
+    },
+    {
+        "type": "dir",
+        "name": "optimization",
+        "label": "性能优化"
     },
     {
         "type": "section-header",

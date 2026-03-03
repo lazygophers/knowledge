@@ -4,7 +4,7 @@ description: 添加、完善新的文档
 argument-hint: <需要处理的内容>
 ---
 
-最佳以下的需求到当前任务清单中
+将以下的需求到当前任务清单中
 
 ```
 $ARGUMENTS
@@ -34,6 +34,7 @@ $ARGUMENTS
    1. 如果是新增了目录相关的部分，要及时更新相关索引
    2. 及时通过 Commands(llms-skills) 添加、更新 `llms.txt`/`llms-full.txt` 文件，且确保 `llms.txt`/`llms-full.txt` 是英文文件
    3. 除了语言的根目录以及 nav.json 标记的根目录外，不允许添加 index 文件
+   4. 不允许有前后矛盾的地方
 
 注意：
 
@@ -56,6 +57,7 @@ $ARGUMENTS
    6. [其它组件](https://rspress.rs/zh/ui/components/)
    7. [Badge](https://rspress.rs/zh/ui/components/badge)
    8. [Callout](https://rspress.rs/zh/ui/components/callout)
+7. 及时提交所有的文件
 
 检查清单：
 

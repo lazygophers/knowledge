@@ -1,0 +1,492 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# 文件读写 - File I/O
+
+<Badge text="基础操作" type="tip" />
+
+文件 I/O 是最常用的操作之一。Go 提供了多种方式来读写文件，从简单的一次性读写到流式处理。
+
+## 读取文件
+
+<Badge text="初级开发者" type="tip" />
+
+### 方法 1: 读取整个文件（适合小文件）
+
+```go
+package main
+
+import (
+    "fmt"
+    "os"
+)
+
+func main() {
+    // 读取整个文件到内存
+    data, err := os.ReadFile("config.json")
+    if err != nil {
+        fmt.Printf("读取文件失败: %v\n", err)
+        return
+    }
+
+    fmt.Println("文件内容:")
+    fmt.Println(string(data))
+}
+```
+
+<Callout type="warning">
+**注意**：`os.ReadFile()` 会将整个文件加载到内存，只适合小文件（<100MB）。
+</Callout>
+
+### 方法 2: 使用 File 对象读取
+
+```go
+package main
+
+import (
+    "fmt"
+    "os"
+)
+
+func main() {
+    // 打开文件
+    file, err := os.Open("data.txt")
+    if err != nil {
+        fmt.Printf("打开文件失败: %v\n", err)
+        return
+    }
+    defer file.Close()  // 确保文件被关闭
+
+    // 创建缓冲区
+    buf := make([]byte, 1024)
+
+    // 循环读取
+    for {
+        n, err := file.Read(buf)
+        if n > 0 {
+            fmt.Printf("读取 %d 字节: %s\n", n, string(buf[:n]))
+        }
+        if err == io.EOF {
+            break  // 读取完成
+        }
+        if err != nil {
+            fmt.Printf("读取错误: %v\n", err)
+            return
+        }
+    }
+}
+```
+
+### 方法 3: 按行读取（推荐用于文本文件）
+
+```go
+package main
+
+import (
+    "bufio"
+    "fmt"
+    "os"
+)
+
+func main() {
+    file, err := os.Open("log.txt")
+    if err != nil {
+        fmt.Printf("打开文件失败: %v\n", err)
+        return
+    }
+    defer file.Close()
+
+    // 创建按行扫描器
+    scanner := bufio.NewScanner(file)
+
+    // 逐行读取
+    lineNum := 0
+    for scanner.Scan() {
+        lineNum++
+        line := scanner.Text()
+        fmt.Printf("第 %d 行: %s\n", lineNum, line)
+    }
+
+    // 检查扫描错误
+    if err := scanner.Err(); err != nil {
+        fmt.Printf("扫描错误: %v\n", err)
+    }
+}
+```
+
+<Callout type="tip">
+**性能提示**：`bufio.Scanner` 默认使用 64KB 缓冲区，适合大多数场景。大文件可调整缓冲区大小。
+</Callout>
+
+## 写入文件
+
+<Badge text="初级开发者" type="tip" />
+
+### 方法 1: 写入整个文件
+
+```go
+package main
+
+import (
+    "os"
+)
+
+func main() {
+    data := []byte("Hello, World!\n")
+
+    // 写入文件（权限 0644）
+    err := os.WriteFile("output.txt", data, 0644)
+    if err != nil {
+        panic(err)
+    }
+}
+```
+
+### 方法 2: 流式写入
+
+```go
+package main
+
+import (
+    "bufio"
+    "fmt"
+    "os"
+)
+
+func main() {
+    // 创建文件
+    file, err := os.Create("output.txt")
+    if err != nil {
+        panic(err)
+    }
+    defer file.Close()
+
+    // 使用缓冲写入器
+    writer := bufio.NewWriter(file)
+    defer writer.Flush()  // 确保所有数据写入
+
+    // 写入多行
+    for i := 0; i < 10; i++ {
+        fmt.Fprintf(writer, "第 %d 行\n", i)
+    }
+
+    // 或者使用 WriteString
+    // writer.WriteString("Hello\n")
+}
+```
+
+### 方法 3: 追加写入
+
+```go
+package main
+
+import (
+    "os"
+)
+
+func main() {
+    // 以追加模式打开文件
+    file, err := os.OpenFile("log.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+    if err != nil {
+        panic(err)
+    }
+    defer file.Close()
+
+    // 追加内容
+    file.WriteString("新的日志条目\n")
+}
+```
+
+## 文件操作模式
+
+<Badge text="中级开发者" type="warning" />
+
+### OpenFile 标志
+
+| 标志 | 说明 |
+|------|------|
+| `os.O_RDONLY` | 只读 |
+| `os.O_WRONLY` | 只写 |
+| `os.O_RDWR` | 读写 |
+| `os.O_CREATE` | 不存在则创建 |
+| `os.O_APPEND` | 追加 |
+| `os.O_EXCL` | 与 O_CREATE 一起用，文件已存在则失败 |
+| `os.O_TRUNC` | 打开时截断文件 |
+
+```go
+// 只读打开
+file, _ := os.OpenFile("data.txt", os.O_RDONLY, 0644)
+
+// 写入模式，不存在则创建
+file, _ := os.OpenFile("data.txt", os.O_CREATE|os.O_WRONLY, 0644)
+
+// 读写模式，不存在则创建
+file, _ := os.OpenFile("data.txt", os.O_CREATE|os.O_RDWR, 0644)
+
+// 追加模式
+file, _ := os.OpenFile("log.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+
+// 独占创建（文件存在则失败）
+file, _ := os.OpenFile("temp.txt", os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
+```
+
+## 文件权限
+
+<Badge text="中级开发者" type="warning" />
+
+Go 使用 Unix 风格的文件权限：
+
+```go
+// 权限常量
+const (
+    // 用户权限
+    S_IRWXU = 0700 // rwx------
+    S_IRUSR = 0400 // r--------
+    S_IWUSR = 0200 // -w-------
+    S_IXUSR = 0100 // --x------
+
+    // 组权限
+    S_IRWXG = 0070 // ---rwx---
+    S_IRGRP = 0040 // ---r-----
+    S_IWGRP = 0020 // ----w----
+    S_IXGRP = 0010 // -----x---
+
+    // 其他权限
+    S_IRWXO = 0007 // ------rwx
+    S_IROTH = 0004 // ------r--
+    S_IWOTH = 0002 // -------w-
+    S_IXOTH = 0001 // --------x
+)
+
+// 常用权限组合
+0644 // -rw-r--r-- (普通文件)
+0755 // -rwxr-xr-x (可执行文件)
+0600 // -rw------- (私有文件)
+0700 // -rwx------ (私有目录)
+```
+
+## 常见操作
+
+<Badge text="初级开发者" type="tip" />
+
+### 检查文件是否存在
+
+```go
+// 方法 1: 使用 os.Stat
+if _, err := os.Stat("file.txt"); err == nil {
+    fmt.Println("文件存在")
+} else if os.IsNotExist(err) {
+    fmt.Println("文件不存在")
+}
+
+// 方法 2: 简化检查
+if _, err := os.Stat("file.txt"); os.IsNotExist(err) {
+    fmt.Println("文件不存在")
+}
+```
+
+### 删除文件
+
+```go
+err := os.Remove("file.txt")
+if err != nil {
+    fmt.Printf("删除失败: %v\n", err)
+}
+```
+
+### 重命名/移动文件
+
+```go
+err := os.Rename("old.txt", "new.txt")
+if err != nil {
+    fmt.Printf("重命名失败: %v\n", err)
+}
+```
+
+### 复制文件
+
+```go
+func copyFile(src, dst string) error {
+    // 打开源文件
+    source, err := os.Open(src)
+    if err != nil {
+        return err
+    }
+    defer source.Close()
+
+    // 创建目标文件
+    destination, err := os.Create(dst)
+    if err != nil {
+        return err
+    }
+    defer destination.Close()
+
+    // 复制内容
+    _, err = io.Copy(destination, source)
+    return err
+}
+
+// 使用
+err := copyFile("source.txt", "destination.txt")
+```
+
+## 性能优化
+
+<Badge text="高级开发者" type="danger" />
+
+### 使用 bufio 提高效率
+
+```go
+// ❌ 每次写入都直接 I/O
+file, _ := os.Create("output.txt")
+for i := 0; i < 10000; i++ {
+    file.WriteString("line\n")  // 每次都写磁盘
+}
+
+// ✅ 使用缓冲
+file, _ := os.Create("output.txt")
+writer := bufio.NewWriter(file)
+for i := 0; i < 10000; i++ {
+    writer.WriteString("line\n")  // 写入内存缓冲
+}
+writer.Flush()  // 一次性写入磁盘
+```
+
+### 调整缓冲区大小
+
+```go
+// 对于大文件，增大缓冲区
+file, _ := os.Open("large.txt")
+reader := bufio.NewReaderSize(file, 1<<20)  // 1MB 缓冲区
+```
+
+## 练习
+
+<Badge text="实战练习" type="success" />
+
+### 练习：实现日志文件轮转
+
+创建一个日志写入器，当日志文件超过指定大小时自动轮转：
+
+```go
+// TODO: 实现
+type RotatingWriter struct {
+    // ...
+}
+
+func (w *RotatingWriter) Write(p []byte) (n int, err error) {
+    // 检查文件大小
+    // 超过限制时轮转
+    // 写入日志
+}
+```
+
+<details>
+<summary>查看答案</summary>
+
+```go
+type RotatingWriter struct {
+    filename string
+    maxSize  int64
+    file     *os.File
+    size     int64
+}
+
+func NewRotatingWriter(filename string, maxSize int64) *RotatingWriter {
+    return &RotatingWriter{
+        filename: filename,
+        maxSize:  maxSize,
+    }
+}
+
+func (w *RotatingWriter) Write(p []byte) (n int, err error) {
+    // 检查是否需要轮转
+    if w.size > 0 && w.size+int64(len(p)) > w.maxSize {
+        if err := w.rotate(); err != nil {
+            return 0, err
+        }
+    }
+
+    // 确保文件已打开
+    if w.file == nil {
+        if err := w.open(); err != nil {
+            return 0, err
+        }
+    }
+
+    // 写入数据
+    n, err = w.file.Write(p)
+    w.size += int64(n)
+    return n, err
+}
+
+func (w *RotatingWriter) rotate() error {
+    if w.file != nil {
+        w.file.Close()
+    }
+
+    // 重命名当前文件
+    timestamp := time.Now().Format("20060102-150405")
+    oldName := fmt.Sprintf("%s.%s", w.filename, timestamp)
+    if err := os.Rename(w.filename, oldName); err != nil {
+        return err
+    }
+
+    // 打开新文件
+    return w.open()
+}
+
+func (w *RotatingWriter) open() error {
+    file, err := os.OpenFile(w.filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+    if err != nil {
+        return err
+    }
+
+    // 获取当前文件大小
+    info, _ := file.Stat()
+    w.size = info.Size()
+    w.file = file
+    return nil
+}
+```
+
+</details>
+
+---
+
+## 总结
+
+### 关键要点
+
+| 读者水平 | 核心要点 |
+|---------|---------|
+| <Badge text="初级开发者" type="tip" /> | 小文件用 `os.ReadFile()`。大文件用 `bufio.Scanner` 逐行读取。 |
+| <Badge text="中级开发者" type="warning" /> | 理解文件打开模式。使用 `bufio` 提高效率。 |
+| <Badge text="高级开发者" type="danger" /> | 调整缓冲区大小优化性能。实现复杂的文件处理逻辑。 |
+
+### 快速参考
+
+```go
+// 读取整个文件
+data, _ := os.ReadFile("file.txt")
+
+// 按行读取
+scanner := bufio.NewScanner(file)
+for scanner.Scan() {
+    line := scanner.Text()
+}
+
+// 写入文件
+os.WriteFile("file.txt", data, 0644)
+
+// 流式写入
+writer := bufio.NewWriter(file)
+writer.WriteString("hello")
+writer.Flush()
+```
+
+### 下一步
+
+- [← I/O 概览](./index.mdx)
+- [缓冲 I/O →](./bufio.mdx)
+- [IO 接口 →](./io-interfaces.mdx)

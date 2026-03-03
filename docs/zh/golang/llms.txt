@@ -73,6 +73,36 @@
 - [Concurrency Sidebar](./concurrency/_meta.json): Navigation metadata for concurrency subdirectory.
 - [Concurrency LLMs Index](./concurrency/llms.txt): English index for concurrency subdirectory.
 
+## Error Handling
+
+- [Error Handling Overview](./error-handling/index.mdx): Overview of Go error handling with learning path and module organization.
+- [Error Basics](./error-handling/error-basics.mdx): error interface, creating errors, basic handling patterns, and performance considerations.
+- [Error Wrapping](./error-handling/error-wrapping.mdx): %w vs %v, errors.Is(), errors.As(), error chains, and wrapping best practices.
+- [Custom Errors](./error-handling/custom-errors.mdx): Implementing custom error types, Unwrap method, errors.As(), and advanced error patterns.
+- [Panic vs Error](./error-handling/panic-vs-error.mdx): Decision tree for panic vs error, defer+recover mechanism, production patterns, and performance.
+- [Best Practices](./error-handling/best-practices.mdx): Enterprise error handling architecture, layered design, anti-patterns, and implementation checklist.
+- [Error Handling Sidebar](./error-handling/_meta.json): Navigation metadata for error-handling subdirectory.
+
+## I/O Operations
+
+- [I/O Overview](./io/index.mdx): Overview of Go I/O with learning path and module organization.
+- [File I/O](./io/file-io.mdx): File reading and writing, os package, bufio.Scanner, file modes, permissions, and common operations.
+- [Buffered I/O](./io/bufio.mdx): bufio package, buffered readers and writers, performance optimization, and usage patterns.
+- [IO Interfaces](./io/io-interfaces.mdx): io.Reader, io.Writer, Closer, Seeker interfaces, composition, and implementation patterns.
+- [Filesystem](./io/filesystem.mdx): File system operations, path handling, directory traversal, file info, and cross-platform considerations.
+- [Serialization](./io/serialization.mdx): JSON encoding/decoding, YAML, custom marshalers, streaming, and best practices.
+- [I/O Sidebar](./io/_meta.json): Navigation metadata for io subdirectory.
+
+## Standard Library
+
+- [Standard Library Overview](./stdlib/index.mdx): Overview of Go standard library utilities with learning path and module organization.
+- [Strings and Strconv](./stdlib/strings-strconv.mdx): strings package operations, strconv type conversions, common patterns, and performance tips.
+- [Time](./stdlib/time.mdx): time package, time formatting, parsing, duration, time zones, and common operations.
+- [Math and Rand](./stdlib/math-rand.mdx): math package functions, rand package, random number generation, and seeding.
+- [Log](./stdlib/log.mdx): log package, structured logging, log levels, rotation, and best practices.
+- [Context](./stdlib/context.mdx): context package, cancellation, timeouts, values, and propagation patterns.
+- [Standard Library Sidebar](./stdlib/_meta.json): Navigation metadata for stdlib subdirectory.
+
 ## Functions and Methods
 
 - [Function Basics](./functions-methods/function-basics.mdx): Function declaration syntax, parameter lists, return value mechanisms, function call flow, basic code examples, and common errors for beginners.
@@ -144,6 +174,25 @@
 
 - [Testing Sidebar](./testing/_meta.json): Navigation metadata for testing subdirectory.
 - [Testing LLMs Index](./testing/llms.txt): English index for testing subdirectory.
+
+## Build Tools
+
+- [Build Tools Overview](./build-tools/index.mdx): Overview of Go build tools with learning path and quick reference.
+- [Go Modules](./build-tools/go-mod.mdx): go.mod files, dependency management, version control, module cache, and best practices.
+- [Go Commands](./build-tools/go-commands.mdx): go build, go run, go test, go install, go vet, and common workflows.
+- [Cross Compilation](./build-tools/cross-compile.mdx): Cross-platform compilation, GOOS/GOARCH, CGO constraints, and build automation.
+- [Go Assembly](./build-tools/go-asm.mdx): Go assembly basics, asm syntax, compiler directives, and performance analysis.
+- [Build Tools Sidebar](./build-tools/_meta.json): Navigation metadata for build-tools subdirectory.
+
+## Performance Optimization
+
+- [Optimization Overview](./optimization/index.mdx): Overview of Go performance optimization with learning path and tool introduction.
+- [pprof](./optimization/pprof.mdx): pprof usage, CPU profiling, memory profiling, heap analysis, and interpretation.
+- [Memory Optimization](./optimization/memory-optimization.mdx): Memory allocation, escape analysis, object pooling, GC tuning, and anti-patterns.
+- [CPU Optimization](./optimization/cpu-optimization.mdx): CPU usage, goroutine scheduling, lock optimization, algorithm choice, and benchmarking.
+- [Common Issues](./optimization/common-issues.mdx): Common performance pitfalls, memory leaks, goroutine leaks, and prevention.
+- [Trace](./optimization/trace.mdx): go tool trace, execution tracing, goroutine analysis, and visualization.
+- [Optimization Sidebar](./optimization/_meta.json): Navigation metadata for optimization subdirectory.
 
 ## Advanced Topics
 

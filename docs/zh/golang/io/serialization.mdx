@@ -1,0 +1,257 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# 序列化 - Serialization
+
+<Badge text="常用操作" type="tip" />
+
+序列化是将数据结构转换为字节流的过程，反序列化则相反。Go 标准库提供了 JSON 和其他格式的支持。
+
+## JSON
+
+<Badge text="初级开发者" type="tip" />
+
+### 基本编解码
+
+```go
+package main
+
+import (
+    "encoding/json"
+    "fmt"
+)
+
+type User struct {
+    ID    int    `json:"id"`
+    Name  string `json:"name"`
+    Email string `json:"email"`
+}
+
+func main() {
+    // 编码（结构体 -> JSON）
+    user := User{ID: 1, Name: "Alice", Email: "alice@example.com"}
+
+    data, err := json.Marshal(user)
+    if err != nil {
+        panic(err)
+    }
+    fmt.Println(string(data))
+    // 输出: {"id":1,"name":"Alice","email":"alice@example.com"}
+
+    // 解码（JSON -> 结构体）
+    var decoded User
+    err = json.Unmarshal(data, &decoded)
+    if err != nil {
+        panic(err)
+    }
+    fmt.Printf("%+v\n", decoded)
+}
+```
+
+### JSON 标签
+
+```go
+type User struct {
+    // 基本用法
+    ID    int    `json:"id"`
+    Name  string `json:"name"`
+
+    // 自定义字段名
+    Email string `json:"email_address"`
+
+    // 忽略空值
+    Age   int    `json:"age,omitempty"`
+
+    // 忽略字段
+    Password string `json:"-"`
+
+    // 字段不存在时使用默认值
+    Active bool `json:"active,omitempty"`
+}
+```
+
+### 流式编解码（大文件）
+
+```go
+// 编码到文件
+file, _ := os.Create("users.json")
+encoder := json.NewEncoder(file)
+encoder.Encode(user1)
+encoder.Encode(user2)
+
+// 从文件解码
+file, _ := os.Open("users.json")
+decoder := json.NewDecoder(file)
+
+for {
+    var user User
+    if err := decoder.Decode(&user); err != nil {
+        if err == io.EOF {
+            break
+        }
+        panic(err)
+    }
+    fmt.Println(user)
+}
+```
+
+### 处理未知字段
+
+```go
+type User struct {
+    ID   int    `json:"id"`
+    Name string `json:"name"`
+    // 捕获未知字段
+    Extra map[string]json.RawMessage `json:"-"`
+}
+
+func (u *User) UnmarshalJSON(data []byte) error {
+    // 先解析到 map
+    var temp map[string]json.RawMessage
+    if err := json.Unmarshal(data, &temp); err != nil {
+        return err
+    }
+
+    // 解析已知字段
+    if id, ok := temp["id"]; ok {
+        json.Unmarshal(id, &u.ID)
+    }
+    if name, ok := temp["name"]; ok {
+        json.Unmarshal(name, &u.Name)
+    }
+
+    // 保存未知字段
+    u.Extra = temp
+    return nil
+}
+```
+
+## YAML
+
+<Badge text="中级开发者" type="warning" />
+
+```go
+import "gopkg.in/yaml.v3"
+
+type Config struct {
+    Server struct {
+        Host string `yaml:"host"`
+        Port int    `yaml:"port"`
+    } `yaml:"server"`
+    Database struct {
+        Driver string `yaml:"driver"`
+        DSN    string `yaml:"dsn"`
+    } `yaml:"database"`
+}
+
+// 读取 YAML 配置
+data, err := os.ReadFile("config.yaml")
+if err != nil {
+    panic(err)
+}
+
+var config Config
+err = yaml.Unmarshal(data, &config)
+if err != nil {
+    panic(err)
+}
+
+// 写入 YAML
+data, err = yaml.Marshal(config)
+os.WriteFile("config.yaml", data, 0644)
+```
+
+## 自定义编解码
+
+<Badge text="高级开发者" type="danger" />
+
+```go
+// 实现 json.Marshaler 接口
+func (u User) MarshalJSON() ([]byte, error) {
+    type Alias User
+    return json.Marshal(&struct {
+        CreatedAt string `json:"created_at"`
+        *Alias
+    }{
+        CreatedAt: u.CreatedAt.Format(time.RFC3339),
+        Alias:     (*Alias)(&u),
+    })
+}
+
+// 实现 json.Unmarshaler 接口
+func (u *User) UnmarshalJSON(data []byte) error {
+    type Alias User
+    aux := &struct {
+        CreatedAt string `json:"created_at"`
+        *Alias
+    }{
+        Alias: (*Alias)(&u),
+    }
+
+    if err := json.Unmarshal(data, &aux); err != nil {
+        return err
+    }
+
+    t, err := time.Parse(time.RFC3339, aux.CreatedAt)
+    if err != nil {
+        return err
+    }
+    u.CreatedAt = t
+
+    return nil
+}
+```
+
+## 练习
+
+<Badge text="实战练习" type="success" />
+
+### 练习：实现配置热加载
+
+创建一个配置加载器，支持文件变化时自动重新加载：
+
+```go
+// TODO: 实现
+type ConfigWatcher struct {
+    // ...
+}
+
+func (w *ConfigWatcher) Watch(filename string) (<-chan Config, <-chan error) {
+    // 监控文件变化
+    // 重新加载配置
+    // 通知订阅者
+}
+```
+
+---
+
+## 总结
+
+### 关键要点
+
+| 读者水平 | 核心要点 |
+|---------|---------|
+| <Badge text="初级开发者" type="tip" /> | 使用 `json.Marshal/Unmarshal`。掌握 struct 标签。 |
+| <Badge text="中级开发者" type="warning" /> | 流式处理大文件。处理未知字段。 |
+| <Badge text="高级开发者" type="danger" /> | 实现自定义编解码。性能优化。 |
+
+### 快速参考
+
+```go
+// JSON 编解码
+json.Marshal(data)
+json.Unmarshal(data, &obj)
+
+// 流式
+json.NewEncoder(file).Encode(obj)
+json.NewDecoder(file).Decode(&obj)
+
+// YAML
+yaml.Unmarshal(data, &config)
+yaml.Marshal(config)
+```
+
+### 下一步
+
+- [← 文件系统](./filesystem.mdx)
+- [标准库 →](../stdlib/)
