@@ -87,7 +87,12 @@ goimports -w main.go
 
 <Callout type="tip">
   <strong>配置编辑器</strong>：在 VS Code 中配置保存时自动运行 goimports：
-  <pre>{ "go.formatTool": "goimports" }</pre>
+
+```json
+{
+  "go.formatTool": "goimports"
+}
+```
 </Callout>
 
 ### 格式化规范
@@ -298,15 +303,18 @@ func (u *User) HasPermission(perm string) bool {
 
 <Callout type="warning">
   <strong>避免</strong>：在函数名中重复包名或类型名
-  <pre>// ❌ 不推荐
-  func (u *User) GetUserName() string { // User 重复
-      return u.Name
-  }
 
-  // ✅ 推荐
-  func (u *User) Name() string {
-      return u.Name
-  }</pre>
+```go
+// ❌ 不推荐
+func (u *User) GetUserName() string { // User 重复
+    return u.Name
+}
+
+// ✅ 推荐
+func (u *User) Name() string {
+    return u.Name
+}
+```
 </Callout>
 
 ### 接口命名
