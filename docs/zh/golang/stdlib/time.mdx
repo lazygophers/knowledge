@@ -1,0 +1,599 @@
+import { Badge } from "@rspress/core/theme";
+import { Callout } from "@rspress/core/theme-original";
+
+# 时间处理 - Time
+
+<Badge text="常用功能" type="success" />
+
+Go 的 `time` 提供了完整的时间处理功能。
+
+## Time 类型
+
+<Badge text="初级开发者" type="tip" />
+
+### 获取当前时间
+
+```go
+package main
+
+import (
+    "fmt"
+    "time"
+)
+
+func main() {
+    // Now - 当前本地时间
+    now := time.Now()
+    fmt.Println("当前时间:", now)
+    fmt.Println("年:", now.Year())
+    fmt.Println("月:", now.Month())
+    fmt.Println("日:", now.Day())
+    fmt.Println("时:", now.Hour())
+    fmt.Println("分:", now.Minute())
+    fmt.Println("秒:", now.Second())
+    fmt.Println("纳秒:", now.Nanosecond())
+
+    // UTC 时间
+    utc := time.Now().UTC()
+    fmt.Println("UTC 时间:", utc)
+}
+```
+
+### 创建特定时间
+
+```go
+// Date - 创建指定日期
+t := time.Date(2024, 3, 15, 14, 30, 0, 0, time.UTC)
+fmt.Println("指定时间:", t)
+
+// Unix - 从 Unix 时间戳创建
+t = time.Unix(1710503400, 0)
+fmt.Println("Unix 时间:", t)
+
+// Since - 创建时间间隔
+duration := time.Since(t)
+fmt.Println("已过去:", duration)
+```
+
+## 时间格式化
+
+<Badge text="初级开发者" type="tip" />
+
+### 格式化时间
+
+<Callout type="danger">
+**重要**：Go 使用特定的参考时间 `Mon Jan 2 15:04:05 MST 2006` 作为格式化模板。
+</Callout>
+
+```go
+package main
+
+import (
+    "fmt"
+    "time"
+)
+
+func main() {
+    now := time.Now()
+
+    // 常用格式
+    fmt.Println(now.Format("2006-01-02"))           // 2024-03-15
+    fmt.Println(now.Format("2006-01-02 15:04:05"))  // 2024-03-15 14:30:00
+    fmt.Println(now.Format("15:04:05"))             // 14:30:00
+    fmt.Println(now.Format("2006-01-02T15:04:05Z07:00")) // ISO 8601
+
+    // 预定义格式
+    fmt.Println(now.Format(time.RFC3339))        // 2024-03-15T14:30:00Z07:00
+    fmt.Println(now.Format(time.RFC1123))         // Fri, 15 Mar 2024 14:30:00 MST
+    fmt.Println(now.Format(time.Kitchen))         // 2:30PM
+
+    // 自定义格式
+    fmt.Println(now.Format("2006年01月02日 15时04分05秒"))
+    // 2024年03月15日 14时30分00秒
+}
+```
+
+### 格式化参考
+
+| 格式 | 输出示例 | 说明 |
+|------|---------|------|
+| `2006` | `2024` | 年份 |
+| `01` | `03` | 月份（补零） |
+| `1` | `3` | 月份（不补零） |
+| `02` | `15` | 日期（补零） |
+| `2` | `15` | 日期（不补零） |
+| `15` | `14` | 小时（24小时制） |
+| `3` | `2` | 小时（12小时制） |
+| `04` | `30` | 分钟（补零） |
+| `4` | `30` | 分钟（不补零） |
+| `05` | `00` | 秒（补零） |
+| `5` | `0` | 秒（不补零） |
+| `.000` | `.000` | 微秒 |
+| `.000000` | `.000000` | 纳秒 |
+| `PM` | `PM` | AM/PM |
+| `MST` | `CST` | 时区 |
+
+### 解析时间
+
+```go
+// Parse - 解析字符串为时间
+t, err := time.Parse("2006-01-02", "2024-03-15")
+if err != nil {
+    panic(err)
+}
+fmt.Println(t)  // 2024-03-15 00:00:00 +0000 UTC
+
+// ParseInLocation - 在指定时区解析
+loc, _ := time.LoadLocation("Asia/Shanghai")
+t, err = time.ParseInLocation("2006-01-02 15:04:05", "2024-03-15 14:30:00", loc)
+fmt.Println(t)  // 2024-03-15 14:30:00 +08:00
+```
+
+## 时间运算
+
+<Badge text="中级开发者" type="warning" />
+
+### Duration 类型
+
+```go
+package main
+
+import (
+    "fmt"
+    "time"
+)
+
+func main() {
+    // 创建 Duration
+    d := time.Hour * 2 + time.Minute * 30
+    fmt.Println("时长:", d)  // 2h30m0s
+
+    // ParseDuration - 解析时长字符串
+    d, _ = time.ParseDuration("2h30m")
+    fmt.Println("时长:", d)  // 2h30m0s
+
+    // 时长单位
+    fmt.Println("1纳秒:", time.Nanosecond)
+    fmt.Println("1微秒:", time.Microsecond)
+    fmt.Println("1毫秒:", time.Millisecond)
+    fmt.Println("1秒:", time.Second)
+    fmt.Println("1分钟:", time.Minute)
+    fmt.Println("1小时:", time.Hour)
+}
+```
+
+### 时间加减
+
+```go
+now := time.Now()
+
+// Add - 时间加减
+future := now.Add(24 * time.Hour)
+fmt.Println("24小时后:", future)
+
+past := now.Add(-24 * time.Hour)
+fmt.Println("24小时前:", past)
+
+// AddDate - 日期加减
+future = now.AddDate(1, 2, 3)  // 年, 月, 日
+fmt.Println("1年2月3日后:", future)
+
+// Sub - 时间差
+duration := future.Sub(now)
+fmt.Println("时间差:", duration)  // 时间差: 456h0m0s
+```
+
+### 时间比较
+
+```go
+t1 := time.Date(2024, 3, 15, 10, 0, 0, 0, time.UTC)
+t2 := time.Date(2024, 3, 15, 12, 0, 0, 0, time.UTC)
+
+// Before / After
+fmt.Println(t1.Before(t2))  // true
+fmt.Println(t1.After(t2))   // false
+
+// Equal
+t3 := time.Date(2024, 3, 15, 10, 0, 0, 0, time.UTC)
+fmt.Println(t1.Equal(t3))  // true
+
+// Since / Until
+fmt.Println(time.Since(t1))  // 从 t1 到现在的时间
+fmt.Println(time.Until(t2))  // 现在到 t2 的时间
+```
+
+## 时区处理
+
+<Badge text="中级开发者" type="warning" />
+
+### 时区类型
+
+```go
+package main
+
+import (
+    "fmt"
+    "time"
+)
+
+func main() {
+    // UTC 时间
+    utc := time.Date(2024, 3, 15, 14, 30, 0, 0, time.UTC)
+    fmt.Println("UTC:", utc)
+
+    // 本地时间
+    local := utc.Local()
+    fmt.Println("本地:", local)
+
+    // 加载时区
+    loc, _ := time.LoadLocation("Asia/Shanghai")
+    shanghai := utc.In(loc)
+    fmt.Println("上海:", shanghai)
+
+    // 美国时区
+    ny, _ := time.LoadLocation("America/New_York")
+    newYork := utc.In(ny)
+    fmt.Println("纽约:", newYork)
+}
+```
+
+### 时区转换
+
+```go
+// 转换到不同时区
+func ConvertToTimeZone(t time.Time, zone string) (time.Time, error) {
+    loc, err := time.LoadLocation(zone)
+    if err != nil {
+        return time.Time{}, err
+    }
+    return t.In(loc), nil
+}
+
+// 使用
+utc := time.Now().UTC()
+shanghai, _ := ConvertToTimeZone(utc, "Asia/Shanghai")
+fmt.Println("上海时间:", shanghai)
+```
+
+## 定时器
+
+<Badge text="高级开发者" type="danger" />
+
+### Timer
+
+```go
+package main
+
+import (
+    "fmt"
+    "time"
+)
+
+func main() {
+    // NewTimer - 创建定时器
+    timer := time.NewTimer(2 * time.Second)
+    defer timer.Stop()
+
+    fmt.Println("等待...")
+
+    <-timer.C
+    fmt.Println("2秒后执行")
+
+    // After - 简写形式
+    <-time.After(1 * time.Second)
+    fmt.Println("再过1秒")
+}
+```
+
+### Ticker
+
+```go
+package main
+
+import (
+    "fmt"
+    "time"
+)
+
+func main() {
+    // NewTicker - 创建周期性定时器
+    ticker := time.NewTicker(500 * time.Millisecond)
+    defer ticker.Stop()
+
+    count := 0
+    for range ticker.C {
+        count++
+        fmt.Printf("执行次数: %d\n", count)
+        if count >= 5 {
+            break
+        }
+    }
+}
+```
+
+### 超时模式
+
+```go
+package main
+
+import (
+    "fmt"
+    "time"
+)
+
+func main() {
+    // 带超时的操作
+    ch := make(chan string, 1)
+
+    go func() {
+        time.Sleep(2 * time.Second)  // 模拟耗时操作
+        ch <- "结果"
+    }()
+
+    select {
+    case result := <-ch:
+        fmt.Println("收到:", result)
+    case <-time.After(1 * time.Second):
+        fmt.Println("超时")
+    }
+}
+```
+
+## 实战案例
+
+<Badge text="高级开发者" type="danger" />
+
+### 案例 1: 性能测量
+
+```go
+package main
+
+import (
+    "fmt"
+    "time"
+)
+
+func TimeIt(name string, fn func()) {
+    start := time.Now()
+    fn()
+    duration := time.Since(start)
+    fmt.Printf("%s 耗时: %v\n", name, duration)
+}
+
+func main() {
+    TimeIt("快速操作", func() {
+        time.Sleep(100 * time.Millisecond)
+    })
+
+    TimeIt("慢速操作", func() {
+        time.Sleep(500 * time.Millisecond)
+    })
+}
+```
+
+### 案例 2: 超时控制
+
+```go
+package main
+
+import (
+    "fmt"
+    "time"
+)
+
+func WithTimeout(fn func() error, timeout time.Duration) error {
+    done := make(chan error, 1)
+
+    go func() {
+        done <- fn()
+    }()
+
+    select {
+    case err := <-done:
+        return err
+    case <-time.After(timeout):
+        return fmt.Errorf("操作超时")
+    }
+}
+
+func LongOperation() error {
+    time.Sleep(2 * time.Second)
+    return nil
+}
+
+func main() {
+    err := WithTimeout(LongOperation, 1*time.Second)
+    if err != nil {
+        fmt.Println("错误:", err)
+    }
+}
+```
+
+### 案例 3: 轮询器
+
+```go
+package main
+
+import (
+    "fmt"
+    "time"
+)
+
+type Poller struct {
+    interval time.Duration
+    timeout  time.Duration
+}
+
+func NewPoller(interval, timeout time.Duration) *Poller {
+    return &Poller{
+        interval: interval,
+        timeout:  timeout,
+    }
+}
+
+func (p *Poller) Poll(condition func() bool) error {
+    timeout := time.After(p.timeout)
+    ticker := time.NewTicker(p.interval)
+    defer ticker.Stop()
+
+    for {
+        select {
+        case <-timeout:
+            return fmt.Errorf("轮询超时")
+        case <-ticker.C:
+            if condition() {
+                return nil
+            }
+        }
+    }
+}
+
+func main() {
+    poller := NewPoller(100*time.Millisecond, 5*time.Second)
+
+    ready := false
+    go func() {
+        time.Sleep(2 * time.Second)
+        ready = true
+    }()
+
+    err := poller.Poll(func() bool {
+        return ready
+    })
+
+    if err != nil {
+        fmt.Println("错误:", err)
+    } else {
+        fmt.Println("条件满足")
+    }
+}
+```
+
+## 练习
+
+<Badge text="实战练习" type="success" />
+
+### 练习：实现工作日计算器
+
+实现一个计算工作日的工具，跳过周末和节假日：
+
+```go
+// TODO: 实现
+type WorkdayCalculator struct {
+    // ...
+}
+
+func (c *WorkdayCalculator) AddWorkdays(start time.Time, days int) time.Time {
+    // 跳过周末
+    // 跳过节假日
+}
+```
+
+<details>
+<summary>查看答案</summary>
+
+```go
+package main
+
+import (
+    "fmt"
+    "time"
+)
+
+type WorkdayCalculator struct {
+    holidays []time.Time
+}
+
+func NewWorkdayCalculator(holidays []time.Time) *WorkdayCalculator {
+    return &WorkdayCalculator{holidays: holidays}
+}
+
+func (c *WorkdayCalculator) isHoliday(t time.Time) bool {
+    for _, holiday := range c.holidays {
+        if t.Year() == holiday.Year() &&
+           t.Month() == holiday.Month() &&
+           t.Day() == holiday.Day() {
+            return true
+        }
+    }
+    return false
+}
+
+func (c *WorkdayCalculator) isWeekend(t time.Time) bool {
+    return t.Weekday() == time.Saturday || t.Weekday() == time.Sunday
+}
+
+func (c *WorkdayCalculator) AddWorkdays(start time.Time, days int) time.Time {
+    current := start
+    added := 0
+
+    for added < days {
+        current = current.Add(24 * time.Hour)
+
+        if !c.isWeekend(current) && !c.isHoliday(current) {
+            added++
+        }
+    }
+
+    return current
+}
+
+func main() {
+    // 假日列表
+    holidays := []time.Time{
+        time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC),  // 元旦
+        time.Date(2024, 2, 10, 0, 0, 0, 0, time.UTC), // 春节
+    }
+
+    calculator := NewWorkdayCalculator(holidays)
+
+    start := time.Date(2024, 1, 29, 0, 0, 0, 0, time.UTC)  // 周一
+    result := calculator.AddWorkdays(start, 5)
+
+    fmt.Println("开始:", start.Weekday(), start.Format("2006-01-02"))
+    fmt.Println("5个工作日后:", result.Weekday(), result.Format("2006-01-02"))
+}
+```
+
+</details>
+
+---
+
+## 总结
+
+### 关键要点
+
+| 读者水平 | 核心要点 |
+|---------|---------|
+| <Badge text="初级开发者" type="tip" /> | 记住参考时间 `2006-01-02 15:04:05`。使用 `time.Since` 和 `time.Until`。 |
+| <Badge text="中级开发者" type="warning" /> | 时区转换。定时器和 Ticker 使用。 |
+| <Badge text="高级开发者" type="danger" /> | 超时控制。性能测量。高精度计时。 |
+
+### 速查表
+
+```go
+// 当前时间
+time.Now()
+
+// 格式化
+t.Format("2006-01-02 15:04:05")
+
+// 解析
+time.Parse("2006-01-02", s)
+
+// 时间加减
+t.Add(24 * time.Hour)
+
+// 时区
+t.In(loc)
+
+// 定时器
+time.NewTimer(d)
+time.NewTicker(d)
+time.After(d)
+```
+
+### 下一步
+
+- [← 字符串处理](./strings-strconv.mdx)
+- [数学与随机 →](./math-rand.mdx)
