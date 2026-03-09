@@ -32,11 +32,15 @@ This file maps all Chinese source documents and navigation metadata into English
 
 ## MySQL
 
-- [MySQL Module Overview](./mysql/index.md): Overview of modeling, performance governance, and operations workflow.
-- [MySQL Schema Design](./mysql/schema-design.md): Core schema and table design principles for maintainable systems.
-- [MySQL Transactions and Locks](./mysql/transactions-locks.md): Isolation levels, lock behavior, and deadlock troubleshooting path.
-- [MySQL Performance Tuning](./mysql/performance-tuning.md): SQL tuning order and index-focused optimization checklist.
-- [MySQL Operations Checklist](./mysql/operations-checklist.md): Pre-release, runtime, and post-incident operational checks.
+- [MySQL Module Overview](./mysql/index.mdx): Knowledge map for schema design, transactions, performance, and operations with level-based reading paths.
+- [MySQL Schema Overview](./mysql/schema.mdx): Root-level topic overview for beginners, intermediate readers, and advanced schema reviewers.
+- [MySQL Schema Design Principles](./mysql/schema/design-principles.mdx): Data modeling, constraints, schema evolution, and review checklist.
+- [MySQL Transactions Overview](./mysql/transactions.mdx): Root-level topic overview for transaction boundaries, locking, and deadlock diagnosis.
+- [MySQL Locking Mechanisms](./mysql/transactions/locking-mechanisms.mdx): Isolation levels, lock conflicts, deadlock analysis, and mitigation patterns.
+- [MySQL Performance Overview](./mysql/performance.mdx): Root-level topic overview for slow SQL triage, execution plans, and index governance.
+- [MySQL Tuning Playbook](./mysql/performance/tuning-playbook.mdx): SQL optimization workflow, index strategy, and validation loop.
+- [MySQL Operations Overview](./mysql/operations.mdx): Root-level topic overview for release checks, observability, backup, and incident response.
+- [MySQL Operations Runbook](./mysql/operations/runbook.mdx): Production checklists, recovery validation, and post-incident review patterns.
 - [MySQL Sidebar Metadata](./mysql/_meta.json): Sidebar grouping and labels for MySQL knowledge pages.
 - [MySQL LLMs Index](./mysql/llms.txt): English machine-readable index for the MySQL subdirectory.
 

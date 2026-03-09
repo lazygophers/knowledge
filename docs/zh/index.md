@@ -24,7 +24,7 @@ features:
     link: /golang/
     span: 3
   - title: MySQL
-    details: 建模、事务锁、索引优化与运维检查清单。
+    details: 面向新手到高级读者的建模、事务锁、性能治理与运维路径。
     icon: 🗃️
     link: /mysql/
     span: 3

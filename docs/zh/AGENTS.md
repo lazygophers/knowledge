@@ -9,7 +9,7 @@
 | Chinese home page | `docs/zh/index.md` | Entry for zh docs |
 | Chinese top navigation | `docs/zh/_nav.json` | Update only for top-level nav changes |
 | Chinese Go docs | `docs/zh/golang/` | Deepest zh subtree; has its own AGENTS |
-| Chinese MySQL docs | `docs/zh/mysql/` | Flat module, inherits this file |
+| Chinese MySQL docs | `docs/zh/mysql/` | Deep module; now has its own AGENTS |
 | Chinese Redis docs | `docs/zh/redis/` | Flat module, inherits this file |
 | Chinese LLM index | `docs/zh/llms.txt` | Root-level machine-readable map exists here |
 
