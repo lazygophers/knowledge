@@ -1,0 +1,10 @@
+# MySQL Performance Submodule (Chinese Source)
+
+> English llms.txt for files under `docs/zh/mysql/performance`.
+
+## Docs
+
+- [Performance Overview](../performance.mdx): Root-level topic overview for slow SQL triage, execution plans, and index governance.
+- [Tuning Playbook](./tuning-playbook.mdx): SQL optimization workflow, index strategy, and validation loop.
+- [Performance Sidebar Metadata](./_meta.json): Navigation metadata for the performance submodule.
+- [This LLMs File](./llms.txt): Machine-readable index for this performance directory.
