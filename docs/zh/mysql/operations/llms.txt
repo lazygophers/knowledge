@@ -1,0 +1,10 @@
+# MySQL Operations Submodule (Chinese Source)
+
+> English llms.txt for files under `docs/zh/mysql/operations`.
+
+## Docs
+
+- [Operations Overview](../operations.mdx): Root-level topic overview for release checks, observability, backup, and incident handling.
+- [Operations Runbook](./runbook.mdx): Production checklists, recovery validation, and post-incident review patterns.
+- [Operations Sidebar Metadata](./_meta.json): Navigation metadata for the operations submodule.
+- [This LLMs File](./llms.txt): Machine-readable index for this operations directory.
