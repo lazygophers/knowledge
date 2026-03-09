@@ -1,0 +1,10 @@
+# MySQL Schema Submodule (Chinese Source)
+
+> English llms.txt for files under `docs/zh/mysql/schema`.
+
+## Docs
+
+- [Schema Overview](../schema.mdx): Root-level topic overview with level-based reading paths for schema design.
+- [Schema Design Principles](./design-principles.mdx): Data modeling trade-offs, constraints, schema evolution, and review checklist.
+- [Schema Sidebar Metadata](./_meta.json): Navigation metadata for the schema submodule.
+- [This LLMs File](./llms.txt): Machine-readable index for this schema directory.
