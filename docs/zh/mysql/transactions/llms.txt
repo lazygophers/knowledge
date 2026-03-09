@@ -1,0 +1,10 @@
+# MySQL Transactions Submodule (Chinese Source)
+
+> English llms.txt for files under `docs/zh/mysql/transactions`.
+
+## Docs
+
+- [Transactions Overview](../transactions.mdx): Root-level topic overview for transaction boundaries, locking, and deadlock diagnosis.
+- [Locking Mechanisms](./locking-mechanisms.mdx): Isolation choices, lock conflicts, deadlock analysis, and mitigation strategies.
+- [Transactions Sidebar Metadata](./_meta.json): Navigation metadata for the transactions submodule.
+- [This LLMs File](./llms.txt): Machine-readable index for this transactions directory.

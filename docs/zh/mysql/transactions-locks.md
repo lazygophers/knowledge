@@ -1,13 +1,8 @@
-# MySQL 事务与锁
+# MySQL 事务与锁（兼容入口）
 
-## 关键概念
+该路径保留为旧链接兼容页。新版内容已经迁移到：
 
-- 隔离级别：RU / RC / RR / SERIALIZABLE
-- 锁类型：行锁、间隙锁、临键锁
-- 死锁：必然存在，重点是快速检测与重试
+- [事务与锁主题首页](/mysql/transactions/)
+- [锁机制与诊断详解](/mysql/transactions/locking-mechanisms/)
 
-## 排查路径
-
-1. `show engine innodb status` 观察死锁信息
-2. 查看热点 SQL 与索引命中
-3. 缩小事务范围并优化访问顺序
+建议先从新的根级主题页选择你的阅读深度，再进入详解页查看隔离级别、锁冲突、死锁排查与重试策略。
