@@ -1,0 +1,69 @@
+import { Badge } from '@rspress/core/theme';
+
+# MySQL 工程实践导航
+
+MySQL 模块聚焦 **建模设计、事务与锁、性能治理、运行维护** 四个核心主题，目标是让不同技术水平的读者都能快速找到合适的阅读深度。
+
+## 🎯 学习路径
+
+<div class="kb-card-grid">
+  <a class="kb-card" href="/mysql/schema/">
+    <span class="kb-card-title">01 库表设计</span>
+    <span class="kb-card-desc">从建模原则、约束语义到索引协同，建立可演进的数据结构。</span>
+  </a>
+  <a class="kb-card" href="/mysql/transactions/">
+    <span class="kb-card-title">02 事务与锁</span>
+    <span class="kb-card-desc">理解隔离级别、锁冲突与死锁排查，让一致性设计不靠运气。</span>
+  </a>
+  <a class="kb-card" href="/mysql/performance/">
+    <span class="kb-card-title">03 性能优化</span>
+    <span class="kb-card-desc">按慢 SQL、执行计划与索引治理的顺序处理性能问题。</span>
+  </a>
+  <a class="kb-card" href="/mysql/operations/">
+    <span class="kb-card-title">04 运维检查</span>
+    <span class="kb-card-desc">覆盖发布前检查、运行中观测、备份恢复与事故复盘。</span>
+  </a>
+</div>
+
+## 👥 面向不同技术水平 {#levels}
+
+| 读者类型 | 目标 | 推荐入口 |
+|---------|------|---------|
+| <Badge text="新手" type="tip" /> | 先搭出能工作的方案，避免明显踩坑 | [库表设计·新手](/mysql/schema/#beginner) → [事务与锁·新手](/mysql/transactions/#beginner) → [性能优化·新手](/mysql/performance/#beginner) → [运维检查·新手](/mysql/operations/#beginner) |
+| <Badge text="进阶" type="info" /> | 理解机制、知道为什么这么设计 | [库表设计·进阶](/mysql/schema/#intermediate) → [事务与锁·进阶](/mysql/transactions/#intermediate) → [性能优化·进阶](/mysql/performance/#intermediate) → [运维检查·进阶](/mysql/operations/#intermediate) |
+| <Badge text="高级" type="warning" /> | 做生产级权衡、验证与回滚设计 | [库表设计·高级](/mysql/schema/#advanced) → [事务与锁·高级](/mysql/transactions/#advanced) → [性能优化·高级](/mysql/performance/#advanced) → [运维检查·高级](/mysql/operations/#advanced) |
+
+## 🧭 按场景选路
+
+| 你现在遇到的问题 | 先看哪里 | 再深入哪里 |
+|------------------|----------|-------------|
+| 新业务要建表，担心后续难扩展 | [库表设计](/mysql/schema/) | [设计原则详解](/mysql/schema/design-principles/) |
+| 线上出现锁等待、死锁或事务异常 | [事务与锁](/mysql/transactions/) | [锁机制与诊断](/mysql/transactions/locking-mechanisms/) |
+| 慢 SQL、索引命中差、执行计划不稳定 | [性能优化](/mysql/performance/) | [调优作战手册](/mysql/performance/tuning-playbook/) |
+| 发布前想确认风险，或事故后需要复盘 | [运维检查](/mysql/operations/) | [运行维护手册](/mysql/operations/runbook/) |
+
+## 新手：先把链路跑通 {#beginner}
+
+- 建表前先写清楚**核心查询路径**，再决定字段和索引。
+- 事务先做到**范围小、顺序稳、失败可重试**。
+- 性能问题先找**最重 SQL**，别一上来就怀疑架构。
+- 发布前确保**备份可恢复、监控可观测、DDL 锁影响已评估**。
+
+## 进阶：理解机制与边界 {#intermediate}
+
+- 为什么 `NULL`、唯一约束、默认值会影响业务语义和统计结果。
+- 为什么 InnoDB 的锁冲突常常不是“加了锁”这么简单，而是与索引命中、访问顺序、隔离级别耦合。
+- 为什么慢 SQL 的优化顺序通常是：业务目标 → SQL 形态 → 索引 → EXPLAIN → 验证。
+- 为什么运维治理要同时覆盖发布、运行、事故三个时段，而不是只盯报警面板。
+
+## 高级：做生产级推演与权衡 {#advanced}
+
+- 设计一张表时，要同时考虑**写放大、冷热分层、索引维护成本、未来演进**。
+- 处理事务问题时，要能推演**一致性要求、并发热点、回滚成本、重试策略**。
+- 做性能治理时，要从**资源瓶颈、执行计划稳定性、回归验证**三方面闭环。
+- 做运行维护时，要准备**容量阈值、备份恢复演练、变更回滚方案、事故复盘模板**。
+
+## 模块边界
+
+- 这里聚焦 **MySQL / InnoDB 工程实践**，不展开 ORM API 或语言驱动细节。
+- 与应用代码强耦合的实现细节，应留在对应语言模块；这里沉淀的是数据库侧的通用方法论。

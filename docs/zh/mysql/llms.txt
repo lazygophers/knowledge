@@ -4,10 +4,30 @@
 
 ## Docs
 
-- [Module Overview](./index.md): Overview of MySQL modeling, performance, and operations practices.
-- [Schema Design](./schema-design.md): Table and schema design principles for consistent data models.
-- [Transactions and Locks](./transactions-locks.md): Isolation levels, lock behavior, and deadlock diagnosis.
-- [Performance Tuning](./performance-tuning.md): Query and index optimization priorities for MySQL.
-- [Operations Checklist](./operations-checklist.md): Operational checks before release and during incidents.
-- [Sidebar Metadata](./_meta.json): Navigation metadata for MySQL module pages.
+- [Module Overview](./index.mdx): Entry page for the MySQL knowledge map, learning paths, and level-based navigation.
+- [Sidebar Metadata](./_meta.json): Navigation metadata for the MySQL module.
+- [Schema Topic Overview](./schema.mdx): Root-level topic entry for schema design with beginner, intermediate, and advanced reading paths.
+- [Transactions Topic Overview](./transactions.mdx): Root-level topic entry for transaction boundaries, locking, and deadlock diagnosis.
+- [Performance Topic Overview](./performance.mdx): Root-level topic entry for slow SQL triage, execution plans, and optimization workflow.
+- [Operations Topic Overview](./operations.mdx): Root-level topic entry for release checks, observability, backup, and incident handling.
+- [Schema Submodule Index](./schema/llms.txt): English index for schema design and data modeling docs.
+- [Transactions Submodule Index](./transactions/llms.txt): English index for transaction and lock docs.
+- [Performance Submodule Index](./performance/llms.txt): English index for performance analysis and SQL tuning docs.
+- [Operations Submodule Index](./operations/llms.txt): English index for release, observability, and incident docs.
 - [This LLMs File](./llms.txt): Machine-readable index for this MySQL directory.
+
+## Schema
+
+- [Schema Design Principles](./schema/design-principles.mdx): Data modeling trade-offs, constraints, evolution rules, and production review checklist.
+
+## Transactions
+
+- [Locking Mechanisms](./transactions/locking-mechanisms.mdx): Isolation choices, lock behavior, deadlock analysis, and mitigation strategies.
+
+## Performance
+
+- [Tuning Playbook](./performance/tuning-playbook.mdx): Execution plan analysis, index strategy, query rewriting, and validation loop.
+
+## Operations
+
+- [Operations Runbook](./operations/runbook.mdx): Pre-release checks, runtime metrics, backup recovery, and post-incident review practices.

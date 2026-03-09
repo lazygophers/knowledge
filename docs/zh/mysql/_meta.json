@@ -1,10 +1,16 @@
 [
-  { "type": "section-header", "label": "学习入口" },
+  { "type": "section-header", "label": "01-模块入口" },
   { "type": "file", "name": "index", "label": "模块概览" },
-  { "type": "file", "name": "schema-design", "label": "01 库表设计" },
-  { "type": "file", "name": "transactions-locks", "label": "02 事务与锁" },
-  { "type": "divider" },
-  { "type": "section-header", "label": "性能与运维" },
-  { "type": "file", "name": "performance-tuning", "label": "03 性能优化" },
-  { "type": "file", "name": "operations-checklist", "label": "04 运维检查清单" }
+
+  { "type": "section-header", "label": "02-数据建模与 Schema" },
+  { "type": "file", "name": "schema", "label": "库表设计" },
+
+  { "type": "section-header", "label": "03-事务与并发控制" },
+  { "type": "file", "name": "transactions", "label": "事务与锁" },
+
+  { "type": "section-header", "label": "04-查询与性能治理" },
+  { "type": "file", "name": "performance", "label": "性能优化" },
+
+  { "type": "section-header", "label": "05-运行维护与发布" },
+  { "type": "file", "name": "operations", "label": "运维检查" }
 ]
